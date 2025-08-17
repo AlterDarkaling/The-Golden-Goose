@@ -1,0 +1,103 @@
+<view class="login-container">
+  <view class="logo-section">
+    <view class="logo">🦢</view>
+    <text class="app-name">金鹅理财</text>
+    <text class="app-slogan">让钱为你工作</text>
+  </view>
+
+  <!-- 微信授权登录 -->
+  <view class="wechat-login-section">
+    <button 
+      class="wechat-login-btn" 
+      bindtap="handleWechatLogin"
+    >
+      <image src="/static/wechat-icon.svg" class="wechat-icon" mode="aspectFit"></image>
+      <text>微信快速登录</text>
+    </button>
+    <text class="wechat-tip">测试版本：模拟微信登录</text>
+  </view>
+
+  <view class="divider">
+    <view class="divider-line"></view>
+    <text class="divider-text">或</text>
+    <view class="divider-line"></view>
+  </view>
+
+  <view class="form-section">
+    <view class="tab-container">
+      <view 
+        class="tab-item {{activeTab === 'login' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="login"
+      >
+        账号登录
+      </view>
+      <view 
+        class="tab-item {{activeTab === 'register' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="register"
+      >
+        账号注册
+      </view>
+    </view>
+
+    <!-- 登录表单 -->
+    <view wx:if="{{activeTab === 'login'}}" class="form-container">
+      <view class="input-group">
+        <text class="input-label">用户名</text>
+        <input 
+          model:value="{{loginForm.username}}" 
+          placeholder="请输入用户名" 
+          class="input-field"
+        />
+      </view>
+      <view class="input-group">
+        <text class="input-label">密码</text>
+        <input 
+          model:value="{{loginForm.password}}" 
+          type="password" 
+          placeholder="请输入密码" 
+          class="input-field"
+        />
+      </view>
+      <button class="submit-btn" bindtap="handleLogin">登录</button>
+    </view>
+
+    <!-- 注册表单 -->
+    <view wx:if="{{activeTab === 'register'}}" class="form-container">
+      <view class="input-group">
+        <text class="input-label">用户名</text>
+        <input 
+          model:value="{{registerForm.username}}" 
+          placeholder="请输入用户名" 
+          class="input-field"
+        />
+      </view>
+      <view class="input-group">
+        <text class="input-label">密码</text>
+        <input 
+          model:value="{{registerForm.password}}" 
+          type="password" 
+          placeholder="请输入密码" 
+          class="input-field"
+        />
+      </view>
+      <view class="input-group">
+        <text class="input-label">确认密码</text>
+        <input 
+          model:value="{{registerForm.confirmPassword}}" 
+          type="password" 
+          placeholder="请再次输入密码" 
+          class="input-field"
+        />
+      </view>
+      <button class="submit-btn" bindtap="handleRegister">注册</button>
+    </view>
+  </view>
+
+  <view class="tips-section">
+    <text class="tips-text">
+      {{activeTab === 'login' ? '还没有账号？点击上方注册' : '已有账号？点击上方登录'}}
+    </text>
+  </view>
+</view>

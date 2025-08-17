@@ -1,0 +1,159 @@
+<view class="edit-container">
+  <view class="header">
+    <text class="header-title">{{isEdit ? '编辑' : '添加'}}{{typeText}}</text>
+  </view>
+
+  <view class="form-container">
+    <view class="form-group">
+      <text class="form-label">名称 *</text>
+      <input 
+        model:value="{{formData.name}}" 
+        placeholder="请输入名称" 
+        class="form-input"
+      />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">分类 *</text>
+      <picker 
+        value="{{categoryIndex}}" 
+        range="{{categoryOptions}}" 
+        range-key="name"
+        bindchange="onCategoryChange"
+        class="form-picker"
+      >
+        <view class="picker-display">
+          <text>{{categoryOptions[categoryIndex].name || '请选择分类'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">状态 *</text>
+      <picker 
+        value="{{statusIndex}}" 
+        range="{{statusOptions}}" 
+        range-key="label"
+        bindchange="onStatusChange"
+        class="form-picker"
+      >
+        <view class="picker-display">
+          <text>{{statusOptions[statusIndex].label || '请选择状态'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 资产特有字段 -->
+    <block wx:if="{{type === 'asset'}}">
+      <view class="form-group">
+        <text class="form-label">初始价值 *</text>
+        <input 
+          model:value="{{formData.initialValue}}" 
+          type="number" 
+          placeholder="请输入初始价值" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">当前价值</text>
+        <input 
+          model:value="{{formData.currentValue}}" 
+          type="number" 
+          placeholder="请输入当前价值" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">每日收益</text>
+        <input 
+          model:value="{{formData.dailyIncome}}" 
+          type="number" 
+          placeholder="请输入每日收益" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">年化收益率 (%)</text>
+        <input 
+          model:value="{{formData.annualReturn}}" 
+          type="number" 
+          placeholder="请输入年化收益率" 
+          class="form-input"
+        />
+      </view>
+    </block>
+
+    <!-- 负债特有字段 -->
+    <block wx:if="{{type === 'liability'}}">
+      <view class="form-group">
+        <text class="form-label">初始金额 *</text>
+        <input 
+          model:value="{{formData.initialAmount}}" 
+          type="number" 
+          placeholder="请输入初始金额" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">当前金额</text>
+        <input 
+          model:value="{{formData.currentAmount}}" 
+          type="number" 
+          placeholder="请输入当前金额" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">每日成本</text>
+        <input 
+          model:value="{{formData.dailyCost}}" 
+          type="number" 
+          placeholder="请输入每日成本" 
+          class="form-input"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">年化利率 (%)</text>
+        <input 
+          model:value="{{formData.annualRate}}" 
+          type="number" 
+          placeholder="请输入年化利率" 
+          class="form-input"
+        />
+      </view>
+    </block>
+
+    <view class="form-group">
+      <text class="form-label">备注</text>
+      <textarea 
+        model:value="{{formData.notes}}" 
+        placeholder="请输入备注信息" 
+        class="form-textarea"
+        maxlength="200"
+      />
+      <text class="char-count">{{formData.notes.length}}/200</text>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">创建时间</text>
+      <picker 
+        mode="date" 
+        value="{{formData.createDate}}" 
+        bindchange="onDateChange"
+        class="form-picker"
+      >
+        <view class="picker-display">
+          <text>{{formData.createDate || '请选择日期'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="button-group">
+    <button class="btn btn-cancel" bindtap="goBack">取消</button>
+    <button class="btn btn-save" bindtap="handleSave">保存</button>
+  </view>
+</view>

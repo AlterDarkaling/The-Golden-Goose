@@ -1,0 +1,43 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "金鹅理财",
+				"navigationBarBackgroundColor": "#4A90E2",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/detail/detail",
+			"style": {
+				"navigationBarTitleText": "详情",
+				"navigationBarBackgroundColor": "#4A90E2",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/edit/edit",
+			"style": {
+				"navigationBarTitleText": "编辑",
+				"navigationBarBackgroundColor": "#4A90E2",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationBarBackgroundColor": "#4A90E2",
+				"navigationBarTextStyle": "white"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "金鹅理财",
+		"navigationBarBackgroundColor": "#4A90E2",
+		"backgroundColor": "#F5F5F5"
+	},
+	"uniIdRouter": {}
+}

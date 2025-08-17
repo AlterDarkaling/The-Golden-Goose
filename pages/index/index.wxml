@@ -1,0 +1,138 @@
+<view class="container">
+  <!-- 个人信息栏 -->
+  <view class="user-info-section">
+    <view class="user-info-top">
+      <view class="net-worth">
+        <text class="net-worth-label">净资产</text>
+        <text class="net-worth-value">¥{{netWorth}}</text>
+      </view>
+      <view class="avatar-container">
+        <image 
+          src="{{userInfo.avatar || '/static/default-avatar.png'}}" 
+          class="avatar"
+          mode="aspectFill"
+          bindtap="chooseAvatar"
+        />
+        <view class="avatar-edit-icon" bindtap="chooseAvatar">📷</view>
+        <view class="logout-btn" bindtap="handleLogout">退出</view>
+      </view>
+    </view>
+    <view class="user-info-bottom">
+      <view class="info-item">
+        <text class="info-label">每日成本</text>
+        <text class="info-value cost">¥{{dailyCost}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">资产数量</text>
+        <text class="info-value">{{assetsCount}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">负债数量</text>
+        <text class="info-value">{{liabilitiesCount}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">每日收益</text>
+        <text class="info-value income">¥{{dailyIncome}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能栏 -->
+  <view class="function-bar">
+    <view class="search-container">
+      <input 
+        model:value="{{searchKeyword}}" 
+        placeholder="搜索资产或负债..." 
+        class="search-input"
+        bindinput="onSearch"
+      />
+    </view>
+    <view class="filter-container">
+      <picker 
+        value="{{sortIndex}}" 
+        range="{{sortOptions}}" 
+        range-key="label"
+        bindchange="onSortChange"
+        class="filter-picker"
+      >
+        <view class="filter-item">
+          <text>{{sortOptions[sortIndex].label}}</text>
+          <text class="filter-arrow">▼</text>
+        </view>
+      </picker>
+      <picker 
+        value="{{categoryIndex}}" 
+        range="{{categoryOptions}}" 
+        range-key="label"
+        bindchange="onCategoryChange"
+        class="filter-picker"
+      >
+        <view class="filter-item">
+          <text>{{categoryOptions[categoryIndex].label}}</text>
+          <text class="filter-arrow">▼</text>
+        </view>
+      </picker>
+      <picker 
+        value="{{statusIndex}}" 
+        range="{{statusOptions}}" 
+        range-key="label"
+        bindchange="onStatusChange"
+        class="filter-picker"
+      >
+        <view class="filter-item">
+          <text>{{statusOptions[statusIndex].label}}</text>
+          <text class="filter-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 数据列表 -->
+  <view class="data-section">
+    <view class="section-header">
+      <text class="section-title">资产与负债</text>
+      <view class="add-buttons">
+        <button class="add-btn asset-btn" bindtap="addAsset">+ 资产</button>
+        <button class="add-btn liability-btn" bindtap="addLiability">+ 负债</button>
+      </view>
+    </view>
+    
+    <view class="data-list">
+      <!-- 资产列表 -->
+      <view wx:for="{{filteredAssets}}" wx:key="id" class="data-item asset-item" bindtap="viewDetail" data-item="{{item}}" data-type="asset">
+        <view class="item-left">
+          <view class="item-icon asset-icon">💰</view>
+          <view class="item-info">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-category">{{item.categoryName}}</text>
+          </view>
+        </view>
+        <view class="item-right">
+          <text class="item-amount">¥{{item.displayAmount}}</text>
+          <text class="item-status {{item.status}}">{{item.statusText}}</text>
+        </view>
+      </view>
+
+      <!-- 负债列表 -->
+      <view wx:for="{{filteredLiabilities}}" wx:key="id" class="data-item liability-item" bindtap="viewDetail" data-item="{{item}}" data-type="liability">
+        <view class="item-left">
+          <view class="item-icon liability-icon">💳</view>
+          <view class="item-info">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-category">{{item.categoryName}}</text>
+          </view>
+        </view>
+        <view class="item-right">
+          <text class="item-amount">¥{{item.displayAmount}}</text>
+          <text class="item-status {{item.status}}">{{item.statusText}}</text>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{filteredAssets.length === 0 && filteredLiabilities.length === 0}}" class="empty-state">
+        <text class="empty-text">暂无数据</text>
+        <text class="empty-hint">点击上方按钮添加资产或负债</text>
+      </view>
+    </view>
+  </view>
+</view>
