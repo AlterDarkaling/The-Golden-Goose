@@ -30,118 +30,105 @@ Page({
       { label: '降序', value: 'desc' },
       { label: '升序', value: 'asc' }
     ],
-    // 资产分类（现金流导向）
+    // 资产分类（传统会计准则）
     assetCategories: [
       { label: '全部类别', value: 'all' },
-      { label: '现金流入型资产', value: 'cashflow_in' },
-      { label: '潜在增值型资产', value: 'appreciation' },
-      { label: '经营性资产', value: 'business' },
-      { label: '消费性资产', value: 'consumer_asset' },
-      { label: '其他资产', value: 'other_asset' }
+      { label: '流动资产', value: 'current_assets' },
+      { label: '金融资产', value: 'financial_assets' },
+      { label: '实物资产', value: 'physical_assets' },
+      { label: '其他资产', value: 'other_assets' }
     ],
     // 资产二级分类
     assetSubCategories: [
       // 全部类别
       [{ label: '全部', value: 'all' }],
-      // 现金流入型资产
+      // 流动资产
       [
         { label: '全部', value: 'all' },
-        { label: '出租房产', value: 'rental_property' },
-        { label: '股息股票', value: 'dividend_stocks' },
-        { label: '债券利息', value: 'bond_interest' },
-        { label: '定期存款', value: 'fixed_deposit' },
-        { label: '基金分红', value: 'fund_dividend' },
-        { label: '专利授权', value: 'patent_license' },
-        { label: '版权收入', value: 'copyright_income' },
-        { label: '其他现金流', value: 'other_cashflow' }
+        { label: '现金类资产', value: 'cash_assets' },
+        { label: '短期理财资产', value: 'short_term_investment' }
       ],
-      // 潜在增值型资产
+      // 金融资产
       [
         { label: '全部', value: 'all' },
-        { label: '投资房产', value: 'investment_property' },
-        { label: '成长股票', value: 'growth_stocks' },
-        { label: '贵金属', value: 'precious_metals' },
-        { label: '收藏品', value: 'collectibles' },
-        { label: '艺术品', value: 'artworks' },
-        { label: '其他增值品', value: 'other_appreciation' }
+        { label: '股票/基金类', value: 'equity_fund' },
+        { label: '固定收益类', value: 'fixed_income' }
       ],
-      // 经营性资产
+      // 实物资产
       [
         { label: '全部', value: 'all' },
-        { label: '实体店铺', value: 'physical_store' },
-        { label: '网络生意', value: 'online_business' },
-        { label: '生产设备', value: 'production_equipment' },
-        { label: '运营车辆', value: 'business_vehicle' },
-        { label: '办公设备', value: 'office_equipment' },
-        { label: '其他经营', value: 'other_business' }
-      ],
-      // 消费性资产
-      [
-        { label: '全部', value: 'all' },
-        { label: '手机通讯', value: 'mobile_phone' },
-        { label: '电脑数码', value: 'computer_digital' },
-        { label: '家用电器', value: 'home_appliances' },
-        { label: '交通工具', value: 'personal_vehicle' },
-        { label: '家具用品', value: 'furniture' },
-        { label: '服装配饰', value: 'clothing_accessories' },
-        { label: '运动健身', value: 'sports_fitness' },
-        { label: '娱乐设备', value: 'entertainment' },
-        { label: '其他消费品', value: 'other_consumer' }
+        { label: '消费型资产', value: 'consumer_assets' },
+        { label: '增值型资产', value: 'appreciating_assets' }
       ],
       // 其他资产
       [
         { label: '全部', value: 'all' },
-        { label: '知识产权', value: 'intellectual_property' },
-        { label: '数字资产', value: 'digital_assets' },
-        { label: '其他', value: 'other' }
+        { label: '无形资产', value: 'intangible_assets' },
+        { label: '预付类资产', value: 'prepaid_assets' }
       ]
     ],
     
-    // 负债分类（现金流导向）
+    // 负债分类（传统会计准则）
     liabilityCategories: [
       { label: '全部类别', value: 'all' },
-      { label: '消费性负债', value: 'consumer_debt' },
-      { label: '投资性负债', value: 'investment_debt' },
-      { label: '其他负债', value: 'other_debt' }
+      { label: '流动负债', value: 'current_liabilities' },
+      { label: '长期负债', value: 'long_term_liabilities' },
+      { label: '其他负债', value: 'other_liabilities' }
     ],
     // 负债二级分类
     liabilitySubCategories: [
       // 全部类别
       [{ label: '全部', value: 'all' }],
-      // 消费性负债
+      // 流动负债
       [
         { label: '全部', value: 'all' },
-        { label: '信用卡账单', value: 'credit_card' },
-        { label: '自用车贷', value: 'personal_car_loan' },
-        { label: '消费贷款', value: 'consumer_loan' },
-        { label: '自住房贷', value: 'home_mortgage' },
-        { label: '装修贷款', value: 'renovation_loan' },
-        { label: '其他消费', value: 'other_consumer' }
+        { label: '信用卡负债', value: 'credit_card_debt' },
+        { label: '短期借款', value: 'short_term_loan' }
       ],
-      // 投资性负债
+      // 长期负债
       [
         { label: '全部', value: 'all' },
-        { label: '投资房贷', value: 'investment_mortgage' },
-        { label: '股票融资', value: 'stock_margin' },
-        { label: '经营贷款', value: 'business_loan' },
-        { label: '设备贷款', value: 'equipment_loan' },
-        { label: '其他投资贷', value: 'other_investment_loan' }
+        { label: '房贷', value: 'mortgage_loan' },
+        { label: '车贷/消费贷', value: 'consumer_loan' }
       ],
       // 其他负债
       [
         { label: '全部', value: 'all' },
-        { label: '学费贷款', value: 'education_loan' },
-        { label: '医疗负债', value: 'medical_debt' },
-        { label: '税务负债', value: 'tax_debt' },
-        { label: '其他', value: 'other' }
+        { label: '应付款项', value: 'accounts_payable' },
+        { label: '预收款项', value: 'advance_receipts' }
       ]
     ],
-      statusOptions: [
-        { label: '全部状态', value: 'all' },
-        { label: '使用中', value: 'active' },
-        { label: '暂停', value: 'paused' },
-        { label: '已完成', value: 'completed' }
+      // 双栏状态选择器：[类型栏, 状态栏]
+      statusCategories: [
+        { label: '全部', value: 'all' },
+        { label: '资产状态', value: 'asset' },
+        { label: '负债状态', value: 'liability' }
       ],
+      statusOptions: [
+        // 全部状态
+        [{ label: '全部状态', value: 'all' }],
+        // 资产状态
+        [
+          { label: '全部资产', value: 'all' },
+          { label: '使用中', value: 'active' },
+          { label: '吃灰中', value: 'dusty' },
+          { label: '出租中', value: 'rented' },
+          { label: '已损坏', value: 'damaged' },
+          { label: '已处理', value: 'processed' },
+          { label: '已送人', value: 'gifted' },
+          { label: '已卖出', value: 'sold' },
+          { label: '已丢失', value: 'lost' }
+        ],
+        // 负债状态
+        [
+          { label: '全部负债', value: 'all' },
+          { label: '正常还款', value: 'normal' },
+          { label: '已还清', value: 'paid_off' },
+          { label: '逾期未还', value: 'overdue' },
+          { label: '提前还清', value: 'prepaid' }
+        ]
+      ],
+      statusIndex: [0, 0], // 双栏索引：[类型索引, 状态索引]
     netWorth: 0,
     dailyCost: 0,
     dailyIncome: 0,
@@ -162,6 +149,7 @@ Page({
 
   checkLogin() {
     const hasInitialized = wx.getStorageSync('app_initialized')
+    
     if (!hasInitialized) {
       // 未初始化，跳转到引导页
       wx.reLaunch({
@@ -173,16 +161,19 @@ Page({
     // 加载用户信息
     const user = StorageManager.getUser()
     if (user) {
-      this.setData({
-        userInfo: user
-      })
+      // 计算显示头像：优先使用微信头像（如果用户选择使用），否则使用自定义头像
+      const displayAvatar = user.useWechatInfo && user.wechatAvatar ? user.wechatAvatar : user.avatar
       
-      // 如果是微信用户，更新头像显示
-      if (user.isWechatUser && user.avatar) {
-        this.setData({
-          'userInfo.avatar': user.avatar
-        })
-      }
+      this.setData({
+        userInfo: {
+          ...user,
+          avatar: displayAvatar || '/static/default-avatar.png'
+        }
+      })
+    } else {
+      wx.reLaunch({
+        url: '/pages/login/login'
+      })
     }
   },
 
@@ -280,7 +271,7 @@ Page({
   },
 
   updateFilteredData() {
-    const { assets, liabilities, searchKeyword, sortFieldIndex, sortOrderIndex, categoryIndex, statusIndex, sortFieldOptions, sortOrderOptions, assetCategories, assetSubCategories, statusOptions } = this.data
+    const { assets, liabilities, searchKeyword, sortFieldIndex, sortOrderIndex, categoryIndex, statusIndex, sortFieldOptions, sortOrderOptions, assetCategories, assetSubCategories, statusCategories, statusOptions } = this.data
 
     // 获取当前选择的分类值
     const selectedCategoryL1 = assetCategories[categoryIndex[0]].value
@@ -307,7 +298,16 @@ Page({
         }
       }
       
-      if (statusIndex > 0 && asset.status !== statusOptions[statusIndex].value) {
+      // 状态筛选：双栏选择器
+      const selectedStatusCategory = statusCategories[statusIndex[0]].value
+      const selectedStatus = statusOptions[statusIndex[0]][statusIndex[1]].value
+      
+      if (selectedStatusCategory === 'liability') {
+        // 如果选择了负债状态，则不显示资产
+        return false
+      }
+      
+      if (selectedStatusCategory === 'asset' && selectedStatus !== 'all' && asset.status !== selectedStatus) {
         return false
       }
       return true
@@ -334,7 +334,16 @@ Page({
         }
       }
       
-      if (statusIndex > 0 && liability.status !== statusOptions[statusIndex].value) {
+      // 状态筛选：双栏选择器
+      const selectedStatusCategory = statusCategories[statusIndex[0]].value
+      const selectedStatus = statusOptions[statusIndex[0]][statusIndex[1]].value
+      
+      if (selectedStatusCategory === 'asset') {
+        // 如果选择了资产状态，则不显示负债
+        return false
+      }
+      
+      if (selectedStatusCategory === 'liability' && selectedStatus !== 'all' && liability.status !== selectedStatus) {
         return false
       }
       return true
@@ -464,10 +473,27 @@ Page({
   },
 
   onStatusChange(e) {
+    const statusIndex = e.detail.value
     this.setData({
-      statusIndex: e.detail.value
+      statusIndex: statusIndex
     })
     this.updateFilteredData()
+  },
+
+  onStatusColumnChange(e) {
+    const { column, value } = e.detail
+    const statusIndex = this.data.statusIndex
+    
+    if (column === 0) {
+      // 第一栏改变时，重置第二栏为0
+      statusIndex[0] = value
+      statusIndex[1] = 0
+      this.setData({
+        statusIndex: statusIndex
+      })
+      // 立即更新筛选结果
+      this.updateFilteredData()
+    }
   },
 
   addAsset() {
@@ -515,16 +541,20 @@ Page({
 
   getStatusText(status) {
     const statusMap = {
+      // 资产状态
       active: '使用中',
-      paused: '暂停',
-      completed: '已完成',
       dusty: '吃灰中',
       rented: '出租中',
       damaged: '已损坏',
       processed: '已处理',
       gifted: '已送人',
       sold: '已卖出',
-      lost: '已丢失'
+      lost: '已丢失',
+      // 负债状态
+      normal: '正常还款',
+      paid_off: '已还清',
+      overdue: '逾期未还',
+      prepaid: '提前还清'
     }
     return statusMap[status] || '未知'
   },
@@ -536,17 +566,11 @@ Page({
 
   // 退出登录功能已移至个人中心页面
   
-  // 浮动按钮点击事件
+  // 浮动按钮点击事件 - 直接跳转到资产编辑页面
   handleFloatBtnClick() {
-    wx.showActionSheet({
-      itemList: ['添加资产', '添加负债'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          this.addAsset()
-        } else if (res.tapIndex === 1) {
-          this.addLiability()
-        }
-      }
+    // 直接跳转到添加资产页面，用户可以在编辑页面选择资产或负债类型
+    wx.navigateTo({
+      url: '/pages/edit/edit'
     })
   }
 })

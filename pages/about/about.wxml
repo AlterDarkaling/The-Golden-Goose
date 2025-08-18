@@ -3,71 +3,71 @@
   <view class="about-header">
     <view class="header-icon">📚</view>
     <text class="header-title">理财启蒙之路</text>
-    <text class="header-subtitle">探索经典理财书籍的智慧</text>
+    <text class="header-subtitle">现代财务管理理念与实践</text>
   </view>
 
-  <!-- 书籍介绍 -->
+  <!-- 财务管理理念 -->
   <view class="books-section">
-    <!-- 富爸爸穷爸爸 -->
+    <!-- 会计基础知识 -->
     <view class="book-card">
       <view class="book-header">
-        <view class="book-icon">💰</view>
-        <text class="book-title">富爸爸穷爸爸</text>
-        <text class="book-author">— 罗伯特·清崎</text>
+        <view class="book-icon">📊</view>
+        <text class="book-title">会计基础理念</text>
+        <text class="book-author">— 财务管理核心</text>
       </view>
       
       <view class="book-content">
         <view class="concept-section">
-          <text class="concept-title">核心理念</text>
+          <text class="concept-title">核心原则</text>
           <view class="concept-item">
-            <text class="concept-label">• 现金流象限：</text>
-            <text class="concept-desc">雇员(E) → 自由职业者(S) → 企业主(B) → 投资者(I)</text>
+            <text class="concept-label">• 资产分类：</text>
+            <text class="concept-desc">流动资产、金融资产、实物资产、工作收入、其他资产</text>
           </view>
           <view class="concept-item">
-            <text class="concept-label">• 资产VS负债：</text>
-            <text class="concept-desc">资产把钱放进你的口袋，负债把钱从你的口袋里取走</text>
+            <text class="concept-label">• 负债管理：</text>
+            <text class="concept-desc">流动负债、长期负债、其他负债的科学分类</text>
           </view>
           <view class="concept-item">
-            <text class="concept-label">• 财商教育：</text>
-            <text class="concept-desc">财务知识、投资策略、市场规律、法律条款</text>
+            <text class="concept-label">• 现金流：</text>
+            <text class="concept-desc">收入流入、支出流出的动态平衡管理</text>
           </view>
         </view>
 
         <view class="story-section">
-          <text class="story-title">经典故事</text>
-          <text class="story-content">作者通过对比"富爸爸"（朋友的父亲）和"穷爸爸"（自己的父亲）的理财观念，揭示了富人与穷人思维方式的根本差异。富爸爸教导：不要为钱工作，要让钱为你工作。</text>
+          <text class="story-title">实用价值</text>
+          <text class="story-content">通过科学的会计分类和现金流管理，帮助个人建立清晰的财务结构，实现资产的合理配置和风险控制。</text>
         </view>
       </view>
     </view>
 
-    <!-- 小狗钱钱 -->
+    <!-- 现金流管理 -->
     <view class="book-card">
       <view class="book-header">
-        <view class="book-icon">🐕</view>
-        <text class="book-title">小狗钱钱</text>
-        <text class="book-author">— 博多·舍费尔</text>
+        <view class="book-icon">💰</view>
+        <text class="book-title">现金流管理</text>
+        <text class="book-author">— 财务健康指标</text>
       </view>
       
       <view class="book-content">
         <view class="concept-section">
-          <text class="concept-title">核心理念</text>
+          <text class="concept-title">核心概念</text>
           <view class="concept-item">
-            <text class="concept-label">• 梦想储蓄罐：</text>
-            <text class="concept-desc">为每个梦想准备专门的储蓄罐，可视化目标进度</text>
+            <text class="concept-label">• 现金流入：</text>
+            <text class="concept-desc">工作收入、投资收益、资产产生的现金流</text>
           </view>
           <view class="concept-item">
-            <text class="concept-label">• 成功日记：</text>
-            <text class="concept-desc">每天记录成功的事情，培养积极的金钱观念</text>
+            <text class="concept-label">• 现金流出：</text>
+            <text class="concept-desc">生活支出、负债还款、资产维护成本</text>
           </view>
           <view class="concept-item">
-            <text class="concept-label">• 鹅与金蛋：</text>
-            <text class="concept-desc">永远不要杀死会下金蛋的鹅（本金），要养更多的鹅</text>
+            <text class="concept-label">• 净现金流：</text>
+            <text class="concept-desc">流入减去流出，反映财务健康状况</text>
           </view>
         </view>
 
         <view class="story-section">
-          <text class="story-title">经典故事</text>
-          <text class="story-content">12岁女孩吉娅偶然救助了一只受伤的小狗，没想到这只小狗竟会说话，并且是一位理财专家！小狗钱钱用生动有趣的方式教会了吉娅如何与金钱打交道，实现财务自由。</text>
+          <text class="story-title">管理意义</text>
+          <text class="story-content">正向现金流是财务自由的基础，通过优化收入结构和控制支出，实现财务状况的持续改善。</text>
         </view>
       </view>
     </view>
@@ -77,35 +77,35 @@
   <view class="purpose-section">
     <view class="purpose-header">
       <view class="purpose-icon">🎯</view>
-      <text class="purpose-title">小程序制作初衷</text>
+      <text class="purpose-title">小程序设计理念</text>
     </view>
     
     <view class="purpose-content">
       <text class="purpose-text">
-        "会下金蛋的鹅"小程序正是基于这两本经典理财书籍的智慧而诞生的。我们希望将书中深奥的理财理念转化为简单易用的工具，帮助每个人：
+        "会下金蛋的鹅"小程序基于科学的财务管理理论和现代会计准则设计，旨在为个人用户提供专业、实用的财务管理工具：
       </text>
       
       <view class="purpose-list">
         <view class="purpose-item">
           <text class="purpose-bullet">🎯</text>
-          <text class="purpose-desc">清晰区分资产与负债，建立正确的金钱观念</text>
+          <text class="purpose-desc">科学分类资产负债，建立清晰的财务结构</text>
         </view>
         <view class="purpose-item">
           <text class="purpose-bullet">📊</text>
-          <text class="purpose-desc">可视化财务状况，掌握真实的净资产情况</text>
+          <text class="purpose-desc">实时监控现金流，掌握财务健康状况</text>
         </view>
         <view class="purpose-item">
           <text class="purpose-bullet">🎁</text>
-          <text class="purpose-desc">养成理财习惯，让每一笔投资都像培养"会下金蛋的鹅"</text>
+          <text class="purpose-desc">量化投资收益，优化资产配置策略</text>
         </view>
         <view class="purpose-item">
           <text class="purpose-bullet">🌟</text>
-          <text class="purpose-desc">追求财务自由，实现"让钱为你工作"的人生境界</text>
+          <text class="purpose-desc">培养理财习惯，实现财务目标管理</text>
         </view>
       </view>
       
       <text class="purpose-footer">
-        愿这只"会下金蛋的鹅"成为您理财路上的得力助手，帮您走向财务自由之路！
+        通过科学的方法和专业的工具，帮助您建立健康的财务管理体系！
       </text>
     </view>
   </view>

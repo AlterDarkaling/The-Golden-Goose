@@ -88,16 +88,18 @@
         </view>
       </picker>
       
-      <!-- 状态选择 -->
+      <!-- 状态选择：双栏选择器 -->
       <picker 
+        mode="multiSelector"
         value="{{statusIndex}}" 
-        range="{{statusOptions}}" 
+        range="{{[statusCategories, statusOptions[statusIndex[0]]]}}"
         range-key="label"
         bindchange="onStatusChange"
+        bindcolumnchange="onStatusColumnChange"
         class="filter-picker"
       >
         <view class="filter-item">
-          <text>{{statusOptions[statusIndex].label}}</text>
+          <text>{{statusOptions[statusIndex[0]][statusIndex[1]].label}}</text>
           <text class="filter-arrow">▼</text>
         </view>
       </picker>

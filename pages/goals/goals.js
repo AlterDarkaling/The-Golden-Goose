@@ -4,20 +4,28 @@ Page({
   data: {
     goals: [],
     showAddGoal: false,
+    goalTemplates: [],
     newGoal: {
       title: '',
       targetAmount: '',
       currentAmount: '',
       deadline: '',
-      category: 'savings',
+      category: 'emergency',
       description: ''
     },
     categoryOptions: [
-      { value: 'savings', label: '储蓄目标', icon: '💰' },
-      { value: 'investment', label: '投资目标', icon: '📈' },
-      { value: 'purchase', label: '购买目标', icon: '🛒' },
-      { value: 'debt', label: '还债目标', icon: '💳' },
-      { value: 'other', label: '其他目标', icon: '🎯' }
+      { value: 'emergency', label: '应急储蓄', icon: '🛡️', description: '建议6个月生活费' },
+      { value: 'house', label: '购房基金', icon: '🏠', description: '首付、装修等' },
+      { value: 'education', label: '教育基金', icon: '🎓', description: '学费、培训等' },
+      { value: 'travel', label: '旅行基金', icon: '✈️', description: '旅游、度假等' },
+      { value: 'investment', label: '投资基金', icon: '📈', description: '股票、基金等' },
+      { value: 'retirement', label: '养老储蓄', icon: '👴', description: '退休规划' },
+      { value: 'car', label: '购车基金', icon: '🚗', description: '购车、换车等' },
+      { value: 'wedding', label: '婚礼基金', icon: '💒', description: '结婚相关费用' },
+      { value: 'health', label: '健康基金', icon: '🏥', description: '医疗、保险等' },
+      { value: 'debt', label: '还债目标', icon: '💳', description: '信用卡、贷款等' },
+      { value: 'gift', label: '礼物基金', icon: '🎁', description: '节日、生日礼物' },
+      { value: 'other', label: '其他目标', icon: '🎯', description: '自定义目标' }
     ],
     categoryIndex: 0
   },
@@ -33,13 +41,32 @@ Page({
   loadGoals() {
     try {
       const goals = wx.getStorageSync('financial_goals') || []
-      // 处理目标数据，添加进度计算
-      const processedGoals = goals.map(goal => ({
-        ...goal,
-        progress: this.calculateProgress(goal),
-        daysLeft: this.calculateDaysLeft(goal.deadline),
-        categoryInfo: this.getCategoryInfo(goal.category)
-      }))
+      // 处理目标数据，添加进度计算和智能建议
+      const processedGoals = goals.map(goal => {
+        const progress = this.calculateProgress(goal)
+        const daysLeft = this.calculateDaysLeft(goal.deadline)
+        const categoryInfo = this.getCategoryInfo(goal.category)
+        const analysis = this.analyzeGoal(goal)
+        
+        return {
+          ...goal,
+          progress,
+          daysLeft,
+          categoryInfo,
+          analysis,
+          advice: analysis ? analysis.advice : null
+        }
+      })
+      
+      // 按优先级和进度排序
+      processedGoals.sort((a, b) => {
+        const priorityOrder = { urgent: 4, high: 3, normal: 2, low: 1 }
+        const aPriority = a.analysis ? priorityOrder[a.analysis.priority] : 1
+        const bPriority = b.analysis ? priorityOrder[b.analysis.priority] : 1
+        
+        if (aPriority !== bPriority) return bPriority - aPriority
+        return a.progress - b.progress // 进度低的排前面
+      })
       
       this.setData({ goals: processedGoals })
     } catch (e) {
@@ -69,6 +96,9 @@ Page({
 
   // 显示添加目标表单
   showAddGoalForm() {
+    const defaultCategory = 'emergency'
+    const templates = this.getGoalTemplates(defaultCategory)
+    
     this.setData({
       showAddGoal: true,
       newGoal: {
@@ -76,10 +106,11 @@ Page({
         targetAmount: '',
         currentAmount: '0',
         deadline: '',
-        category: 'savings',
+        category: defaultCategory,
         description: ''
       },
-      categoryIndex: 0
+      categoryIndex: 0,
+      goalTemplates: templates
     })
   },
 
@@ -90,9 +121,64 @@ Page({
 
   // 分类选择
   onCategoryChange(e) {
+    const selectedCategory = this.data.categoryOptions[e.detail.value].value
+    const templates = this.getGoalTemplates(selectedCategory)
+    
     this.setData({
       categoryIndex: e.detail.value,
-      'newGoal.category': this.data.categoryOptions[e.detail.value].value
+      'newGoal.category': selectedCategory,
+      goalTemplates: templates
+    })
+  },
+
+  // 选择模板
+  selectTemplate(e) {
+    const template = e.currentTarget.dataset.template
+    const amount = template.amount || (template.months * template.multiplier)
+    
+    this.setData({
+      'newGoal.title': template.name,
+      'newGoal.targetAmount': amount.toString(),
+      'newGoal.description': `基于${template.name}模板创建的目标`
+    })
+    
+    wx.showToast({
+      title: '模板已应用',
+      icon: 'success'
+    })
+  },
+
+  // 显示建议详情
+  showAdviceDetail(e) {
+    const { goalId } = e.currentTarget.dataset
+    const goal = this.data.goals.find(g => g.id === goalId)
+    
+    if (!goal || !goal.analysis) return
+
+    const { analysis, advice } = goal
+    let content = `📊 储蓄计划建议：\n\n`
+    
+    if (advice) {
+      content += `💰 还需储蓄：¥${this.formatMoney(advice.remaining)}\n`
+      content += `📅 剩余时间：${advice.daysLeft}天\n\n`
+      content += `💡 储蓄建议：\n`
+      content += `• 每日储蓄：¥${advice.dailyNeeded.toFixed(2)}\n`
+      content += `• 每周储蓄：¥${advice.weeklyNeeded.toFixed(2)}\n`
+      content += `• 每月储蓄：¥${advice.monthlyNeeded.toFixed(2)}\n\n`
+    }
+    
+    if (analysis.suggestions.length > 0) {
+      content += `🎯 专家建议：\n`
+      analysis.suggestions.forEach(suggestion => {
+        content += `• ${suggestion}\n`
+      })
+    }
+
+    wx.showModal({
+      title: `${goal.categoryInfo.icon} ${goal.title}`,
+      content,
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
@@ -134,7 +220,7 @@ Page({
     
     // 验证表单
     if (!newGoal.title.trim()) {
-      wx.showToast({ title: '请输入目标名称', icon: 'none' })
+      wx.showToast({ title: '请输入储蓄罐名称', icon: 'none' })
       return
     }
     
@@ -167,7 +253,7 @@ Page({
       goals.push(goal)
       wx.setStorageSync('financial_goals', goals)
       
-      wx.showToast({ title: '目标添加成功', icon: 'success' })
+      wx.showToast({ title: '储蓄罐创建成功', icon: 'success' })
       this.hideAddGoalForm()
       this.loadGoals()
     } catch (e) {
@@ -214,8 +300,8 @@ Page({
         // 检查是否完成目标
         if (newAmount >= goals[goalIndex].targetAmount) {
           wx.showModal({
-            title: '🎉 恭喜完成目标！',
-            content: `您已成功达成"${goals[goalIndex].title}"的目标！`,
+            title: '🎉 恭喜梦想达成！',
+            content: `您已成功完成"${goals[goalIndex].title}"储蓄罐！`,
             showCancel: false
           })
           goals[goalIndex].status = 'completed'
@@ -238,7 +324,7 @@ Page({
     
     wx.showModal({
       title: '确认删除',
-      content: `确定要删除目标"${goal.title}"吗？`,
+      content: `确定要删除储蓄罐"${goal.title}"吗？`,
       success: (res) => {
         if (res.confirm) {
           try {
@@ -278,5 +364,137 @@ Page({
 
   formatMoney(amount) {
     return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  },
+
+  // 计算储蓄建议
+  calculateSavingsAdvice(goal) {
+    const remaining = goal.targetAmount - goal.currentAmount
+    const daysLeft = this.calculateDaysLeft(goal.deadline)
+    
+    if (daysLeft <= 0 || remaining <= 0) return null
+    
+    const monthsLeft = Math.max(1, Math.ceil(daysLeft / 30))
+    const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7))
+    
+    const monthlyNeeded = remaining / monthsLeft
+    const weeklyNeeded = remaining / weeksLeft
+    const dailyNeeded = remaining / daysLeft
+    
+    return {
+      remaining,
+      monthsLeft,
+      weeksLeft,
+      daysLeft,
+      monthlyNeeded,
+      weeklyNeeded,
+      dailyNeeded
+    }
+  },
+
+  // 获取目标模板建议
+  getGoalTemplates(category) {
+    const templates = {
+      emergency: [
+        { name: '基础应急金', months: 3, multiplier: 3000 },
+        { name: '标准应急金', months: 6, multiplier: 3000 },
+        { name: '充足应急金', months: 9, multiplier: 3000 },
+        { name: '安全应急金', months: 12, multiplier: 3000 }
+      ],
+      house: [
+        { name: '首付20%', amount: 200000 },
+        { name: '首付30%', amount: 300000 },
+        { name: '全款购房', amount: 800000 },
+        { name: '装修基金', amount: 100000 }
+      ],
+      education: [
+        { name: '技能培训', amount: 5000 },
+        { name: '学历提升', amount: 20000 },
+        { name: '职业认证', amount: 15000 },
+        { name: '子女教育', amount: 50000 }
+      ],
+      travel: [
+        { name: '国内游', amount: 5000 },
+        { name: '周边游', amount: 2000 },
+        { name: '出境游', amount: 15000 },
+        { name: '深度游', amount: 30000 }
+      ],
+      car: [
+        { name: '代步车', amount: 50000 },
+        { name: '经济型车', amount: 80000 },
+        { name: '舒适型车', amount: 150000 },
+        { name: '豪华型车', amount: 300000 }
+      ],
+      wedding: [
+        { name: '简约婚礼', amount: 50000 },
+        { name: '标准婚礼', amount: 100000 },
+        { name: '精致婚礼', amount: 150000 },
+        { name: '豪华婚礼', amount: 200000 }
+      ],
+      investment: [
+        { name: '入门投资', amount: 10000 },
+        { name: '稳健投资', amount: 50000 },
+        { name: '进阶投资', amount: 100000 },
+        { name: '大额投资', amount: 500000 }
+      ],
+      retirement: [
+        { name: '基础养老', amount: 200000 },
+        { name: '舒适养老', amount: 500000 },
+        { name: '优质养老', amount: 1000000 },
+        { name: '无忧养老', amount: 2000000 }
+      ],
+      health: [
+        { name: '基础保障', amount: 20000 },
+        { name: '全面保障', amount: 50000 },
+        { name: '高端医疗', amount: 100000 },
+        { name: '顶级保障', amount: 200000 }
+      ],
+      gift: [
+        { name: '节日礼品', amount: 2000 },
+        { name: '生日礼品', amount: 5000 },
+        { name: '纪念礼品', amount: 10000 },
+        { name: '特殊礼品', amount: 20000 }
+      ]
+    }
+    
+    return templates[category] || []
+  },
+
+  // 智能目标分析
+  analyzeGoal(goal) {
+    const advice = this.calculateSavingsAdvice(goal)
+    if (!advice) return null
+    
+    let priority = 'normal'
+    let suggestions = []
+    
+    // 根据储蓄类型给出优先级建议
+    if (goal.category === 'emergency') {
+      priority = 'high'
+      suggestions.push('应急储蓄是理财基础，建议优先完成')
+    } else if (goal.category === 'debt') {
+      priority = 'high'
+      suggestions.push('还债储蓄建议优先处理，减少利息支出')
+    }
+    
+    // 根据时间紧迫性给出建议
+    if (advice.daysLeft <= 30) {
+      priority = 'urgent'
+      suggestions.push('储蓄罐即将到期，建议加大储蓄力度')
+    } else if (advice.daysLeft <= 90) {
+      suggestions.push('时间相对紧张，建议制定详细储蓄计划')
+    }
+    
+    // 根据金额大小给出建议
+    if (advice.dailyNeeded > 100) {
+      suggestions.push('每日储蓄金额较大，建议检查预算合理性')
+    } else if (advice.dailyNeeded < 10) {
+      suggestions.push('每日储蓄压力较小，可以轻松达成')
+    }
+    
+    return {
+      priority,
+      suggestions,
+      advice
+    }
   }
 })

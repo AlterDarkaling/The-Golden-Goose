@@ -12,7 +12,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: '理财启蒙 - 富爸爸穷爸爸与小狗钱钱的智慧',
+      title: '理财启蒙 - 现代财务管理知识',
       path: '/pages/about/about'
     }
   }

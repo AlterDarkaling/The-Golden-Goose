@@ -14,6 +14,16 @@
       <view class="user-info">
         <view class="nickname-container">
           <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '会下金蛋的鹅用户'}}</text>
+          <!-- 隐藏的微信原生昵称输入，用于直接触发微信昵称选择 -->
+          <input 
+            type="nickname" 
+            class="hidden-nickname-input"
+            style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px;"
+            bind:input="onDirectNicknameChange"
+            id="hiddenNicknameInput"
+            wx:if="{{showHiddenNicknameInput}}"
+            focus="{{showHiddenNicknameInput}}"
+          />
         </view>
         <text class="user-motto" bindtap="changeMotto">{{displayInfo.motto || '理财从认识资产负债开始'}}</text>
       </view>
@@ -31,10 +41,13 @@
           <input 
             type="nickname" 
             class="nickname-input" 
-            placeholder="点击此处自动填充微信昵称或手动输入"
+            placeholder="点击输入框可自动填充微信昵称"
             value="{{tempNickname}}"
             bind:input="onTempNicknameInput"
+            bind:blur="onNicknameBlur"
+            bind:focus="onNicknameFocus"
             focus="{{showNicknameInput}}"
+            maxlength="20"
           />
         </view>
         <view class="modal-footer">
@@ -114,7 +127,7 @@
         <view class="setting-icon">📚</view>
         <view class="setting-content">
           <text class="setting-title">理财启蒙</text>
-          <text class="setting-desc">了解富爸爸穷爸爸和小狗钱钱的理财智慧</text>
+          <text class="setting-desc">了解现代财务管理理念和会计知识</text>
         </view>
       </view>
       <text class="setting-arrow">></text>

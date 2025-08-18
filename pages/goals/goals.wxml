@@ -23,11 +23,34 @@
         <text class="progress-text">{{item.progress.toFixed(1)}}%</text>
       </view>
       
+      <!-- 储蓄建议 -->
+      <view wx:if="{{item.advice}}" class="savings-advice">
+        <view class="advice-header">
+          <text class="advice-icon">💡</text>
+          <text class="advice-title">储蓄建议</text>
+          <view class="priority-tag {{item.analysis.priority}}">{{item.analysis.priority === 'urgent' ? '紧急' : item.analysis.priority === 'high' ? '高优先级' : '普通'}}</view>
+        </view>
+        <view class="advice-content">
+          <view class="advice-item">
+            <text class="advice-label">每日储蓄：</text>
+            <text class="advice-value">¥{{item.advice.dailyNeeded.toFixed(2)}}</text>
+          </view>
+          <view class="advice-item">
+            <text class="advice-label">每月储蓄：</text>
+            <text class="advice-value">¥{{item.advice.monthlyNeeded.toFixed(2)}}</text>
+          </view>
+        </view>
+        <view wx:if="{{item.analysis.suggestions.length > 0}}" class="suggestions">
+          <text wx:for="{{item.analysis.suggestions}}" wx:key="*this" class="suggestion-text">• {{item}}</text>
+        </view>
+      </view>
+      
       <view class="goal-footer">
         <text class="deadline {{item.daysLeft < 0 ? 'expired' : item.daysLeft <= 7 ? 'urgent' : ''}}">
           {{item.daysLeft > 0 ? '还有' + item.daysLeft + '天' : item.daysLeft === 0 ? '今天到期' : '已过期' + Math.abs(item.daysLeft) + '天'}}
         </text>
         <view class="goal-actions">
+          <button class="action-btn advice-btn" bindtap="showAdviceDetail" data-goal-id="{{item.id}}" catchtap>建议</button>
           <button class="action-btn update-btn" bindtap="updateProgress" data-goal-id="{{item.id}}" catchtap>更新</button>
           <button class="action-btn delete-btn" bindtap="deleteGoal" data-goal-id="{{item.id}}" catchtap>删除</button>
         </view>
@@ -38,37 +61,51 @@
   <!-- 空状态 -->
   <view wx:else class="empty-state">
     <text class="empty-icon">🎯</text>
-    <text class="empty-title">暂无理财目标</text>
-    <text class="empty-desc">设定目标，让理财更有方向</text>
+    <text class="empty-title">暂无梦想储蓄罐</text>
+    <text class="empty-desc">设定梦想，让储蓄更有动力</text>
   </view>
 
   <!-- 添加目标按钮 -->
   <view class="add-goal-section">
-    <button class="add-goal-btn" bindtap="showAddGoalForm">+ 添加新目标</button>
+    <button class="add-goal-btn" bindtap="showAddGoalForm">+ 添加新储蓄罐</button>
   </view>
 
   <!-- 添加目标弹窗 -->
   <view wx:if="{{showAddGoal}}" class="modal-overlay" bindtap="hideAddGoalForm">
     <view class="modal-content" catchtap>
       <view class="modal-header">
-        <text class="modal-title">添加理财目标</text>
+        <text class="modal-title">添加梦想储蓄罐</text>
         <button class="close-btn" bindtap="hideAddGoalForm">✕</button>
       </view>
       
       <view class="form-section">
         <view class="form-group">
-          <text class="form-label">目标名称 *</text>
-          <input value="{{newGoal.title}}" placeholder="例如：买房首付" class="form-input" bindinput="onTitleInput" />
+          <text class="form-label">储蓄罐名称 *</text>
+          <input value="{{newGoal.title}}" placeholder="例如：买房首付、旅行基金" class="form-input" bindinput="onTitleInput" />
         </view>
         
         <view class="form-group">
-          <text class="form-label">目标分类</text>
+          <text class="form-label">储蓄分类</text>
           <picker value="{{categoryIndex}}" range="{{categoryOptions}}" range-key="label" bindchange="onCategoryChange" class="form-picker">
             <view class="picker-display">
-              <text>{{categoryOptions[categoryIndex].icon}} {{categoryOptions[categoryIndex].label}}</text>
+              <view class="picker-content">
+                <text class="picker-main">{{categoryOptions[categoryIndex].icon}} {{categoryOptions[categoryIndex].label}}</text>
+                <text class="picker-desc">{{categoryOptions[categoryIndex].description}}</text>
+              </view>
               <text class="picker-arrow">▼</text>
             </view>
           </picker>
+        </view>
+        
+        <!-- 目标模板快速选择 -->
+        <view class="form-group" wx:if="{{goalTemplates.length > 0}}">
+          <text class="form-label">快速设置 <text class="optional">(可选)</text></text>
+          <view class="template-grid">
+            <view wx:for="{{goalTemplates}}" wx:key="name" class="template-item" bindtap="selectTemplate" data-template="{{item}}">
+              <text class="template-name">{{item.name}}</text>
+              <text class="template-amount">¥{{formatMoney(item.amount || item.months * item.multiplier)}}</text>
+            </view>
+          </view>
         </view>
         
         <view class="form-group">
@@ -92,8 +129,8 @@
         </view>
         
         <view class="form-group">
-          <text class="form-label">目标描述</text>
-          <textarea value="{{newGoal.description}}" placeholder="描述一下您的理财目标..." class="form-textarea" maxlength="200" bindinput="onDescriptionInput" />
+          <text class="form-label">储蓄描述</text>
+          <textarea value="{{newGoal.description}}" placeholder="描述一下您的储蓄梦想..." class="form-textarea" maxlength="200" bindinput="onDescriptionInput" />
         </view>
       </view>
       

@@ -13,13 +13,8 @@
 		},
 		methods: {
 			initApp() {
-				// 检查是否是首次启动
-				const isFirstLaunch = !uni.getStorageSync('app_initialized')
-				if (isFirstLaunch) {
-					// 初始化默认设置
-					this.initDefaultSettings()
-					uni.setStorageSync('app_initialized', true)
-				}
+				// 不再自动设置初始化标志，让用户完成引导流程
+				console.log('应用启动，等待用户完成引导流程')
 			},
 			initDefaultSettings() {
 				// 创建默认用户（用于演示）

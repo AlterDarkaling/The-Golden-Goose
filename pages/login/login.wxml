@@ -9,7 +9,7 @@
     <view class="welcome-section">
       <view class="welcome-title">欢迎使用会下金蛋的鹅</view>
       <view class="welcome-description">
-        <text class="desc-line">基于《富爸爸穷爸爸》理念设计</text>
+        <text class="desc-line">基于现代会计准则设计</text>
         <text class="desc-line">帮助您清晰区分资产与负债</text>
         <text class="desc-line">实现财务管理与财富增长</text>
       </view>

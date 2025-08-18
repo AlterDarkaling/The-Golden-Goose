@@ -114,6 +114,90 @@
   text-align: right;
 }
 
+/* 储蓄建议 */
+.savings-advice {
+  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border-left: 4rpx solid #ffc107;
+}
+
+.advice-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  gap: 10rpx;
+}
+
+.advice-icon {
+  font-size: 24rpx;
+}
+
+.advice-title {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #856404;
+  flex: 1;
+}
+
+.priority-tag {
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.priority-tag.urgent {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.priority-tag.high {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.priority-tag.normal {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.advice-content {
+  display: flex;
+  gap: 30rpx;
+  margin-bottom: 16rpx;
+}
+
+.advice-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.advice-label {
+  font-size: 22rpx;
+  color: #856404;
+}
+
+.advice-value {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #212529;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.suggestion-text {
+  font-size: 22rpx;
+  color: #856404;
+  line-height: 1.4;
+}
+
 /* 目标底部 */
 .goal-footer {
   display: flex;
@@ -146,6 +230,11 @@
   border-radius: 20rpx;
   font-size: 22rpx;
   border: none;
+}
+
+.advice-btn {
+  background: #ffc107;
+  color: #212529;
 }
 
 .update-btn {
@@ -296,17 +385,82 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 80rpx;
+  min-height: 80rpx;
   background: #f8f9fa;
   border-radius: 12rpx;
-  padding: 0 24rpx;
+  padding: 16rpx 24rpx;
   font-size: 28rpx;
   color: #495057;
+}
+
+.picker-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+}
+
+.picker-main {
+  font-size: 28rpx;
+  color: #495057;
+}
+
+.picker-desc {
+  font-size: 22rpx;
+  color: #6c757d;
 }
 
 .picker-arrow {
   font-size: 20rpx;
   color: #adb5bd;
+}
+
+.optional {
+  color: #6c757d;
+  font-size: 22rpx;
+  font-weight: normal;
+}
+
+/* 目标模板 */
+.template-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+  margin-top: 16rpx;
+}
+
+.template-item {
+  flex: 1;
+  min-width: 200rpx;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f1f8fe 100%);
+  border-radius: 12rpx;
+  padding: 20rpx;
+  border: 2rpx solid #e3f2fd;
+  transition: all 0.3s ease;
+}
+
+.template-item:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  border-color: #4A90E2;
+}
+
+.template-item:active .template-name,
+.template-item:active .template-amount {
+  color: white;
+}
+
+.template-name {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #1976d2;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.template-amount {
+  font-size: 22rpx;
+  color: #1976d2;
 }
 
 .modal-footer {

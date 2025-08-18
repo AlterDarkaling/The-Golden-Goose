@@ -158,6 +158,15 @@
   padding: 0 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+  background-color: #f8f9fa;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.nickname-input:focus {
+  border-color: #007aff;
+  background-color: #fff;
+  box-shadow: 0 0 0 3rpx rgba(0, 122, 255, 0.1);
 }
 
 .modal-footer {
@@ -208,6 +217,15 @@
   padding: 0 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+  background-color: #f8f9fa;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.motto-input:focus {
+  border-color: #007aff;
+  background-color: #fff;
+  box-shadow: 0 0 0 3rpx rgba(0, 122, 255, 0.1);
 }
 
 /* 统计数据 */

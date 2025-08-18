@@ -15,7 +15,8 @@ Page({
     showNicknameInput: false,
     tempNickname: '',
     showMottoInput: false,
-    tempMotto: ''
+    tempMotto: '',
+    showHiddenNicknameInput: false
   },
 
   onLoad() {
@@ -33,7 +34,11 @@ Page({
     if (userInfo) {
       // 计算显示信息
       const displayInfo = {
-        avatar: userInfo.useWechatInfo && userInfo.wechatAvatar ? userInfo.wechatAvatar : userInfo.avatar,
+        // 头像显示逻辑：
+        // 1. 如果有自定义头像，优先使用自定义头像
+        // 2. 如果没有自定义头像但有微信头像，使用微信头像  
+        // 3. 最后使用默认头像
+        avatar: userInfo.avatar || userInfo.wechatAvatar || '/static/default-avatar.png',
         nickname: userInfo.useWechatInfo && userInfo.wechatNickname ? userInfo.wechatNickname : userInfo.nickname,
         motto: userInfo.motto || '理财从认识资产负债开始'
       }
@@ -85,18 +90,22 @@ Page({
   // 新的头像选择处理 - 使用微信官方推荐的方式
   onChooseAvatar(e) {
     const { avatarUrl } = e.detail
-    console.log('选择的头像路径:', avatarUrl)
+    console.log('选择的微信头像路径:', avatarUrl)
     
-    // 更新显示的头像
+    // 保存微信头像信息
+    const userInfo = { 
+      ...this.data.userInfo, 
+      wechatAvatar: avatarUrl,  // 保存微信头像
+      useWechatInfo: true       // 设置使用微信信息
+    }
+    StorageManager.saveUser(userInfo)
     this.setData({
-      'displayInfo.avatar': avatarUrl
+      userInfo
     })
-    
-    // 保存头像到用户信息
-    this.updateAvatar(avatarUrl)
+    this.loadUserInfo()  // 重新加载用户信息以更新显示
     
     wx.showToast({
-      title: '头像更新成功',
+      title: '微信头像设置成功',
       icon: 'success'
     })
   },
@@ -167,11 +176,16 @@ Page({
   },
 
   updateAvatar(avatarPath) {
-    const userInfo = { ...this.data.userInfo, avatar: avatarPath }
+    const userInfo = { 
+      ...this.data.userInfo, 
+      avatar: avatarPath,
+      useWechatInfo: false  // 设置自定义头像时，关闭微信信息使用标志
+    }
     StorageManager.saveUser(userInfo)
     this.setData({
       userInfo
     })
+    this.loadUserInfo()  // 重新加载用户信息以更新显示
     wx.showToast({
       title: '头像更新成功',
       icon: 'success'
@@ -195,7 +209,7 @@ Page({
   // 选择昵称
   chooseNickname() {
     const { userInfo } = this.data
-    const items = ['自定义输入昵称', '使用微信昵称输入']
+    const items = ['自定义输入昵称', '微信昵称']
     
     // 如果已有微信昵称，提供直接使用选项
     if (userInfo.wechatNickname) {
@@ -216,17 +230,54 @@ Page({
     })
   },
 
-  // 显示微信昵称输入框
+  // 显示微信昵称输入框（直接使用微信原生昵称输入）
   showWechatNicknameInput() {
-    wx.showModal({
-      title: '使用微信昵称',
-      content: '将为您显示微信昵称输入框，点击确定后在输入框中可自动填充微信昵称',
-      success: (res) => {
-        if (res.confirm) {
-          this.showNicknameInputModal()
-        }
-      }
+    console.log('触发微信昵称输入')
+    
+    // 通过数据驱动显示隐藏输入框并自动获得焦点
+    this.setData({
+      showHiddenNicknameInput: true
     })
+    
+    wx.showToast({
+      title: '请在弹出框中选择昵称',
+      icon: 'none',
+      duration: 2000
+    })
+    
+    // 短暂延迟后隐藏，确保微信昵称选择被触发
+    setTimeout(() => {
+      this.setData({
+        showHiddenNicknameInput: false
+      })
+    }, 3000)
+  },
+
+  // 直接处理微信原生昵称输入
+  onDirectNicknameChange(e) {
+    console.log('微信昵称输入事件触发:', e.detail.value)
+    const nickname = e.detail.value
+    if (nickname && nickname.trim()) {
+      console.log('保存微信昵称:', nickname.trim())
+      
+      // 直接保存微信昵称，无需弹窗确认
+      const updatedUserInfo = {
+        ...this.data.userInfo,
+        nickname: nickname.trim()
+      }
+
+      // 注意：这里不修改头像设置，完全保持用户当前的头像选择
+      // 无论用户使用的是微信头像还是自定义头像，都不应该在改昵称时修改
+      
+      StorageManager.saveUser(updatedUserInfo)
+      this.setData({ userInfo: updatedUserInfo })
+      this.loadUserInfo()
+
+      wx.showToast({
+        title: '微信昵称设置成功',
+        icon: 'success'
+      })
+    }
   },
 
   // 显示带有nickname类型的输入框
@@ -252,9 +303,46 @@ Page({
     })
   },
 
+  // 昵称输入框失去焦点时（微信昵称自动填充后会触发）
+  onNicknameBlur(e) {
+    const value = e.detail.value
+    if (value && value !== this.data.tempNickname) {
+      this.setData({
+        tempNickname: value
+      })
+      // 给用户一个反馈，表示昵称已填充
+      if (value.length > 0) {
+        wx.showToast({
+          title: '微信昵称已填充',
+          icon: 'success',
+          duration: 1500
+        })
+      }
+    }
+  },
+
+  // 昵称输入框获得焦点时
+  onNicknameFocus(e) {
+    // 延迟检查输入框的值，确保微信昵称填充完成
+    setTimeout(() => {
+      const inputElement = e.target
+      if (inputElement && inputElement.value && inputElement.value !== this.data.tempNickname) {
+        this.setData({
+          tempNickname: inputElement.value
+        })
+        // 给用户一个反馈，表示昵称已填充
+        wx.showToast({
+          title: '微信昵称已填充',
+          icon: 'success',
+          duration: 1500
+        })
+      }
+    }, 100)
+  },
+
   // 确认昵称
   confirmNickname() {
-    const { tempNickname } = this.data
+    const { tempNickname, userInfo } = this.data
     if (!tempNickname.trim()) {
       wx.showToast({
         title: '请输入昵称',
@@ -263,16 +351,27 @@ Page({
       return
     }
 
-    // 更新昵称
+    // 更新用户信息，严格保持头像设置不变
+    const updatedUserInfo = {
+      ...userInfo,
+      nickname: tempNickname.trim()
+    }
+
+    // 注意：完全不修改任何头像相关的字段
+    // 用户的头像选择（无论是微信头像还是自定义头像）都应该保持不变
+
+    // 关闭弹窗
     this.setData({
-      'displayInfo.nickname': tempNickname,
-      showNicknameInput: false
+      showNicknameInput: false,
+      tempNickname: '',
+      userInfo: updatedUserInfo
     })
 
-    // 保存到用户信息
-    const userInfo = { ...this.data.userInfo, nickname: tempNickname }
-    wx.setStorageSync('user_info', userInfo)
-    this.setData({ userInfo })
+    // 保存到存储
+    StorageManager.saveUser(updatedUserInfo)
+    
+    // 重新加载用户信息以更新显示
+    this.loadUserInfo()
 
     wx.showToast({
       title: '昵称更新成功',
@@ -331,9 +430,18 @@ Page({
       editable: true,
       success: (res) => {
         if (res.confirm && res.content && res.content.trim()) {
-          userInfo.nickname = res.content.trim()
-          userInfo.useWechatInfo = false
-          StorageManager.saveUser(userInfo)
+          // 更新昵称，严格保持头像设置不变
+          const updatedUserInfo = {
+            ...userInfo,
+            nickname: res.content.trim(),
+            useWechatInfo: false  // 只针对昵称，头像逻辑独立处理
+          }
+          
+          // 注意：完全不修改任何头像相关的字段
+          // 用户的头像选择（无论是微信头像还是自定义头像）都应该保持不变
+          
+          StorageManager.saveUser(updatedUserInfo)
+          this.setData({ userInfo: updatedUserInfo })
           this.loadUserInfo()
           wx.showToast({
             title: '昵称设置成功',
@@ -508,8 +616,12 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          // 清除用户信息
+          // 清除用户信息和初始化标志，回到首次使用状态
           wx.removeStorageSync('user_info')
+          wx.removeStorageSync('app_initialized')
+          wx.removeStorageSync('assets_data')
+          wx.removeStorageSync('liabilities_data')
+          wx.removeStorageSync('has_sample_data')
           
           // 跳转到登录页
           wx.reLaunch({

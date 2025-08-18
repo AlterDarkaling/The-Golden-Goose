@@ -11,6 +11,7 @@ Page({
   checkFirstTime() {
     // 检查是否已经初始化过应用
     const hasInitialized = wx.getStorageSync('app_initialized')
+    
     if (hasInitialized) {
       // 已经初始化过，直接跳转到首页
       wx.reLaunch({

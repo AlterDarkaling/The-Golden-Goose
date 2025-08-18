@@ -1,291 +1,926 @@
+/* 财务报告页面样式 */
 .report-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20rpx;
-  padding-bottom: 120rpx;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-bottom: 40rpx;
 }
 
-/* 通用卡片样式 */
-.overview-card,
-.cashflow-card,
-.category-card {
+/* 报表导航 */
+.report-nav {
   background: white;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-scroll {
+  white-space: nowrap;
+  padding: 20rpx 0;
+}
+
+.nav-item {
+  display: inline-block;
+  padding: 20rpx 30rpx;
+  margin: 0 10rpx;
+  border-radius: 30rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+  vertical-align: top;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.3);
+}
+
+.nav-icon {
+  display: block;
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.nav-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 时间段选择 */
+.period-selector {
+  display: flex;
+  background: white;
+  margin: 20rpx;
   border-radius: 16rpx;
+  padding: 8rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+.period-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.period-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+/* 报告内容 */
+.report-content {
+  padding: 0 20rpx;
+}
+
+/* 概览卡片 */
+.overview-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 20rpx;
   padding: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.overview-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.main-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.main-card::before {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
 }
 
 .card-title {
   font-size: 32rpx;
-  font-weight: bold;
-  color: #212529;
-  margin-bottom: 30rpx;
-  padding-bottom: 16rpx;
-  border-bottom: 2rpx solid #f8f9fa;
+  font-weight: 600;
 }
 
-/* 财务概况 */
-.overview-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 30rpx;
+.card-icon {
+  font-size: 48rpx;
+  opacity: 0.8;
 }
 
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 20rpx;
+.card-content {
+  text-align: center;
 }
 
-.stat-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30rpx 20rpx;
-  border-radius: 12rpx;
+.main-value {
+  font-size: 56rpx;
+  font-weight: 700;
+  margin-bottom: 20rpx;
+  display: block;
 }
 
-.stat-item.positive {
-  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+.main-value.positive {
+  color: #4CAF50;
 }
 
-.stat-item.negative {
-  background: linear-gradient(135deg, #ffeaea 0%, #fff0f0 100%);
+.main-value.negative {
+  color: #F44336;
 }
 
-.stat-label {
-  font-size: 26rpx;
-  color: #6c757d;
-  margin-bottom: 12rpx;
-}
-
-.stat-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #212529;
-}
-
-.net-worth-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16rpx;
+.main-card .main-value {
   color: white;
 }
 
-.net-worth-label {
-  font-size: 28rpx;
-  opacity: 0.9;
-  margin-bottom: 16rpx;
-}
-
-.net-worth-value {
-  font-size: 56rpx;
-  font-weight: bold;
-  letter-spacing: 2rpx;
-}
-
-.net-worth-value.positive {
-  color: #51cf66;
-}
-
-.net-worth-value.negative {
-  color: #ff6b6b;
-}
-
-/* 现金流分析 */
-.cashflow-stats {
+.sub-values {
   display: flex;
-  flex-direction: column;
-  gap: 30rpx;
+  justify-content: space-around;
 }
 
-.cashflow-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 20rpx;
+.sub-item {
+  text-align: center;
 }
 
-.cashflow-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24rpx;
-  border-radius: 12rpx;
-}
-
-.cashflow-item.income {
-  background: #e8f5e8;
-}
-
-.cashflow-item.cost {
-  background: #ffeaea;
-}
-
-.cashflow-label {
+.sub-label {
+  display: block;
   font-size: 24rpx;
-  color: #6c757d;
+  opacity: 0.7;
   margin-bottom: 8rpx;
 }
 
-.cashflow-value {
-  font-size: 32rpx;
-  font-weight: bold;
+.sub-value {
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
-.net-cashflow {
+.sub-value.positive {
+  color: #4CAF50;
+}
+
+.sub-value.negative {
+  color: #F44336;
+}
+
+.main-card .sub-value {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 财务健康度 */
+.health-indicator {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.health-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30rpx;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  border-left: 6rpx solid #4A90E2;
+  margin-bottom: 30rpx;
 }
 
-.net-label {
-  font-size: 28rpx;
-  color: #495057;
-  font-weight: 500;
+.health-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
 }
 
-.net-value {
-  font-size: 36rpx;
-  font-weight: bold;
+.health-score {
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
-.net-value.positive {
-  color: #28a745;
+.health-score.excellent {
+  background: #E8F5E8;
+  color: #4CAF50;
 }
 
-.net-value.negative {
-  color: #dc3545;
+.health-score.good {
+  background: #FFF3E0;
+  color: #FF9800;
 }
 
-.projections {
+.health-score.warning {
+  background: #FFEBEE;
+  color: #F44336;
+}
+
+.health-metrics {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
+}
+
+.metric-item {
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.metric-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 图表卡片 */
+.chart-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+  margin-bottom: 30rpx;
+}
+
+.chart-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-content {
+  display: flex;
+  flex-direction: column;
   gap: 20rpx;
 }
 
-.projection-item {
+.chart-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.chart-bar {
   flex: 1;
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 8rpx;
+  transition: width 0.6s ease;
+}
+
+.chart-info {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  min-width: 200rpx;
+}
+
+.chart-name {
+  font-size: 26rpx;
+  color: #333;
+  min-width: 80rpx;
+}
+
+.chart-value {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #4CAF50;
+  min-width: 60rpx;
+}
+
+.chart-percentage {
+  font-size: 22rpx;
+  color: #666;
+  min-width: 40rpx;
+}
+
+/* 资产负债表 */
+.balance-sheet {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.balance-section {
+  margin-bottom: 40rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f0f0f0;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.section-total {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #4CAF50;
+}
+
+.section-total.negative {
+  color: #F44336;
+}
+
+.section-total.positive {
+  color: #4CAF50;
+}
+
+.balance-items {
   display: flex;
   flex-direction: column;
+  gap: 16rpx;
+}
+
+.balance-item {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 20rpx;
   background: #f8f9fa;
   border-radius: 12rpx;
 }
 
-.projection-label {
-  font-size: 24rpx;
-  color: #6c757d;
-  margin-bottom: 8rpx;
+.item-info {
+  flex: 1;
 }
 
-.projection-value {
+.item-name {
   font-size: 28rpx;
-  font-weight: bold;
-  color: #4A90E2;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 6rpx;
 }
 
-/* 分类分析 */
-.category-list {
+.item-desc {
+  font-size: 22rpx;
+  color: #666;
+  font-style: italic;
+}
+
+.item-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.item-value.negative {
+  color: #F44336;
+}
+
+.balance-divider {
+  height: 2rpx;
+  background: #e0e0e0;
+  margin: 30rpx 0;
+}
+
+.balance-divider.thick {
+  height: 4rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.section-header.net-worth {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  border: none;
+  margin: 0;
+}
+
+.net-worth .section-title,
+.net-worth .section-total {
+  color: white;
+}
+
+/* 利润表 */
+.income-statement {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.income-section {
+  margin-bottom: 30rpx;
+}
+
+.income-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.income-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: #f8f9fa;
+  border-radius: 10rpx;
+}
+
+.income-divider {
+  height: 2rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  margin: 30rpx 0;
+}
+
+.section-header.net-income {
+  background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+  color: white;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  border: none;
+  margin: 0;
+}
+
+.net-income .section-title,
+.net-income .section-total {
+  color: white;
+}
+
+/* 饼图 */
+.pie-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+  margin-top: 30rpx;
+}
+
+.pie-chart {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.pie-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.pie-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.pie-item {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+}
+
+.pie-color {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+}
+
+.pie-name {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.pie-percentage {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #666;
+}
+
+/* 现金流量表 */
+.cashflow-statement {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.cashflow-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.cashflow-item.total {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16rpx;
+  border: none;
+  margin-top: 20rpx;
+}
+
+.cashflow-header {
+  flex: 1;
+}
+
+.cashflow-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.cashflow-subtitle {
+  font-size: 22rpx;
+  color: #666;
+  font-style: italic;
+}
+
+.cashflow-value {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.cashflow-value.positive {
+  color: #4CAF50;
+}
+
+.cashflow-value.negative {
+  color: #F44336;
+}
+
+.cashflow-item.total .cashflow-title,
+.cashflow-item.total .cashflow-subtitle,
+.cashflow-item.total .cashflow-value {
+  color: white;
+}
+
+.cashflow-divider {
+  height: 2rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  margin: 20rpx 0;
+}
+
+/* 趋势图表 */
+.trend-chart {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-top: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.trend-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30rpx;
+  display: block;
+}
+
+.trend-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: end;
+  height: 300rpx;
+  padding: 20rpx 0;
+}
+
+.trend-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15rpx;
+}
+
+.bar-container {
+  height: 200rpx;
+  width: 40rpx;
+  display: flex;
+  align-items: end;
+  position: relative;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 20rpx 20rpx 0 0;
+  min-height: 10rpx;
+  transition: height 0.6s ease;
+}
+
+.bar-fill.positive {
+  background: linear-gradient(180deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+.bar-fill.negative {
+  background: linear-gradient(180deg, #F44336 0%, #FF7043 100%);
+}
+
+.bar-label {
+  font-size: 22rpx;
+  color: #666;
+}
+
+.bar-value {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 财务分析 */
+.ratio-analysis {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.analysis-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30rpx;
+  display: block;
+}
+
+.ratio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.ratio-item {
+  text-align: center;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+
+.ratio-item:active {
+  border-color: #667eea;
+  transform: scale(0.98);
+}
+
+.ratio-name {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.ratio-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.ratio-desc {
+  font-size: 20rpx;
+  color: #999;
+  font-style: italic;
+}
+
+/* 折旧分析 */
+.depreciation-analysis,
+.loan-analysis {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.depreciation-list,
+.loan-list {
   display: flex;
   flex-direction: column;
   gap: 20rpx;
 }
 
-.category-item {
-  position: relative;
-  padding: 24rpx;
+.depreciation-item,
+.loan-item {
+  padding: 25rpx;
   background: #f8f9fa;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
+  border-left: 6rpx solid #667eea;
 }
 
-.category-info {
+.depreciation-header,
+.loan-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
 }
 
-.category-name {
+.asset-name,
+.loan-name {
   font-size: 28rpx;
-  font-weight: 500;
-  color: #212529;
+  font-weight: 600;
+  color: #333;
 }
 
-.category-details {
-  display: flex;
-  gap: 16rpx;
-}
-
-.category-count {
+.depreciation-rate,
+.loan-rate {
   font-size: 22rpx;
-  color: #6c757d;
-}
-
-.category-percentage {
-  font-size: 22rpx;
-  color: #4A90E2;
-  font-weight: bold;
-}
-
-.category-value {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #212529;
-  margin-bottom: 16rpx;
-}
-
-.progress-bar {
-  height: 8rpx;
+  color: #666;
   background: #e9ecef;
-  border-radius: 4rpx;
-  overflow: hidden;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
 }
 
-.progress-fill {
-  height: 100%;
-  border-radius: 4rpx;
-  transition: width 0.3s ease;
+.depreciation-values,
+.loan-values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15rpx;
+}
+
+.depreciation-value,
+.loan-value {
+  text-align: center;
+}
+
+.value-label {
+  font-size: 22rpx;
+  color: #666;
+  margin-bottom: 6rpx;
+  display: block;
+}
+
+.value-amount {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.value-amount.negative {
+  color: #F44336;
 }
 
 /* 操作按钮 */
-.action-buttons {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 20rpx 40rpx;
-  border-top: 1rpx solid #e9ecef;
+.action-section {
   display: flex;
   gap: 20rpx;
+  padding: 30rpx 20rpx;
+  background: transparent;
 }
 
 .action-btn {
   flex: 1;
-  height: 88rpx;
-  border-radius: 12rpx;
-  font-size: 32rpx;
-  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 30rpx 20rpx;
+  border-radius: 20rpx;
+  border: none;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::after {
   border: none;
 }
 
-.analysis-btn {
-  background: #4A90E2;
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
 }
 
-.export-btn {
-  background: #28a745;
-  color: white;
+.action-btn.secondary {
+  background: white;
+  color: #333;
+  border: 2rpx solid #e0e0e0;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:active {
+  transform: translateY(2rpx);
+}
+
+.btn-icon {
+  font-size: 36rpx;
+}
+
+.btn-text {
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+/* 演示数据按钮 */
+.demo-section {
+  padding: 20rpx;
+  text-align: center;
+}
+
+.demo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 40rpx;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  color: #E65100;
+  border: 2rpx solid #FFB74D;
+  border-radius: 25rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.demo-btn::after {
+  border: none;
+}
+
+.demo-btn:active {
+  transform: scale(0.98);
+  background: linear-gradient(135deg, #FFE0B2 0%, #FFCC02 100%);
+}
+
+.demo-icon {
+  font-size: 28rpx;
+}
+
+.demo-text {
+  font-size: 24rpx;
+}
+
+/* 响应式适配 */
+@media (max-width: 750rpx) {
+  .ratio-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .depreciation-values,
+  .loan-values {
+    grid-template-columns: 1fr;
+  }
+  
+  .trend-content {
+    height: 250rpx;
+  }
+  
+  .bar-container {
+    height: 150rpx;
+    width: 30rpx;
+  }
+  
+  .action-section {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    flex: none;
+  }
 }

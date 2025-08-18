@@ -1,0 +1,104 @@
+<view class="add-cost-container">
+  <!-- 头部信息 -->
+  <view class="header-section">
+    <view class="item-info">
+      <text class="item-name">{{itemName}}</text>
+      <text class="item-type">{{itemType === 'asset' ? '💰 资产' : '💳 负债'}}</text>
+    </view>
+  </view>
+
+  <!-- 费用表单 -->
+  <view class="form-section">
+    <view class="section-title">💸 费用信息</view>
+    
+    <!-- 费用名称 -->
+    <view class="form-group">
+      <text class="form-label">费用名称 *</text>
+      <input 
+        class="form-input"
+        type="text"
+        placeholder="请输入费用名称（如：维修费、保养费等）"
+        value="{{formData.name}}"
+        bindinput="onNameInput"
+        maxlength="20"
+      />
+    </view>
+
+    <!-- 费用类型 -->
+    <view class="form-group">
+      <text class="form-label">费用类型 *</text>
+      <picker 
+        range="{{costTypes}}" 
+        range-key="label"
+        value="{{costTypeIndex}}"
+        bindchange="onCostTypeChange"
+        class="form-picker"
+      >
+        <view class="picker-display">
+          <text>{{costTypes[costTypeIndex].label || '请选择费用类型'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 费用金额 -->
+    <view class="form-group">
+      <text class="form-label">费用金额 *</text>
+      <input 
+        class="form-input"
+        type="digit"
+        placeholder="请输入费用金额"
+        value="{{formData.amount}}"
+        bindinput="onAmountInput"
+      />
+    </view>
+
+    <!-- 发生日期 -->
+    <view class="form-group">
+      <text class="form-label">发生日期 *</text>
+      <picker 
+        mode="date"
+        value="{{formData.date}}"
+        bindchange="onDateChange"
+        class="form-picker"
+      >
+        <view class="picker-display">
+          <text>{{formData.date || '请选择日期'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 费用说明 -->
+    <view class="form-group">
+      <text class="form-label">费用说明</text>
+      <textarea 
+        class="form-textarea"
+        placeholder="请输入费用说明（选填）"
+        value="{{formData.description}}"
+        bindinput="onDescriptionInput"
+        maxlength="100"
+        auto-height
+      />
+    </view>
+
+    <!-- 是否影响净值 -->
+    <view class="form-group">
+      <view class="switch-group">
+        <text class="form-label">是否影响资产净值</text>
+        <switch 
+          checked="{{formData.affectNetWorth}}"
+          bindchange="onAffectNetWorthChange"
+          color="#4facfe"
+        />
+      </view>
+      <text class="form-hint">开启后，此费用将从资产当前价值中扣除</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <button class="action-btn cancel-btn" bindtap="handleCancel">取消</button>
+    <button class="action-btn save-btn" bindtap="handleSave">保存</button>
+  </view>
+</view>

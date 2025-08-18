@@ -1,0 +1,188 @@
+/* 添加费用页面样式 */
+.add-cost-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20rpx;
+}
+
+/* 头部信息 */
+.header-section {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10rpx);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.item-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #212529;
+}
+
+.item-type {
+  font-size: 24rpx;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+/* 表单部分 */
+.form-section {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10rpx);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #212529;
+  margin-bottom: 30rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #e9ecef;
+}
+
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12rpx;
+}
+
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 20rpx;
+  border: 2rpx solid #e9ecef;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #212529;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.form-input:focus, .form-textarea:focus {
+  border-color: #4facfe;
+  outline: none;
+}
+
+.form-textarea {
+  min-height: 120rpx;
+  resize: none;
+}
+
+.form-picker {
+  width: 100%;
+}
+
+.picker-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border: 2rpx solid #e9ecef;
+  border-radius: 12rpx;
+  background: #ffffff;
+  font-size: 28rpx;
+  color: #212529;
+}
+
+.picker-arrow {
+  color: #6c757d;
+  font-size: 24rpx;
+}
+
+.switch-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.form-hint {
+  font-size: 24rpx;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+/* 操作按钮 */
+.action-section {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 0;
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: #6c757d;
+  border: 2rpx solid #e9ecef;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .add-cost-container {
+    padding: 15rpx;
+  }
+  
+  .header-section,
+  .form-section {
+    padding: 20rpx;
+  }
+  
+  .section-title {
+    font-size: 28rpx;
+  }
+  
+  .form-label {
+    font-size: 26rpx;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .picker-display {
+    font-size: 26rpx;
+    padding: 16rpx;
+  }
+}
