@@ -33,7 +33,7 @@ Page({
         categoryName: this.getCategoryName(item.categoryId),
         statusText: this.getStatusText(item.status),
         displayAmount: this.formatNumber(this.data.type === 'asset' ? (item.currentValue || item.initialValue) : (item.currentAmount || item.initialAmount)),
-        createDate: this.formatDate(item.createTime)
+        createDate: this.formatPurchaseDate(item.createDate, item.createTime)
       })
     } else {
       wx.showToast({
@@ -59,7 +59,7 @@ Page({
 
   getStatusText(status) {
     const statusMap = {
-      active: '活跃',
+      active: '使用中',
       paused: '暂停',
       completed: '已完成'
     }
@@ -104,6 +104,21 @@ Page({
     return date.toLocaleDateString('zh-CN')
   },
 
+  formatPurchaseDate(createDate, createTime) {
+    // 优先使用购买日期，如果没有则使用创建时间
+    let targetDate
+    
+    if (createDate) {
+      targetDate = new Date(createDate)
+    } else if (createTime) {
+      targetDate = new Date(createTime)
+    } else {
+      return '未知日期'
+    }
+    
+    return targetDate.toLocaleDateString('zh-CN')
+  },
+
   handleEdit() {
     wx.navigateTo({
       url: `/pages/edit/edit?type=${this.data.type}&id=${this.data.itemId}`
@@ -116,14 +131,29 @@ Page({
       content: `确定要删除这个${this.data.type === 'asset' ? '资产' : '负债'}吗？`,
       success: (res) => {
         if (res.confirm) {
-          // 这里可以添加删除逻辑
-          wx.showToast({
-            title: '删除成功',
-            icon: 'success'
-          })
-          setTimeout(() => {
-            wx.navigateBack()
-          }, 1500)
+          const StorageManager = require('../../utils/storage.js')
+          let success = false
+          
+          if (this.data.type === 'asset') {
+            success = StorageManager.deleteAsset(this.data.itemId)
+          } else {
+            success = StorageManager.deleteLiability(this.data.itemId)
+          }
+
+          if (success) {
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            })
+            setTimeout(() => {
+              wx.navigateBack()
+            }, 1500)
+          } else {
+            wx.showToast({
+              title: '删除失败，请重试',
+              icon: 'none'
+            })
+          }
         }
       }
     })

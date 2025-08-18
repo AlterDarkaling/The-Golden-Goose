@@ -3,26 +3,23 @@
     "pages/index/index",
     "pages/detail/detail",
     "pages/edit/edit",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/profile/profile",
+    "pages/report/report",
+    "pages/goals/goals"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#4A90E2",
-    "navigationBarTitleText": "金鹅理财",
-    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "会下金蛋的鹅",
+    "navigationBarTextStyle": "black",
     "backgroundColor": "#F5F5F5"
   },
   "permission": {
     "scope.userInfo": {
       "desc": "用于完善用户资料和提供个性化服务"
-    },
-    "scope.userLocation": {
-      "desc": "用于提供更好的本地化服务"
     }
   },
-  "requiredPrivateInfos": [
-    "getLocation"
-  ],
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

@@ -22,7 +22,7 @@ Page({
       createDate: ''
     },
     statusOptions: [
-      { label: '活跃', value: 'active' },
+      { label: '使用中', value: 'active' },
       { label: '暂停', value: 'paused' },
       { label: '已完成', value: 'completed' }
     ],
@@ -105,8 +105,51 @@ Page({
   },
 
   loadEditData() {
-    // 这里可以添加加载编辑数据的逻辑
-    // 暂时使用空数据
+    const StorageManager = require('../../utils/storage.js')
+    const { type, editId } = this.data
+    
+    let item
+    if (type === 'asset') {
+      const assets = StorageManager.getAssets()
+      item = assets.find(a => a.id === editId)
+    } else {
+      const liabilities = StorageManager.getLiabilities()
+      item = liabilities.find(l => l.id === editId)
+    }
+
+    if (item) {
+      // 找到对应的分类索引
+      const categoryIndex = this.data.categoryOptions.findIndex(cat => cat.id === item.categoryId)
+      const statusIndex = this.data.statusOptions.findIndex(status => status.value === item.status)
+
+      this.setData({
+        formData: {
+          name: item.name || '',
+          categoryId: item.categoryId || '',
+          status: item.status || 'active',
+          initialValue: item.initialValue ? item.initialValue.toString() : '',
+          currentValue: item.currentValue ? item.currentValue.toString() : '',
+          dailyIncome: item.dailyIncome ? item.dailyIncome.toString() : '',
+          annualReturn: item.annualReturn ? item.annualReturn.toString() : '',
+          initialAmount: item.initialAmount ? item.initialAmount.toString() : '',
+          currentAmount: item.currentAmount ? item.currentAmount.toString() : '',
+          dailyCost: item.dailyCost ? item.dailyCost.toString() : '',
+          annualRate: item.annualRate ? item.annualRate.toString() : '',
+          notes: item.notes || '',
+          createDate: item.createDate || new Date().toISOString().split('T')[0]
+        },
+        categoryIndex: categoryIndex >= 0 ? categoryIndex : 0,
+        statusIndex: statusIndex >= 0 ? statusIndex : 0
+      })
+    } else {
+      wx.showToast({
+        title: '数据不存在',
+        icon: 'none'
+      })
+      setTimeout(() => {
+        this.goBack()
+      }, 1500)
+    }
   },
 
   onCategoryChange(e) {
@@ -126,6 +169,67 @@ Page({
   onDateChange(e) {
     this.setData({
       'formData.createDate': e.detail.value
+    })
+  },
+
+  // 输入事件处理
+  onNameInput(e) {
+    this.setData({
+      'formData.name': e.detail.value
+    })
+  },
+
+  onInitialValueInput(e) {
+    this.setData({
+      'formData.initialValue': e.detail.value
+    })
+  },
+
+  onCurrentValueInput(e) {
+    this.setData({
+      'formData.currentValue': e.detail.value
+    })
+  },
+
+  onDailyIncomeInput(e) {
+    this.setData({
+      'formData.dailyIncome': e.detail.value
+    })
+  },
+
+  onAnnualReturnInput(e) {
+    this.setData({
+      'formData.annualReturn': e.detail.value
+    })
+  },
+
+  onInitialAmountInput(e) {
+    this.setData({
+      'formData.initialAmount': e.detail.value
+    })
+  },
+
+  onCurrentAmountInput(e) {
+    this.setData({
+      'formData.currentAmount': e.detail.value
+    })
+  },
+
+  onDailyCostInput(e) {
+    this.setData({
+      'formData.dailyCost': e.detail.value
+    })
+  },
+
+  onAnnualRateInput(e) {
+    this.setData({
+      'formData.annualRate': e.detail.value
+    })
+  },
+
+  onNotesInput(e) {
+    this.setData({
+      'formData.notes': e.detail.value
     })
   },
 
@@ -172,14 +276,62 @@ Page({
       return
     }
 
-    // 这里可以添加保存逻辑
-    wx.showToast({
-      title: this.data.isEdit ? '更新成功' : '添加成功',
-      icon: 'success'
-    })
-    setTimeout(() => {
-      this.goBack()
-    }, 1500)
+    const StorageManager = require('../../utils/storage.js')
+    const { formData, type, isEdit, editId } = this.data
+
+    // 构建保存数据
+    const saveData = {
+      name: formData.name.trim(),
+      categoryId: formData.categoryId,
+      status: formData.status,
+      notes: formData.notes.trim(),
+      createDate: formData.createDate
+    }
+
+    // 根据类型添加特定字段
+    if (type === 'asset') {
+      saveData.initialValue = parseFloat(formData.initialValue) || 0
+      saveData.currentValue = parseFloat(formData.currentValue) || parseFloat(formData.initialValue) || 0
+      saveData.dailyIncome = parseFloat(formData.dailyIncome) || 0
+      saveData.annualReturn = parseFloat(formData.annualReturn) || 0
+    } else {
+      saveData.initialAmount = parseFloat(formData.initialAmount) || 0
+      saveData.currentAmount = parseFloat(formData.currentAmount) || parseFloat(formData.initialAmount) || 0
+      saveData.dailyCost = parseFloat(formData.dailyCost) || 0
+      saveData.annualRate = parseFloat(formData.annualRate) || 0
+    }
+
+    let success = false
+    if (isEdit) {
+      // 更新数据
+      if (type === 'asset') {
+        success = StorageManager.updateAsset(editId, saveData)
+      } else {
+        success = StorageManager.updateLiability(editId, saveData)
+      }
+    } else {
+      // 添加新数据
+      if (type === 'asset') {
+        success = StorageManager.addAsset(saveData)
+      } else {
+        success = StorageManager.addLiability(saveData)
+      }
+    }
+
+    if (success) {
+      wx.showToast({
+        title: isEdit ? '更新成功' : '添加成功',
+        icon: 'success'
+      })
+      setTimeout(() => {
+        this.goBack()
+      }, 1500)
+    } else {
+      wx.showToast({
+        title: '保存失败，请重试',
+        icon: 'none'
+      })
+    }
   },
 
   goBack() {

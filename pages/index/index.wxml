@@ -13,8 +13,6 @@
           mode="aspectFill"
           bindtap="chooseAvatar"
         />
-        <view class="avatar-edit-icon" bindtap="chooseAvatar">📷</view>
-        <view class="logout-btn" bindtap="handleLogout">退出</view>
       </view>
     </view>
     <view class="user-info-bottom">
@@ -41,37 +39,45 @@
   <view class="function-bar">
     <view class="search-container">
       <input 
-        model:value="{{searchKeyword}}" 
-        placeholder="搜索资产或负债..." 
+        value="{{searchKeyword}}" 
+        placeholder="搜索名称" 
         class="search-input"
-        bindinput="onSearch"
+        bindinput="onSearchInput"
       />
     </view>
     <view class="filter-container">
+      <!-- 双栏排序选择器 -->
       <picker 
-        value="{{sortIndex}}" 
-        range="{{sortOptions}}" 
+        mode="multiSelector"
+        value="{{[sortFieldIndex, sortOrderIndex]}}"
+        range="{{[sortFieldOptions, sortOrderOptions]}}"
         range-key="label"
         bindchange="onSortChange"
         class="filter-picker"
       >
         <view class="filter-item">
-          <text>{{sortOptions[sortIndex].label}}</text>
+          <text>{{sortFieldIndex === 0 ? sortFieldOptions[sortFieldIndex].label : sortFieldOptions[sortFieldIndex].label + ' ' + sortOrderOptions[sortOrderIndex].label}}</text>
           <text class="filter-arrow">▼</text>
         </view>
       </picker>
+      
+      <!-- 分类选择 -->
       <picker 
+        mode="multiSelector"
         value="{{categoryIndex}}" 
-        range="{{categoryOptions}}" 
+        range="{{[categoryLevelOne, categoryLevelTwo[categoryIndex[0]]]}}" 
         range-key="label"
         bindchange="onCategoryChange"
+        bindcolumnchange="onCategoryColumnChange"
         class="filter-picker"
       >
         <view class="filter-item">
-          <text>{{categoryOptions[categoryIndex].label}}</text>
+          <text>{{categoryIndex[0] === 0 ? categoryLevelOne[categoryIndex[0]].label : categoryLevelOne[categoryIndex[0]].label + ' ' + categoryLevelTwo[categoryIndex[0]][categoryIndex[1]].label}}</text>
           <text class="filter-arrow">▼</text>
         </view>
       </picker>
+      
+      <!-- 状态选择 -->
       <picker 
         value="{{statusIndex}}" 
         range="{{statusOptions}}" 
@@ -89,22 +95,18 @@
 
   <!-- 数据列表 -->
   <view class="data-section">
-    <view class="section-header">
-      <text class="section-title">资产与负债</text>
-      <view class="add-buttons">
-        <button class="add-btn asset-btn" bindtap="addAsset">+ 资产</button>
-        <button class="add-btn liability-btn" bindtap="addLiability">+ 负债</button>
-      </view>
-    </view>
-    
     <view class="data-list">
       <!-- 资产列表 -->
       <view wx:for="{{filteredAssets}}" wx:key="id" class="data-item asset-item" bindtap="viewDetail" data-item="{{item}}" data-type="asset">
         <view class="item-left">
           <view class="item-icon asset-icon">💰</view>
           <view class="item-info">
-            <text class="item-name">{{item.name}}</text>
+            <view class="item-name-row">
+              <text class="item-name">{{item.name}}</text>
+              <text class="item-type-tag asset-tag">{{item.typeText}}</text>
+            </view>
             <text class="item-category">{{item.categoryName}}</text>
+            <text class="item-purchase-date">{{item.createTimeText}}</text>
           </view>
         </view>
         <view class="item-right">
@@ -118,8 +120,12 @@
         <view class="item-left">
           <view class="item-icon liability-icon">💳</view>
           <view class="item-info">
-            <text class="item-name">{{item.name}}</text>
+            <view class="item-name-row">
+              <text class="item-name">{{item.name}}</text>
+              <text class="item-type-tag liability-tag">{{item.typeText}}</text>
+            </view>
             <text class="item-category">{{item.categoryName}}</text>
+            <text class="item-purchase-date">{{item.createTimeText}}</text>
           </view>
         </view>
         <view class="item-right">
@@ -131,8 +137,13 @@
       <!-- 空状态 -->
       <view wx:if="{{filteredAssets.length === 0 && filteredLiabilities.length === 0}}" class="empty-state">
         <text class="empty-text">暂无数据</text>
-        <text class="empty-hint">点击上方按钮添加资产或负债</text>
+        <text class="empty-hint">点击右下角按钮添加资产或负债</text>
       </view>
     </view>
+  </view>
+  
+  <!-- 浮动添加按钮 -->
+  <view class="float-btn" bindtap="handleFloatBtnClick">
+    <text class="float-btn-icon">+</text>
   </view>
 </view>

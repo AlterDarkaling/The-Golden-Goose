@@ -3,40 +3,64 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "金鹅理财",
-				"navigationBarBackgroundColor": "#4A90E2",
-				"navigationBarTextStyle": "white"
+				"navigationBarTitleText": "会下金蛋的鹅",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/detail/detail",
 			"style": {
 				"navigationBarTitleText": "详情",
-				"navigationBarBackgroundColor": "#4A90E2",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/edit/edit",
 			"style": {
 				"navigationBarTitleText": "编辑",
-				"navigationBarBackgroundColor": "#4A90E2",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
 			}
 		},
 		{
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
-				"navigationBarBackgroundColor": "#4A90E2",
-				"navigationBarTextStyle": "white"
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "个人中心",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/report/report",
+			"style": {
+				"navigationBarTitleText": "财务报告",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/goals/goals",
+			"style": {
+				"navigationBarTitleText": "理财目标",
+				"navigationBarBackgroundColor": "#FFFFFF",
+				"navigationBarTextStyle": "black"
 			}
 		}
 	],
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "金鹅理财",
-		"navigationBarBackgroundColor": "#4A90E2",
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "会下金蛋的鹅",
+		"navigationBarBackgroundColor": "#FFFFFF",
 		"backgroundColor": "#F5F5F5"
 	},
 	"uniIdRouter": {}

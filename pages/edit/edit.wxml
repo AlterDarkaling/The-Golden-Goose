@@ -7,9 +7,10 @@
     <view class="form-group">
       <text class="form-label">名称 *</text>
       <input 
-        model:value="{{formData.name}}" 
+        value="{{formData.name}}" 
         placeholder="请输入名称" 
         class="form-input"
+        bindinput="onNameInput"
       />
     </view>
 
@@ -50,37 +51,41 @@
       <view class="form-group">
         <text class="form-label">初始价值 *</text>
         <input 
-          model:value="{{formData.initialValue}}" 
+          value="{{formData.initialValue}}" 
           type="number" 
           placeholder="请输入初始价值" 
           class="form-input"
+          bindinput="onInitialValueInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">当前价值</text>
         <input 
-          model:value="{{formData.currentValue}}" 
+          value="{{formData.currentValue}}" 
           type="number" 
           placeholder="请输入当前价值" 
           class="form-input"
+          bindinput="onCurrentValueInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">每日收益</text>
         <input 
-          model:value="{{formData.dailyIncome}}" 
+          value="{{formData.dailyIncome}}" 
           type="number" 
           placeholder="请输入每日收益" 
           class="form-input"
+          bindinput="onDailyIncomeInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">年化收益率 (%)</text>
         <input 
-          model:value="{{formData.annualReturn}}" 
+          value="{{formData.annualReturn}}" 
           type="number" 
           placeholder="请输入年化收益率" 
           class="form-input"
+          bindinput="onAnnualReturnInput"
         />
       </view>
     </block>
@@ -90,37 +95,41 @@
       <view class="form-group">
         <text class="form-label">初始金额 *</text>
         <input 
-          model:value="{{formData.initialAmount}}" 
+          value="{{formData.initialAmount}}" 
           type="number" 
           placeholder="请输入初始金额" 
           class="form-input"
+          bindinput="onInitialAmountInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">当前金额</text>
         <input 
-          model:value="{{formData.currentAmount}}" 
+          value="{{formData.currentAmount}}" 
           type="number" 
           placeholder="请输入当前金额" 
           class="form-input"
+          bindinput="onCurrentAmountInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">每日成本</text>
         <input 
-          model:value="{{formData.dailyCost}}" 
+          value="{{formData.dailyCost}}" 
           type="number" 
           placeholder="请输入每日成本" 
           class="form-input"
+          bindinput="onDailyCostInput"
         />
       </view>
       <view class="form-group">
         <text class="form-label">年化利率 (%)</text>
         <input 
-          model:value="{{formData.annualRate}}" 
+          value="{{formData.annualRate}}" 
           type="number" 
           placeholder="请输入年化利率" 
           class="form-input"
+          bindinput="onAnnualRateInput"
         />
       </view>
     </block>
@@ -128,16 +137,17 @@
     <view class="form-group">
       <text class="form-label">备注</text>
       <textarea 
-        model:value="{{formData.notes}}" 
+        value="{{formData.notes}}" 
         placeholder="请输入备注信息" 
         class="form-textarea"
         maxlength="200"
+        bindinput="onNotesInput"
       />
       <text class="char-count">{{formData.notes.length}}/200</text>
     </view>
 
     <view class="form-group">
-      <text class="form-label">创建时间</text>
+      <text class="form-label">购买日期</text>
       <picker 
         mode="date" 
         value="{{formData.createDate}}" 

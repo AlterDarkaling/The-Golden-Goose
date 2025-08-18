@@ -1,0 +1,39 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#FFD700" stroke="#FFA500" stroke-width="3"/>
+  
+  <!-- Goose body -->
+  <ellipse cx="100" cy="120" rx="45" ry="35" fill="#FFF" stroke="#DAA520" stroke-width="2"/>
+  
+  <!-- Goose neck -->
+  <path d="M70 110 Q60 90 65 75" stroke="#FFF" stroke-width="20" fill="none" stroke-linecap="round"/>
+  
+  <!-- Goose head -->
+  <circle cx="65" cy="70" r="18" fill="#FFF" stroke="#DAA520" stroke-width="2"/>
+  
+  <!-- Goose beak -->
+  <path d="M55 68 L45 70 L55 72" fill="#FF8C00" stroke="#DAA520" stroke-width="1"/>
+  
+  <!-- Goose eye -->
+  <circle cx="62" cy="68" r="3" fill="#000"/>
+  
+  <!-- Goose wing -->
+  <ellipse cx="110" cy="115" rx="25" ry="15" fill="#FFF" stroke="#DAA520" stroke-width="2" transform="rotate(-20 110 115)"/>
+  
+  <!-- Goose tail -->
+  <path d="M135 125 Q150 115 145 135" fill="#FFF" stroke="#DAA520" stroke-width="2"/>
+  
+  <!-- Golden coin -->
+  <circle cx="130" cy="95" r="18" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+  <text x="130" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#B8860B">¥</text>
+  
+  <!-- Sparkles around coin -->
+  <circle cx="115" cy="85" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="145" cy="85" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="115" cy="105" r="2" fill="#FFD700" opacity="0.8"/>
+  <circle cx="145" cy="105" r="2" fill="#FFD700" opacity="0.8"/>
+  
+  <!-- Goose feet -->
+  <ellipse cx="85" cy="150" rx="8" ry="12" fill="#FF8C00"/>
+  <ellipse cx="115" cy="150" rx="8" ry="12" fill="#FF8C00"/>
+</svg>

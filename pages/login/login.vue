@@ -2,7 +2,7 @@
   <view class="login-container">
     <view class="logo-section">
       <view class="logo">🦢</view>
-      <text class="app-name">金鹅理财</text>
+      <text class="app-name">会下金蛋的鹅</text>
       <text class="app-slogan">让钱为你工作</text>
     </view>
 

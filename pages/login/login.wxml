@@ -1,103 +1,41 @@
-<view class="login-container">
+<view class="welcome-container">
   <view class="logo-section">
     <view class="logo">🦢</view>
-    <text class="app-name">金鹅理财</text>
+    <text class="app-name">会下金蛋的鹅</text>
     <text class="app-slogan">让钱为你工作</text>
   </view>
 
-  <!-- 微信授权登录 -->
-  <view class="wechat-login-section">
-    <button 
-      class="wechat-login-btn" 
-      bindtap="handleWechatLogin"
-    >
-      <image src="/static/wechat-icon.svg" class="wechat-icon" mode="aspectFit"></image>
-      <text>微信快速登录</text>
-    </button>
-    <text class="wechat-tip">测试版本：模拟微信登录</text>
-  </view>
-
-  <view class="divider">
-    <view class="divider-line"></view>
-    <text class="divider-text">或</text>
-    <view class="divider-line"></view>
-  </view>
-
-  <view class="form-section">
-    <view class="tab-container">
-      <view 
-        class="tab-item {{activeTab === 'login' ? 'active' : ''}}"
-        bindtap="switchTab"
-        data-tab="login"
-      >
-        账号登录
+  <view class="content">
+    <view class="welcome-section">
+      <view class="welcome-title">欢迎使用会下金蛋的鹅</view>
+      <view class="welcome-description">
+        <text class="desc-line">基于《富爸爸穷爸爸》理念设计</text>
+        <text class="desc-line">帮助您清晰区分资产与负债</text>
+        <text class="desc-line">实现财务管理与财富增长</text>
       </view>
-      <view 
-        class="tab-item {{activeTab === 'register' ? 'active' : ''}}"
-        bindtap="switchTab"
-        data-tab="register"
-      >
-        账号注册
+      
+      <view class="features">
+        <view class="feature-item">
+          <text class="feature-icon">📊</text>
+          <text class="feature-text">资产负债管理</text>
+        </view>
+        <view class="feature-item">
+          <text class="feature-icon">💰</text>
+          <text class="feature-text">净资产计算</text>
+        </view>
+        <view class="feature-item">
+          <text class="feature-icon">📈</text>
+          <text class="feature-text">收益成本分析</text>
+        </view>
       </view>
     </view>
 
-    <!-- 登录表单 -->
-    <view wx:if="{{activeTab === 'login'}}" class="form-container">
-      <view class="input-group">
-        <text class="input-label">用户名</text>
-        <input 
-          model:value="{{loginForm.username}}" 
-          placeholder="请输入用户名" 
-          class="input-field"
-        />
-      </view>
-      <view class="input-group">
-        <text class="input-label">密码</text>
-        <input 
-          model:value="{{loginForm.password}}" 
-          type="password" 
-          placeholder="请输入密码" 
-          class="input-field"
-        />
-      </view>
-      <button class="submit-btn" bindtap="handleLogin">登录</button>
+    <!-- 进入程序按钮 -->
+    <view class="enter-section">
+      <button class="enter-btn" bindtap="handleEnterApp">
+        开始使用
+      </button>
+      <view class="enter-tip">数据存储在本地，安全可靠</view>
     </view>
-
-    <!-- 注册表单 -->
-    <view wx:if="{{activeTab === 'register'}}" class="form-container">
-      <view class="input-group">
-        <text class="input-label">用户名</text>
-        <input 
-          model:value="{{registerForm.username}}" 
-          placeholder="请输入用户名" 
-          class="input-field"
-        />
-      </view>
-      <view class="input-group">
-        <text class="input-label">密码</text>
-        <input 
-          model:value="{{registerForm.password}}" 
-          type="password" 
-          placeholder="请输入密码" 
-          class="input-field"
-        />
-      </view>
-      <view class="input-group">
-        <text class="input-label">确认密码</text>
-        <input 
-          model:value="{{registerForm.confirmPassword}}" 
-          type="password" 
-          placeholder="请再次输入密码" 
-          class="input-field"
-        />
-      </view>
-      <button class="submit-btn" bindtap="handleRegister">注册</button>
-    </view>
-  </view>
-
-  <view class="tips-section">
-    <text class="tips-text">
-      {{activeTab === 'login' ? '还没有账号？点击上方注册' : '已有账号？点击上方登录'}}
-    </text>
   </view>
 </view>

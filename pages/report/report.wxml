@@ -1,0 +1,103 @@
+<view class="report-container">
+  <!-- 财务概况卡片 -->
+  <view class="overview-card">
+    <view class="card-title">财务概况</view>
+    <view class="overview-stats">
+      <view class="stat-row">
+        <view class="stat-item positive">
+          <text class="stat-label">总资产</text>
+          <text class="stat-value">¥{{formatMoney(reportData.totalAssets)}}</text>
+        </view>
+        <view class="stat-item negative">
+          <text class="stat-label">总负债</text>
+          <text class="stat-value">¥{{formatMoney(reportData.totalLiabilities)}}</text>
+        </view>
+      </view>
+      <view class="net-worth-section">
+        <text class="net-worth-label">净资产</text>
+        <text class="net-worth-value {{reportData.netWorth >= 0 ? 'positive' : 'negative'}}">
+          ¥{{formatMoney(reportData.netWorth)}}
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 现金流分析 -->
+  <view class="cashflow-card">
+    <view class="card-title">现金流分析</view>
+    <view class="cashflow-stats">
+      <view class="cashflow-row">
+        <view class="cashflow-item income">
+          <text class="cashflow-label">每日收益</text>
+          <text class="cashflow-value">+¥{{reportData.dailyIncome.toFixed(2)}}</text>
+        </view>
+        <view class="cashflow-item cost">
+          <text class="cashflow-label">每日成本</text>
+          <text class="cashflow-value">-¥{{reportData.dailyCost.toFixed(2)}}</text>
+        </view>
+      </view>
+      <view class="net-cashflow">
+        <text class="net-label">每日净收益</text>
+        <text class="net-value {{reportData.dailyNet >= 0 ? 'positive' : 'negative'}}">
+          {{reportData.dailyNet >= 0 ? '+' : ''}}¥{{reportData.dailyNet.toFixed(2)}}
+        </text>
+      </view>
+      <view class="projections">
+        <view class="projection-item">
+          <text class="projection-label">月度预测</text>
+          <text class="projection-value">¥{{formatMoney(reportData.monthlyProjection)}}</text>
+        </view>
+        <view class="projection-item">
+          <text class="projection-label">年度预测</text>
+          <text class="projection-value">¥{{formatMoney(reportData.yearlyProjection)}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 资产分类分析 -->
+  <view wx:if="{{assetCategories.length > 0}}" class="category-card">
+    <view class="card-title">资产分类分析</view>
+    <view class="category-list">
+      <view wx:for="{{assetCategories}}" wx:key="id" class="category-item">
+        <view class="category-info">
+          <view class="category-name">{{item.name}}</view>
+          <view class="category-details">
+            <text class="category-count">{{item.count}}项</text>
+            <text class="category-percentage">{{item.percentage}}%</text>
+          </view>
+        </view>
+        <view class="category-value">¥{{formatMoney(item.total)}}</view>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{item.percentage}}%; background-color: {{item.color}};"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 负债分类分析 -->
+  <view wx:if="{{liabilityCategories.length > 0}}" class="category-card">
+    <view class="card-title">负债分类分析</view>
+    <view class="category-list">
+      <view wx:for="{{liabilityCategories}}" wx:key="id" class="category-item">
+        <view class="category-info">
+          <view class="category-name">{{item.name}}</view>
+          <view class="category-details">
+            <text class="category-count">{{item.count}}项</text>
+            <text class="category-percentage">{{item.percentage}}%</text>
+          </view>
+        </view>
+        <view class="category-value">¥{{formatMoney(item.total)}}</view>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{item.percentage}}%; background-color: {{item.color}};"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="action-btn analysis-btn" bindtap="showAnalysis">智能分析</button>
+    <button class="action-btn export-btn" bindtap="exportReport">导出报告</button>
+  </view>
+</view>

@@ -1,0 +1,106 @@
+<view class="goals-container">
+  <!-- 目标列表 -->
+  <view wx:if="{{goals.length > 0}}" class="goals-list">
+    <view wx:for="{{goals}}" wx:key="id" class="goal-item {{item.status}}" bindtap="viewGoalDetail" data-goal-id="{{item.id}}">
+      <view class="goal-header">
+        <view class="goal-info">
+          <text class="goal-icon">{{item.categoryInfo.icon}}</text>
+          <view class="goal-details">
+            <text class="goal-title">{{item.title}}</text>
+            <text class="goal-category">{{item.categoryInfo.label}}</text>
+          </view>
+        </view>
+        <view class="goal-amount">
+          <text class="current-amount">¥{{formatMoney(item.currentAmount)}}</text>
+          <text class="target-amount">/ ¥{{formatMoney(item.targetAmount)}}</text>
+        </view>
+      </view>
+      
+      <view class="progress-section">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{item.progress}}%;"></view>
+        </view>
+        <text class="progress-text">{{item.progress.toFixed(1)}}%</text>
+      </view>
+      
+      <view class="goal-footer">
+        <text class="deadline {{item.daysLeft < 0 ? 'expired' : item.daysLeft <= 7 ? 'urgent' : ''}}">
+          {{item.daysLeft > 0 ? '还有' + item.daysLeft + '天' : item.daysLeft === 0 ? '今天到期' : '已过期' + Math.abs(item.daysLeft) + '天'}}
+        </text>
+        <view class="goal-actions">
+          <button class="action-btn update-btn" bindtap="updateProgress" data-goal-id="{{item.id}}" catchtap>更新</button>
+          <button class="action-btn delete-btn" bindtap="deleteGoal" data-goal-id="{{item.id}}" catchtap>删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <text class="empty-icon">🎯</text>
+    <text class="empty-title">暂无理财目标</text>
+    <text class="empty-desc">设定目标，让理财更有方向</text>
+  </view>
+
+  <!-- 添加目标按钮 -->
+  <view class="add-goal-section">
+    <button class="add-goal-btn" bindtap="showAddGoalForm">+ 添加新目标</button>
+  </view>
+
+  <!-- 添加目标弹窗 -->
+  <view wx:if="{{showAddGoal}}" class="modal-overlay" bindtap="hideAddGoalForm">
+    <view class="modal-content" catchtap>
+      <view class="modal-header">
+        <text class="modal-title">添加理财目标</text>
+        <button class="close-btn" bindtap="hideAddGoalForm">✕</button>
+      </view>
+      
+      <view class="form-section">
+        <view class="form-group">
+          <text class="form-label">目标名称 *</text>
+          <input value="{{newGoal.title}}" placeholder="例如：买房首付" class="form-input" bindinput="onTitleInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">目标分类</text>
+          <picker value="{{categoryIndex}}" range="{{categoryOptions}}" range-key="label" bindchange="onCategoryChange" class="form-picker">
+            <view class="picker-display">
+              <text>{{categoryOptions[categoryIndex].icon}} {{categoryOptions[categoryIndex].label}}</text>
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">目标金额 *</text>
+          <input value="{{newGoal.targetAmount}}" type="number" placeholder="0.00" class="form-input" bindinput="onTargetAmountInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">当前金额</text>
+          <input value="{{newGoal.currentAmount}}" type="number" placeholder="0.00" class="form-input" bindinput="onCurrentAmountInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">目标日期 *</text>
+          <picker mode="date" value="{{newGoal.deadline}}" bindchange="onDeadlineChange" class="form-picker">
+            <view class="picker-display">
+              <text>{{newGoal.deadline || '请选择日期'}}</text>
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">目标描述</text>
+          <textarea value="{{newGoal.description}}" placeholder="描述一下您的理财目标..." class="form-textarea" maxlength="200" bindinput="onDescriptionInput" />
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="modal-btn cancel-btn" bindtap="hideAddGoalForm">取消</button>
+        <button class="modal-btn save-btn" bindtap="saveGoal">保存</button>
+      </view>
+    </view>
+  </view>
+</view>
