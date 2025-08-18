@@ -6,20 +6,31 @@
         <text class="net-worth-label">净资产</text>
         <text class="net-worth-value">¥{{netWorth}}</text>
       </view>
-      <view class="avatar-container">
+      <view class="avatar-container" bindtap="chooseAvatar">
         <image 
           src="{{userInfo.avatar || '/static/default-avatar.png'}}" 
           class="avatar"
           mode="aspectFill"
-          bindtap="chooseAvatar"
         />
       </view>
     </view>
-    <view class="user-info-bottom">
-      <view class="info-item">
-        <text class="info-label">每日成本</text>
-        <text class="info-value cost">¥{{dailyCost}}</text>
+    <!-- 现金流概览 -->
+    <view class="cashflow-overview">
+      <view class="cashflow-item positive">
+        <text class="cashflow-label">月现金流入</text>
+        <text class="cashflow-value">¥{{monthlyCashflowIn}}</text>
       </view>
+      <view class="cashflow-item negative">
+        <text class="cashflow-label">月现金流出</text>
+        <text class="cashflow-value">¥{{monthlyCashflowOut}}</text>
+      </view>
+      <view class="cashflow-item {{netMonthlyCashflow >= 0 ? 'neutral' : 'warning'}}">
+        <text class="cashflow-label">净月现金流</text>
+        <text class="cashflow-value">¥{{netMonthlyCashflow}}</text>
+      </view>
+    </view>
+    
+    <view class="user-info-bottom">
       <view class="info-item">
         <text class="info-label">资产数量</text>
         <text class="info-value">{{assetsCount}}</text>
@@ -29,8 +40,8 @@
         <text class="info-value">{{liabilitiesCount}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">每日收益</text>
-        <text class="info-value income">¥{{dailyIncome}}</text>
+        <text class="info-label">现金流状态</text>
+        <text class="info-value {{netMonthlyCashflow >= 0 ? 'positive' : 'negative'}}">{{cashflowStatus}}</text>
       </view>
     </view>
   </view>
@@ -65,14 +76,14 @@
       <picker 
         mode="multiSelector"
         value="{{categoryIndex}}" 
-        range="{{[categoryLevelOne, categoryLevelTwo[categoryIndex[0]]]}}" 
+        range="{{[assetCategories, assetSubCategories[categoryIndex[0]]]}}" 
         range-key="label"
         bindchange="onCategoryChange"
         bindcolumnchange="onCategoryColumnChange"
         class="filter-picker"
       >
         <view class="filter-item">
-          <text>{{categoryIndex[0] === 0 ? categoryLevelOne[categoryIndex[0]].label : categoryLevelOne[categoryIndex[0]].label + ' ' + categoryLevelTwo[categoryIndex[0]][categoryIndex[1]].label}}</text>
+          <text>{{categoryIndex[0] === 0 ? assetCategories[categoryIndex[0]].label : assetCategories[categoryIndex[0]].label + ' ' + assetSubCategories[categoryIndex[0]][categoryIndex[1]].label}}</text>
           <text class="filter-arrow">▼</text>
         </view>
       </picker>
@@ -107,6 +118,11 @@
             </view>
             <text class="item-category">{{item.categoryName}}</text>
             <text class="item-purchase-date">{{item.createTimeText}}</text>
+            <!-- 现金流信息 -->
+            <view class="item-cashflow">
+              <text class="cashflow-label">月收入: </text>
+              <text class="cashflow-amount positive">¥{{item.monthlyIncome || '0'}}</text>
+            </view>
           </view>
         </view>
         <view class="item-right">
@@ -126,6 +142,11 @@
             </view>
             <text class="item-category">{{item.categoryName}}</text>
             <text class="item-purchase-date">{{item.createTimeText}}</text>
+            <!-- 现金流信息 -->
+            <view class="item-cashflow">
+              <text class="cashflow-label">月支出: </text>
+              <text class="cashflow-amount negative">¥{{item.monthlyPayment || '0'}}</text>
+            </view>
           </view>
         </view>
         <view class="item-right">

@@ -11,7 +11,11 @@ Page({
       usageDays: 0,
       categoryCount: 0,
       assetCount: 0
-    }
+    },
+    showNicknameInput: false,
+    tempNickname: '',
+    showMottoInput: false,
+    tempMotto: ''
   },
 
   onLoad() {
@@ -30,7 +34,8 @@ Page({
       // 计算显示信息
       const displayInfo = {
         avatar: userInfo.useWechatInfo && userInfo.wechatAvatar ? userInfo.wechatAvatar : userInfo.avatar,
-        nickname: userInfo.useWechatInfo && userInfo.wechatNickname ? userInfo.wechatNickname : userInfo.nickname
+        nickname: userInfo.useWechatInfo && userInfo.wechatNickname ? userInfo.wechatNickname : userInfo.nickname,
+        motto: userInfo.motto || '理财从认识资产负债开始'
       }
       
       this.setData({
@@ -55,7 +60,7 @@ Page({
 
     // 计算净资产
     const netWorth = StorageManager.calculateNetWorth()
-    const netWorthText = netWorth >= 0 ? `+${this.formatMoney(netWorth)}` : this.formatMoney(netWorth)
+    const netWorthText = this.formatMoney(netWorth)
 
     // 获取总记录数量（资产+负债）
     const assetCount = assets.length + liabilities.length
@@ -77,12 +82,52 @@ Page({
     return amount.toFixed(0)
   },
 
-  // 选择头像
+  // 新的头像选择处理 - 使用微信官方推荐的方式
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail
+    console.log('选择的头像路径:', avatarUrl)
+    
+    // 更新显示的头像
+    this.setData({
+      'displayInfo.avatar': avatarUrl
+    })
+    
+    // 保存头像到用户信息
+    this.updateAvatar(avatarUrl)
+    
+    wx.showToast({
+      title: '头像更新成功',
+      icon: 'success'
+    })
+  },
+
+  // 昵称修改处理
+  onNicknameChange(e) {
+    const newNickname = e.detail.value
+    console.log('新昵称:', newNickname)
+    
+    // 更新显示的昵称
+    this.setData({
+      'displayInfo.nickname': newNickname
+    })
+    
+    // 保存昵称到用户信息
+    const userInfo = { ...this.data.userInfo, nickname: newNickname }
+    wx.setStorageSync('user_info', userInfo)
+    this.setData({ userInfo })
+    
+    wx.showToast({
+      title: '昵称更新成功',
+      icon: 'success'
+    })
+  },
+
+  // 选择头像 (保留作为备用方法)
   chooseAvatar() {
     const { userInfo } = this.data
     const items = ['从相册选择', '拍照']
     
-    // 如果有微信头像，添加选择微信头像选项
+    // 如果已有微信头像，提供使用选项
     if (userInfo.wechatAvatar) {
       items.push('使用微信头像')
     }
@@ -150,11 +195,11 @@ Page({
   // 选择昵称
   chooseNickname() {
     const { userInfo } = this.data
-    const items = ['自定义昵称']
+    const items = ['自定义输入昵称', '使用微信昵称输入']
     
-    // 如果有微信昵称，添加选择微信昵称选项
+    // 如果已有微信昵称，提供直接使用选项
     if (userInfo.wechatNickname) {
-      items.push('使用微信昵称')
+      items.push('使用已保存的微信昵称')
     }
     
     wx.showActionSheet({
@@ -162,10 +207,118 @@ Page({
       success: (res) => {
         if (res.tapIndex === 0) {
           this.customNickname()
-        } else if (res.tapIndex === 1 && userInfo.wechatNickname) {
+        } else if (res.tapIndex === 1) {
+          this.showWechatNicknameInput()
+        } else if (res.tapIndex === 2 && userInfo.wechatNickname) {
           this.useWechatNickname()
         }
       }
+    })
+  },
+
+  // 显示微信昵称输入框
+  showWechatNicknameInput() {
+    wx.showModal({
+      title: '使用微信昵称',
+      content: '将为您显示微信昵称输入框，点击确定后在输入框中可自动填充微信昵称',
+      success: (res) => {
+        if (res.confirm) {
+          this.showNicknameInputModal()
+        }
+      }
+    })
+  },
+
+  // 显示带有nickname类型的输入框
+  showNicknameInputModal() {
+    this.setData({
+      showNicknameInput: true,
+      tempNickname: this.data.displayInfo.nickname || ''
+    })
+  },
+
+  // 关闭昵称输入弹窗
+  closeNicknameInput() {
+    this.setData({
+      showNicknameInput: false,
+      tempNickname: ''
+    })
+  },
+
+  // 临时昵称输入
+  onTempNicknameInput(e) {
+    this.setData({
+      tempNickname: e.detail.value
+    })
+  },
+
+  // 确认昵称
+  confirmNickname() {
+    const { tempNickname } = this.data
+    if (!tempNickname.trim()) {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 更新昵称
+    this.setData({
+      'displayInfo.nickname': tempNickname,
+      showNicknameInput: false
+    })
+
+    // 保存到用户信息
+    const userInfo = { ...this.data.userInfo, nickname: tempNickname }
+    wx.setStorageSync('user_info', userInfo)
+    this.setData({ userInfo })
+
+    wx.showToast({
+      title: '昵称更新成功',
+      icon: 'success'
+    })
+  },
+
+  // 更换个人签名
+  changeMotto() {
+    this.setData({
+      showMottoInput: true,
+      tempMotto: this.data.displayInfo.motto || ''
+    })
+  },
+
+  closeMottoInput() {
+    this.setData({
+      showMottoInput: false,
+      tempMotto: ''
+    })
+  },
+
+  onTempMottoInput(e) {
+    this.setData({
+      tempMotto: e.detail.value
+    })
+  },
+
+  confirmMotto() {
+    const motto = this.data.tempMotto.trim() || '理财从认识资产负债开始'
+    
+    // 更新显示
+    this.setData({
+      'displayInfo.motto': motto,
+      showMottoInput: false,
+      tempMotto: ''
+    })
+    
+    // 保存到用户信息
+    const userInfo = { ...this.data.userInfo, motto: motto }
+    wx.setStorageSync('user_info', userInfo)
+    this.setData({ userInfo })
+    
+    wx.showToast({
+      title: '个人签名已更新',
+      icon: 'success'
     })
   },
 
@@ -205,30 +358,14 @@ Page({
     }
   },
 
-  // 获取微信信息
-  getWechatInfo() {
-    wx.getUserProfile({
-      desc: '用于完善个人资料',
-      success: (res) => {
-        const { userInfo } = this.data
-        userInfo.wechatNickname = res.userInfo.nickName
-        userInfo.wechatAvatar = res.userInfo.avatarUrl
-        StorageManager.saveUser(userInfo)
-        
-        wx.showToast({
-          title: '微信信息获取成功',
-          icon: 'success'
-        })
-      },
-      fail: (err) => {
-        console.error('获取微信用户信息失败:', err)
-        wx.showToast({
-          title: '获取失败，请重试',
-          icon: 'none'
-        })
-      }
-    })
-  },
+  // 废弃的getUserProfile方法已被移除
+  // 现在使用新的头像选择方式: onChooseAvatar 方法
+
+  // 废弃的getUserProfile昵称获取方法已被移除
+  // 现在使用nickname类型的input组件: onNicknameChange 方法
+
+  // 废弃的getUserProfile信息获取方法已被移除
+  // 微信官方已不再支持直接获取用户信息，请使用新的交互方式
 
   // 功能菜单点击事件
   handleFinancialReport() {
@@ -237,7 +374,7 @@ Page({
     })
   },
 
-  handleGoalSetting() {
+  handleDreamJar() {
     wx.navigateTo({
       url: '/pages/goals/goals'
     })
@@ -245,17 +382,13 @@ Page({
 
   handleSettings() {
     wx.showActionSheet({
-      itemList: ['获取微信信息', '主题设置', '数据设置', '通知设置'],
+      itemList: ['主题设置', '数据设置', '通知设置'],
       success: (res) => {
-        if (res.tapIndex === 0) {
-          this.getWechatInfo()
-        } else {
-          const actions = ['', '主题设置', '数据设置', '通知设置']
-          wx.showToast({
-            title: `${actions[res.tapIndex]}功能开发中`,
-            icon: 'none'
-          })
-        }
+        const actions = ['主题设置', '数据设置', '通知设置']
+        wx.showToast({
+          title: `${actions[res.tapIndex]}功能开发中`,
+          icon: 'none'
+        })
       }
     })
   },
@@ -330,11 +463,9 @@ Page({
   },
 
   // 其他功能
-  handleHelp() {
-    wx.showModal({
-      title: '常见问题',
-      content: '这是一个资产负债管理小程序，帮助您更好地管理个人财务。\n\n功能说明：\n• 资产：会增值的投资\n• 负债：产生成本的支出\n• 参考《富爸爸穷爸爸》理念',
-      showCancel: false
+  handleAboutBooks() {
+    wx.navigateTo({
+      url: '/pages/about/about'
     })
   },
 

@@ -44,6 +44,8 @@
   height: 120rpx;
 }
 
+
+
 .avatar {
   width: 100%;
   height: 100%;
@@ -323,6 +325,34 @@
   background: #6c757d;
 }
 
+.item-status.dusty {
+  background: #868e96;
+}
+
+.item-status.rented {
+  background: #17a2b8;
+}
+
+.item-status.damaged {
+  background: #dc3545;
+}
+
+.item-status.processed {
+  background: #6f42c1;
+}
+
+.item-status.gifted {
+  background: #fd7e14;
+}
+
+.item-status.sold {
+  background: #20c997;
+}
+
+.item-status.lost {
+  background: #495057;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;
@@ -363,4 +393,88 @@
   color: white;
   font-weight: bold;
   margin-bottom: 6rpx;
+}
+
+/* 现金流概览 */
+.cashflow-overview {
+  margin: 30rpx 0;
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.cashflow-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.cashflow-item.positive {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.cashflow-item.negative {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.cashflow-item.neutral {
+  background: rgba(33, 150, 243, 0.2);
+}
+
+.cashflow-item.warning {
+  background: rgba(255, 152, 0, 0.2);
+}
+
+.cashflow-label {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8rpx;
+}
+
+.cashflow-value {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: white;
+}
+
+/* 状态颜色 */
+.info-value.positive {
+  color: #4caf50;
+}
+
+.info-value.negative {
+  color: #f44336;
+}
+
+/* 列表项现金流信息 */
+.item-cashflow {
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+}
+
+.cashflow-label {
+  font-size: 20rpx;
+  color: #666666;
+  margin-right: 8rpx;
+}
+
+.cashflow-amount {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.cashflow-amount.positive {
+  color: #4caf50;
+}
+
+.cashflow-amount.negative {
+  color: #f44336;
 }

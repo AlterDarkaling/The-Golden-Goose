@@ -75,59 +75,61 @@ Page({
     const sampleAssets = [
       {
         id: 'asset_1',
-        name: '股票投资组合',
-        categoryId: 'investment', // 保留旧ID用于兼容
-        categoryL1: 'investment',
-        categoryL2: 'stocks',
+        name: '蓝筹股投资组合',
+        categoryL1: 'cashflow_in',
+        categoryL2: 'dividend_stocks',
         status: 'active',
         initialValue: 50000,
         currentValue: 52000,
         dailyIncome: 15.5,
         annualReturn: 8.5,
-        notes: '蓝筹股投资组合，包含银行、科技等板块',
+        monthlyIncome: 465, // 每月股息收入
+        notes: '高股息蓝筹股组合，月度分红稳定',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       },
       {
         id: 'asset_2',
-        name: '网约车',
-        categoryId: 'business', // 保留旧ID用于兼容
-        categoryL1: 'vehicle',
-        categoryL2: 'car',
+        name: '网约车运营',
+        categoryL1: 'business',
+        categoryL2: 'business_vehicle',
         status: 'active',
         initialValue: 150000,
         currentValue: 145000,
         dailyIncome: 200,
         annualReturn: 12,
-        notes: '用于网约车运营的车辆，每日产生收益',
+        monthlyIncome: 6000, // 每月净收入
+        notes: '网约车运营业务，每日产生现金流入',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       },
       {
         id: 'asset_3',
-        name: '商铺租赁',
-        categoryL1: 'property',
-        categoryL2: 'commercial',
+        name: '商铺出租',
+        categoryL1: 'cashflow_in',
+        categoryL2: 'rental_property',
         status: 'active',
         initialValue: 800000,
         currentValue: 820000,
         dailyIncome: 120,
         annualReturn: 5.5,
-        notes: '市中心商铺，每月收租金',
+        monthlyIncome: 3600, // 每月租金收入
+        notes: '市中心商铺，月租金稳定',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       },
       {
         id: 'asset_4',
-        name: 'MacBook Pro',
-        categoryL1: 'digital',
-        categoryL2: 'laptop',
+        name: '工作设备',
+        categoryL1: 'business',
+        categoryL2: 'office_equipment',
         status: 'active',
         initialValue: 15000,
         currentValue: 12000,
         dailyIncome: 50,
         annualReturn: -5,
-        notes: '用于视频剪辑和设计工作，产生收入',
+        monthlyIncome: 1500, // 通过设备产生的月收入
+        notes: '用于视频剪辑和设计工作的设备',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       }
@@ -137,30 +139,46 @@ Page({
     const sampleLiabilities = [
       {
         id: 'liability_1',
-        name: '信用卡消费',
-        categoryId: 'credit_card', // 保留旧ID用于兼容
-        categoryL1: 'debt',
+        name: '信用卡消费账单',
+        categoryL1: 'consumer_debt',
         categoryL2: 'credit_card',
         status: 'active',
         initialAmount: 8000,
         currentAmount: 7500,
         dailyCost: 2.5,
         annualRate: 18,
-        notes: '日常消费信用卡，需要按时还款',
+        monthlyPayment: 900, // 每月还款额
+        notes: '日常消费信用卡账单，高利率负债',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       },
       {
         id: 'liability_2',
-        name: '房屋贷款',
-        categoryL1: 'debt',
-        categoryL2: 'mortgage',
+        name: '自住房贷款',
+        categoryL1: 'consumer_debt',
+        categoryL2: 'home_mortgage',
         status: 'active',
         initialAmount: 500000,
         currentAmount: 480000,
         dailyCost: 45,
         annualRate: 4.9,
-        notes: '自住房贷款，30年期',
+        monthlyPayment: 2650, // 每月还款额
+        notes: '自住房贷款，30年期，消费性负债',
+        createTime: new Date().toISOString(),
+        createDate: new Date().toISOString().split('T')[0]
+      },
+      {
+        id: 'liability_3',
+        name: '投资房贷款',
+        categoryL1: 'investment_debt',
+        categoryL2: 'investment_mortgage',
+        status: 'active',
+        initialAmount: 600000,
+        currentAmount: 580000,
+        dailyCost: 82,
+        annualRate: 5.2,
+        monthlyPayment: 3200, // 每月还款额
+        notes: '投资房产贷款，对应资产产生租金收入',
         createTime: new Date().toISOString(),
         createDate: new Date().toISOString().split('T')[0]
       }

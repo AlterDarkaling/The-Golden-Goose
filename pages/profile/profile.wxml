@@ -2,17 +2,69 @@
   <!-- 头部用户信息卡片 -->
   <view class="user-card">
     <view class="user-header">
-      <view class="avatar-container" bindtap="chooseAvatar">
-        <image 
-          src="{{displayInfo.avatar || '/static/default-avatar.png'}}" 
-          class="user-avatar"
-          mode="aspectFill"
-        />
-        <view class="avatar-edit-icon">✏️</view>
+      <view class="avatar-container">
+        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image 
+            src="{{displayInfo.avatar || '/static/default-avatar.png'}}" 
+            class="user-avatar"
+            mode="aspectFill"
+          />
+        </button>
       </view>
       <view class="user-info">
-        <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '会下金蛋的鹅用户'}}</text>
-        <text class="user-motto">理财从认识资产负债开始</text>
+        <view class="nickname-container">
+          <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '会下金蛋的鹅用户'}}</text>
+        </view>
+        <text class="user-motto" bindtap="changeMotto">{{displayInfo.motto || '理财从认识资产负债开始'}}</text>
+      </view>
+    </view>
+    
+    <!-- 昵称输入弹窗 -->
+    <view class="nickname-input-modal" wx:if="{{showNicknameInput}}">
+      <view class="modal-mask" bindtap="closeNicknameInput"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">设置昵称</text>
+          <view class="modal-close" bindtap="closeNicknameInput">×</view>
+        </view>
+        <view class="modal-body">
+          <input 
+            type="nickname" 
+            class="nickname-input" 
+            placeholder="点击此处自动填充微信昵称或手动输入"
+            value="{{tempNickname}}"
+            bind:input="onTempNicknameInput"
+            focus="{{showNicknameInput}}"
+          />
+        </view>
+        <view class="modal-footer">
+          <button class="cancel-btn" bindtap="closeNicknameInput">取消</button>
+          <button class="confirm-btn" bindtap="confirmNickname">确定</button>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 个人签名输入弹窗 -->
+    <view class="motto-input-modal" wx:if="{{showMottoInput}}">
+      <view class="modal-mask" bindtap="closeMottoInput"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">设置个人签名</text>
+          <view class="modal-close" bindtap="closeMottoInput">×</view>
+        </view>
+        <view class="modal-body">
+          <input 
+            class="motto-input" 
+            placeholder="输入你的理财格言"
+            value="{{tempMotto}}"
+            bind:input="onTempMottoInput"
+            focus="{{showMottoInput}}"
+          />
+        </view>
+        <view class="modal-footer">
+          <button class="cancel-btn" bindtap="closeMottoInput">取消</button>
+          <button class="confirm-btn" bindtap="confirmMotto">确定</button>
+        </view>
       </view>
     </view>
     
@@ -40,9 +92,9 @@
         <view class="menu-icon">📊</view>
         <text class="menu-label">财务报告</text>
       </view>
-      <view class="menu-item" bindtap="handleGoalSetting">
-        <view class="menu-icon">🎯</view>
-        <text class="menu-label">理财目标</text>
+      <view class="menu-item" bindtap="handleDreamJar">
+        <view class="menu-icon">🏆</view>
+        <text class="menu-label">梦想储蓄罐</text>
       </view>
       <view class="menu-item" bindtap="handleDataBackup">
         <view class="menu-icon">💾</view>
@@ -57,12 +109,12 @@
 
   <!-- 设置列表 -->
   <view class="settings-section">
-    <view class="setting-item" bindtap="handleHelp">
+    <view class="setting-item" bindtap="handleAboutBooks">
       <view class="setting-left">
-        <view class="setting-icon">❓</view>
+        <view class="setting-icon">📚</view>
         <view class="setting-content">
-          <text class="setting-title">常见问题</text>
-          <text class="setting-desc">查看使用帮助和常见问题解答</text>
+          <text class="setting-title">理财启蒙</text>
+          <text class="setting-desc">了解富爸爸穷爸爸和小狗钱钱的理财智慧</text>
         </view>
       </view>
       <text class="setting-arrow">></text>

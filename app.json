@@ -6,7 +6,8 @@
     "pages/login/login",
     "pages/profile/profile",
     "pages/report/report",
-    "pages/goals/goals"
+    "pages/goals/goals",
+    "pages/about/about"
   ],
   "window": {
     "backgroundTextStyle": "light",

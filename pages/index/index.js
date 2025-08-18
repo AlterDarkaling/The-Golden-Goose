@@ -6,6 +6,14 @@ Page({
     userInfo: {},
     assets: [],
     liabilities: [],
+    // 财务数据
+    netWorth: '0.00',
+    monthlyCashflowIn: '0.00',
+    monthlyCashflowOut: '0.00',
+    netMonthlyCashflow: '0.00',
+    cashflowStatus: '健康',
+    assetsCount: 0,
+    liabilitiesCount: 0,
     searchKeyword: '',
     sortFieldIndex: 0,
     sortOrderIndex: 0,
@@ -22,90 +30,109 @@ Page({
       { label: '降序', value: 'desc' },
       { label: '升序', value: 'asc' }
     ],
-    // 一级分类
-    categoryLevelOne: [
+    // 资产分类（现金流导向）
+    assetCategories: [
       { label: '全部类别', value: 'all' },
-      { label: '投资理财', value: 'investment' },
-      { label: '房产相关', value: 'property' },
-      { label: '交通工具', value: 'vehicle' },
-      { label: '数码设备', value: 'digital' },
-      { label: '设备器材', value: 'equipment' },
-      { label: '贷款负债', value: 'debt' },
-      { label: '其他', value: 'other' }
+      { label: '现金流入型资产', value: 'cashflow_in' },
+      { label: '潜在增值型资产', value: 'appreciation' },
+      { label: '经营性资产', value: 'business' },
+      { label: '消费性资产', value: 'consumer_asset' },
+      { label: '其他资产', value: 'other_asset' }
     ],
-    // 二级分类
-    categoryLevelTwo: [
-      // 全部类别的二级分类
+    // 资产二级分类
+    assetSubCategories: [
+      // 全部类别
       [{ label: '全部', value: 'all' }],
-      // 投资理财的二级分类
+      // 现金流入型资产
       [
         { label: '全部', value: 'all' },
-        { label: '股票', value: 'stocks' },
-        { label: '基金', value: 'funds' },
-        { label: '债券', value: 'bonds' },
-        { label: '理财产品', value: 'wealth_products' },
-        { label: '保险', value: 'insurance' },
+        { label: '出租房产', value: 'rental_property' },
+        { label: '股息股票', value: 'dividend_stocks' },
+        { label: '债券利息', value: 'bond_interest' },
+        { label: '定期存款', value: 'fixed_deposit' },
+        { label: '基金分红', value: 'fund_dividend' },
+        { label: '专利授权', value: 'patent_license' },
+        { label: '版权收入', value: 'copyright_income' },
+        { label: '其他现金流', value: 'other_cashflow' }
+      ],
+      // 潜在增值型资产
+      [
+        { label: '全部', value: 'all' },
+        { label: '投资房产', value: 'investment_property' },
+        { label: '成长股票', value: 'growth_stocks' },
         { label: '贵金属', value: 'precious_metals' },
-        { label: '其他投资', value: 'other_investment' }
+        { label: '收藏品', value: 'collectibles' },
+        { label: '艺术品', value: 'artworks' },
+        { label: '其他增值品', value: 'other_appreciation' }
       ],
-      // 房产相关的二级分类
+      // 经营性资产
       [
         { label: '全部', value: 'all' },
-        { label: '住宅', value: 'residence' },
-        { label: '商铺', value: 'commercial' },
-        { label: '写字楼', value: 'office' },
-        { label: '厂房', value: 'factory' },
-        { label: '土地', value: 'land' },
-        { label: '停车位', value: 'parking' },
-        { label: '其他房产', value: 'other_property' }
-      ],
-      // 交通工具的二级分类
-      [
-        { label: '全部', value: 'all' },
-        { label: '汽车', value: 'car' },
-        { label: '摩托车', value: 'motorcycle' },
-        { label: '货车', value: 'truck' },
-        { label: '电动车', value: 'electric_vehicle' },
-        { label: '船舶', value: 'boat' },
-        { label: '其他交通工具', value: 'other_vehicle' }
-      ],
-      // 数码设备的二级分类
-      [
-        { label: '全部', value: 'all' },
-        { label: '台式电脑', value: 'desktop' },
-        { label: '笔记本电脑', value: 'laptop' },
-        { label: '手机', value: 'phone' },
-        { label: '平板电脑', value: 'tablet' },
-        { label: '相机摄像', value: 'camera' },
-        { label: '音响耳机', value: 'audio' },
-        { label: '智能手表', value: 'smartwatch' },
-        { label: '游戏设备', value: 'gaming' },
-        { label: '其他数码', value: 'other_digital' }
-      ],
-      // 设备器材的二级分类
-      [
-        { label: '全部', value: 'all' },
+        { label: '实体店铺', value: 'physical_store' },
+        { label: '网络生意', value: 'online_business' },
         { label: '生产设备', value: 'production_equipment' },
+        { label: '运营车辆', value: 'business_vehicle' },
         { label: '办公设备', value: 'office_equipment' },
-        { label: '家用电器', value: 'appliances' },
-        { label: '工具仪器', value: 'tools' },
-        { label: '其他设备', value: 'other_equipment' }
+        { label: '其他经营', value: 'other_business' }
       ],
-      // 贷款负债的二级分类
+      // 消费性资产
       [
         { label: '全部', value: 'all' },
-        { label: '房贷', value: 'mortgage' },
-        { label: '车贷', value: 'car_loan' },
-        { label: '经营贷款', value: 'business_loan' },
-        { label: '消费贷款', value: 'consumer_loan' },
-        { label: '信用卡', value: 'credit_card' },
-        { label: '其他贷款', value: 'other_loan' }
+        { label: '手机通讯', value: 'mobile_phone' },
+        { label: '电脑数码', value: 'computer_digital' },
+        { label: '家用电器', value: 'home_appliances' },
+        { label: '交通工具', value: 'personal_vehicle' },
+        { label: '家具用品', value: 'furniture' },
+        { label: '服装配饰', value: 'clothing_accessories' },
+        { label: '运动健身', value: 'sports_fitness' },
+        { label: '娱乐设备', value: 'entertainment' },
+        { label: '其他消费品', value: 'other_consumer' }
       ],
-      // 其他的二级分类
+      // 其他资产
       [
         { label: '全部', value: 'all' },
         { label: '知识产权', value: 'intellectual_property' },
-        { label: '收藏品', value: 'collectibles' },
+        { label: '数字资产', value: 'digital_assets' },
+        { label: '其他', value: 'other' }
+      ]
+    ],
+    
+    // 负债分类（现金流导向）
+    liabilityCategories: [
+      { label: '全部类别', value: 'all' },
+      { label: '消费性负债', value: 'consumer_debt' },
+      { label: '投资性负债', value: 'investment_debt' },
+      { label: '其他负债', value: 'other_debt' }
+    ],
+    // 负债二级分类
+    liabilitySubCategories: [
+      // 全部类别
+      [{ label: '全部', value: 'all' }],
+      // 消费性负债
+      [
+        { label: '全部', value: 'all' },
+        { label: '信用卡账单', value: 'credit_card' },
+        { label: '自用车贷', value: 'personal_car_loan' },
+        { label: '消费贷款', value: 'consumer_loan' },
+        { label: '自住房贷', value: 'home_mortgage' },
+        { label: '装修贷款', value: 'renovation_loan' },
+        { label: '其他消费', value: 'other_consumer' }
+      ],
+      // 投资性负债
+      [
+        { label: '全部', value: 'all' },
+        { label: '投资房贷', value: 'investment_mortgage' },
+        { label: '股票融资', value: 'stock_margin' },
+        { label: '经营贷款', value: 'business_loan' },
+        { label: '设备贷款', value: 'equipment_loan' },
+        { label: '其他投资贷', value: 'other_investment_loan' }
+      ],
+      // 其他负债
+      [
+        { label: '全部', value: 'all' },
+        { label: '学费贷款', value: 'education_loan' },
+        { label: '医疗负债', value: 'medical_debt' },
+        { label: '税务负债', value: 'tax_debt' },
         { label: '其他', value: 'other' }
       ]
     ],
@@ -168,7 +195,7 @@ Page({
       ...asset,
       type: 'asset',
       typeText: '资产',
-      categoryName: this.getCategoryName(asset.categoryL1, asset.categoryL2),
+      categoryName: this.getCategoryName(asset.categoryL1, asset.categoryL2, true),
       displayAmount: this.formatNumber(asset.currentValue || asset.initialValue),
       statusText: this.getStatusText(asset.status),
       createTimeText: StorageManager.formatPurchaseDate(asset.createDate, asset.createTime),
@@ -183,7 +210,7 @@ Page({
       ...liability,
       type: 'liability',
       typeText: '负债',
-      categoryName: this.getCategoryName(liability.categoryL1, liability.categoryL2),
+      categoryName: this.getCategoryName(liability.categoryL1, liability.categoryL2, false),
       displayAmount: this.formatNumber(liability.currentAmount || liability.initialAmount),
       statusText: this.getStatusText(liability.status),
       createTimeText: StorageManager.formatPurchaseDate(liability.createDate, liability.createTime),
@@ -196,23 +223,68 @@ Page({
 
     this.setData({
       assets: processedAssets,
-      liabilities: processedLiabilities,
-      netWorth: this.formatNumber(StorageManager.calculateNetWorth()),
-      dailyCost: this.formatNumber(StorageManager.calculateDailyCost()),
-      dailyIncome: this.formatNumber(StorageManager.calculateDailyIncome()),
-      assetsCount: assets.length,
-      liabilitiesCount: liabilities.length
+      liabilities: processedLiabilities
     })
 
+    this.calculateCashflow()
     this.updateFilteredData()
   },
 
+  // 计算现金流数据
+  calculateCashflow() {
+    const { assets, liabilities } = this.data
+    
+    // 计算月现金流入（资产的月收入）
+    const monthlyCashflowIn = assets.reduce((total, asset) => {
+      return total + (parseFloat(asset.monthlyIncome) || 0)
+    }, 0)
+    
+    // 计算月现金流出（负债的月还款）
+    const monthlyCashflowOut = liabilities.reduce((total, liability) => {
+      return total + (parseFloat(liability.monthlyPayment) || 0)
+    }, 0)
+    
+    // 净月现金流
+    const netMonthlyCashflow = monthlyCashflowIn - monthlyCashflowOut
+    
+    // 计算净资产
+    const totalAssetValue = assets.reduce((total, asset) => {
+      return total + (parseFloat(asset.currentValue) || parseFloat(asset.initialValue) || 0)
+    }, 0)
+    
+    const totalLiabilityValue = liabilities.reduce((total, liability) => {
+      return total + (parseFloat(liability.currentAmount) || parseFloat(liability.initialAmount) || 0)
+    }, 0)
+    
+    const netWorth = totalAssetValue - totalLiabilityValue
+    
+    // 确定现金流状态
+    let cashflowStatus = '健康'
+    if (netMonthlyCashflow < 0) {
+      cashflowStatus = '负流'
+    } else if (netMonthlyCashflow === 0) {
+      cashflowStatus = '平衡'
+    } else if (netMonthlyCashflow > monthlyCashflowOut * 0.5) {
+      cashflowStatus = '优秀'
+    }
+    
+    this.setData({
+      netWorth: this.formatNumber(netWorth),
+      monthlyCashflowIn: this.formatNumber(monthlyCashflowIn),
+      monthlyCashflowOut: this.formatNumber(monthlyCashflowOut),
+      netMonthlyCashflow: this.formatNumber(netMonthlyCashflow),
+      cashflowStatus: cashflowStatus,
+      assetsCount: assets.length,
+      liabilitiesCount: liabilities.length
+    })
+  },
+
   updateFilteredData() {
-    const { assets, liabilities, searchKeyword, sortFieldIndex, sortOrderIndex, categoryIndex, statusIndex, sortFieldOptions, sortOrderOptions, categoryLevelOne, categoryLevelTwo, statusOptions } = this.data
+    const { assets, liabilities, searchKeyword, sortFieldIndex, sortOrderIndex, categoryIndex, statusIndex, sortFieldOptions, sortOrderOptions, assetCategories, assetSubCategories, statusOptions } = this.data
 
     // 获取当前选择的分类值
-    const selectedCategoryL1 = categoryLevelOne[categoryIndex[0]].value
-    const selectedCategoryL2 = categoryLevelTwo[categoryIndex[0]][categoryIndex[1]].value
+    const selectedCategoryL1 = assetCategories[categoryIndex[0]].value
+    const selectedCategoryL2 = assetSubCategories[categoryIndex[0]][categoryIndex[1]].value
 
     // 过滤资产
     let filteredAssets = assets.filter(asset => {
@@ -241,13 +313,13 @@ Page({
       return true
     })
 
-    // 过滤负债
+    // 过滤负债（暂时使用相同的分类，后续需要独立的负债分类筛选）
     let filteredLiabilities = liabilities.filter(liability => {
       if (searchKeyword && !liability.name.includes(searchKeyword)) {
         return false
       }
       
-      // 分类过滤
+      // 分类过滤 - 负债暂时使用资产分类逻辑，实际应该有独立的负债分类
       if (categoryIndex[0] > 0) { // 不是"全部类别"
         if (categoryIndex[1] === 0) {
           // 选择了一级分类的"全部"，只过滤一级分类
@@ -417,18 +489,21 @@ Page({
     })
   },
 
-  getCategoryName(categoryL1, categoryL2) {
-    const { categoryLevelOne, categoryLevelTwo } = this.data
+  getCategoryName(categoryL1, categoryL2, isAsset = true) {
+    // 根据资产或负债选择对应的分类体系
+    const { assetCategories, assetSubCategories, liabilityCategories, liabilitySubCategories } = this.data
+    const categories = isAsset ? assetCategories : liabilityCategories
+    const subCategories = isAsset ? assetSubCategories : liabilitySubCategories
     
     // 查找一级分类
-    const level1 = categoryLevelOne.find(cat => cat.value === categoryL1)
+    const level1 = categories.find(cat => cat.value === categoryL1)
     if (!level1) return '其他'
     
-    const level1Index = categoryLevelOne.findIndex(cat => cat.value === categoryL1)
+    const level1Index = categories.findIndex(cat => cat.value === categoryL1)
     if (level1Index === -1) return level1.label
     
     // 查找二级分类
-    const level2List = categoryLevelTwo[level1Index] || []
+    const level2List = subCategories[level1Index] || []
     const level2 = level2List.find(cat => cat.value === categoryL2)
     
     if (categoryL2 === 'all' || !level2) {
@@ -442,7 +517,14 @@ Page({
     const statusMap = {
       active: '使用中',
       paused: '暂停',
-      completed: '已完成'
+      completed: '已完成',
+      dusty: '吃灰中',
+      rented: '出租中',
+      damaged: '已损坏',
+      processed: '已处理',
+      gifted: '已送人',
+      sold: '已卖出',
+      lost: '已丢失'
     }
     return statusMap[status] || '未知'
   },

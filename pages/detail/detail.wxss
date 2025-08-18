@@ -104,6 +104,34 @@
   background: #6c757d;
 }
 
+.info-value.status.dusty {
+  background: #868e96;
+}
+
+.info-value.status.rented {
+  background: #17a2b8;
+}
+
+.info-value.status.damaged {
+  background: #dc3545;
+}
+
+.info-value.status.processed {
+  background: #6f42c1;
+}
+
+.info-value.status.gifted {
+  background: #fd7e14;
+}
+
+.info-value.status.sold {
+  background: #20c997;
+}
+
+.info-value.status.lost {
+  background: #495057;
+}
+
 .notes-content {
   background: #f8f9fa;
   padding: 30rpx;

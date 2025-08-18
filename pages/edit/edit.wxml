@@ -1,36 +1,75 @@
 <view class="edit-container">
   <view class="header">
-    <text class="header-title">{{isEdit ? '编辑' : '添加'}}{{typeText}}</text>
+    <text class="header-title">{{isEdit ? '编辑' : '添加'}}项目</text>
   </view>
 
   <view class="form-container">
-    <view class="form-group">
+    <!-- 第一步：强制选择类型 -->
+    <view class="form-group type-selection" wx:if="{{!isEdit}}">
+      <text class="form-label">项目类型 *</text>
+      <text class="form-desc">根据《富爸爸穷爸爸》理念区分</text>
+      <view class="type-buttons">
+        <view 
+          class="type-button {{type === 'asset' ? 'active' : ''}}" 
+          bindtap="selectType" 
+          data-type="asset"
+        >
+          <view class="type-icon">💰</view>
+          <text class="type-label">资产</text>
+          <text class="type-desc">把钱放进你口袋</text>
+        </view>
+        <view 
+          class="type-button {{type === 'liability' ? 'active' : ''}}" 
+          bindtap="selectType" 
+          data-type="liability"
+        >
+          <view class="type-icon">💸</view>
+          <text class="type-label">负债</text>
+          <text class="type-desc">从你口袋取钱</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 显示当前选择的类型 -->
+    <view class="form-group" wx:if="{{type}}">
+      <text class="form-label">当前类型</text>
+      <view class="selected-type">
+        <text class="type-tag {{type}}">{{type === 'asset' ? '资产' : '负债'}}</text>
+      </view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="form-group" wx:if="{{type}}">
       <text class="form-label">名称 *</text>
       <input 
         value="{{formData.name}}" 
-        placeholder="请输入名称" 
+        placeholder="请输入{{type === 'asset' ? '资产' : '负债'}}名称" 
         class="form-input"
         bindinput="onNameInput"
       />
     </view>
 
-    <view class="form-group">
+    <!-- 分类选择 -->
+    <view class="form-group" wx:if="{{type}}">
       <text class="form-label">分类 *</text>
       <picker 
+        mode="multiSelector"
         value="{{categoryIndex}}" 
-        range="{{categoryOptions}}" 
-        range-key="name"
+        range="{{[categoryLevelOne, categoryLevelTwo[categoryIndex[0]]]}}" 
+        range-key="label"
         bindchange="onCategoryChange"
+        bindcolumnchange="onCategoryColumnChange"
         class="form-picker"
       >
         <view class="picker-display">
-          <text>{{categoryOptions[categoryIndex].name || '请选择分类'}}</text>
+          <text>{{categoryDisplayText}}</text>
           <text class="picker-arrow">▼</text>
         </view>
       </picker>
     </view>
 
-    <view class="form-group">
+    <!-- 状态选择 -->
+    <view class="form-group" wx:if="{{type}}">
       <text class="form-label">状态 *</text>
       <picker 
         value="{{statusIndex}}" 
@@ -48,89 +87,178 @@
 
     <!-- 资产特有字段 -->
     <block wx:if="{{type === 'asset'}}">
-      <view class="form-group">
-        <text class="form-label">初始价值 *</text>
-        <input 
-          value="{{formData.initialValue}}" 
-          type="number" 
-          placeholder="请输入初始价值" 
-          class="form-input"
-          bindinput="onInitialValueInput"
-        />
+      <view class="form-section">
+        <text class="section-title">💰 资产价值</text>
+        
+        <view class="form-group">
+          <text class="form-label">初始投入 *</text>
+          <input 
+            value="{{formData.initialValue}}" 
+            placeholder="购买时的价格" 
+            class="form-input"
+            type="digit"
+            bindinput="onInitialValueInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">当前价值</text>
+          <input 
+            value="{{formData.currentValue}}" 
+            placeholder="当前市场价值" 
+            class="form-input"
+            type="digit"
+            bindinput="onCurrentValueInput"
+          />
+        </view>
       </view>
-      <view class="form-group">
-        <text class="form-label">当前价值</text>
-        <input 
-          value="{{formData.currentValue}}" 
-          type="number" 
-          placeholder="请输入当前价值" 
-          class="form-input"
-          bindinput="onCurrentValueInput"
-        />
+
+      <view class="form-section cashflow-section">
+        <text class="section-title">📈 现金流收入（核心）</text>
+        <text class="section-desc">资产必须能够产生现金流入</text>
+        
+        <view class="form-group">
+          <text class="form-label">月收入 *</text>
+          <input 
+            value="{{formData.monthlyIncome}}" 
+            placeholder="每月现金流入" 
+            class="form-input"
+            type="digit"
+            bindinput="onMonthlyIncomeInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">年化收益率 *</text>
+          <input 
+            value="{{formData.annualReturn}}" 
+            placeholder="预期年化收益率(%)" 
+            class="form-input"
+            type="digit"
+            bindinput="onAnnualReturnInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">收入类型</text>
+          <picker 
+            value="{{incomeTypeIndex}}" 
+            range="{{incomeTypeOptions}}" 
+            range-key="label"
+            bindchange="onIncomeTypeChange"
+            class="form-picker"
+          >
+            <view class="picker-display">
+              <text>{{incomeTypeOptions[incomeTypeIndex].label}}</text>
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
       </view>
-      <view class="form-group">
-        <text class="form-label">每日收益</text>
-        <input 
-          value="{{formData.dailyIncome}}" 
-          type="number" 
-          placeholder="请输入每日收益" 
-          class="form-input"
-          bindinput="onDailyIncomeInput"
-        />
-      </view>
-      <view class="form-group">
-        <text class="form-label">年化收益率 (%)</text>
-        <input 
-          value="{{formData.annualReturn}}" 
-          type="number" 
-          placeholder="请输入年化收益率" 
-          class="form-input"
-          bindinput="onAnnualReturnInput"
-        />
+
+      <!-- 消费性资产特有字段 -->
+      <view wx:if="{{isConsumerAsset}}" class="form-section consumer-asset-section">
+        <text class="section-title">🛍️ 消费性资产管理</text>
+        <text class="section-desc">记录运营成本，不计算预期收益</text>
+        
+        <view class="form-group">
+          <text class="form-label">月度运营成本</text>
+          <input 
+            value="{{formData.monthlyOperatingCost}}" 
+            placeholder="如：话费、维修费等" 
+            class="form-input"
+            type="digit"
+            bindinput="onMonthlyOperatingCostInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">年折旧率 (%)</text>
+          <input 
+            value="{{formData.depreciationRate}}" 
+            placeholder="如：手机约30-50%" 
+            class="form-input"
+            type="digit"
+            bindinput="onDepreciationRateInput"
+          />
+        </view>
+
+        <view class="depreciation-warning">
+          <text class="warning-icon">⚠️</text>
+          <text class="warning-text">提醒：消费性资产通常快速贬值，请定期更新当前价值</text>
+        </view>
       </view>
     </block>
 
     <!-- 负债特有字段 -->
     <block wx:if="{{type === 'liability'}}">
-      <view class="form-group">
-        <text class="form-label">初始金额 *</text>
-        <input 
-          value="{{formData.initialAmount}}" 
-          type="number" 
-          placeholder="请输入初始金额" 
-          class="form-input"
-          bindinput="onInitialAmountInput"
-        />
+      <view class="form-section">
+        <text class="section-title">💸 负债金额</text>
+        
+        <view class="form-group">
+          <text class="form-label">初始借款 *</text>
+          <input 
+            value="{{formData.initialAmount}}" 
+            placeholder="借款总额" 
+            class="form-input"
+            type="digit"
+            bindinput="onInitialAmountInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">当前余额</text>
+          <input 
+            value="{{formData.currentAmount}}" 
+            placeholder="剩余欠款" 
+            class="form-input"
+            type="digit"
+            bindinput="onCurrentAmountInput"
+          />
+        </view>
       </view>
-      <view class="form-group">
-        <text class="form-label">当前金额</text>
-        <input 
-          value="{{formData.currentAmount}}" 
-          type="number" 
-          placeholder="请输入当前金额" 
-          class="form-input"
-          bindinput="onCurrentAmountInput"
-        />
-      </view>
-      <view class="form-group">
-        <text class="form-label">每日成本</text>
-        <input 
-          value="{{formData.dailyCost}}" 
-          type="number" 
-          placeholder="请输入每日成本" 
-          class="form-input"
-          bindinput="onDailyCostInput"
-        />
-      </view>
-      <view class="form-group">
-        <text class="form-label">年化利率 (%)</text>
-        <input 
-          value="{{formData.annualRate}}" 
-          type="number" 
-          placeholder="请输入年化利率" 
-          class="form-input"
-          bindinput="onAnnualRateInput"
-        />
+
+      <view class="form-section cashflow-section">
+        <text class="section-title">📉 现金流支出（核心）</text>
+        <text class="section-desc">负债必须明确现金流出成本</text>
+        
+        <view class="form-group">
+          <text class="form-label">月还款额 *</text>
+          <input 
+            value="{{formData.monthlyPayment}}" 
+            placeholder="每月还款金额" 
+            class="form-input"
+            type="digit"
+            bindinput="onMonthlyPaymentInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">年利率 *</text>
+          <input 
+            value="{{formData.annualRate}}" 
+            placeholder="年化利率(%)" 
+            class="form-input"
+            type="digit"
+            bindinput="onAnnualRateInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">负债性质</text>
+          <picker 
+            value="{{debtTypeIndex}}" 
+            range="{{debtTypeOptions}}" 
+            range-key="label"
+            bindchange="onDebtTypeChange"
+            class="form-picker"
+          >
+            <view class="picker-display">
+              <text>{{debtTypeOptions[debtTypeIndex].label}}</text>
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
       </view>
     </block>
 

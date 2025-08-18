@@ -61,7 +61,14 @@ Page({
     const statusMap = {
       active: '使用中',
       paused: '暂停',
-      completed: '已完成'
+      completed: '已完成',
+      dusty: '吃灰中',
+      rented: '出租中',
+      damaged: '已损坏',
+      processed: '已处理',
+      gifted: '已送人',
+      sold: '已卖出',
+      lost: '已丢失'
     }
     return statusMap[status] || '未知'
   },
