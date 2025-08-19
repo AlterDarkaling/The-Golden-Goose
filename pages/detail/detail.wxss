@@ -308,42 +308,7 @@
   color: #8892b0;
 }
 
-/* 使用记录样式 */
-.usage-record-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20rpx;
-  margin-top: 20rpx;
-}
 
-.usage-item {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.usage-date, .usage-count {
-  display: block;
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #00f5ff;
-  margin-bottom: 8rpx;
-}
-
-.usage-label {
-  font-size: 24rpx;
-  color: #8892b0;
-}
-
-.warranty-status {
-  display: block;
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #10ac84;
-  margin-bottom: 8rpx;
-}
 
 /* 其他费用样式 */
 .section-title-with-action {

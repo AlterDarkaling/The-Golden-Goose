@@ -181,21 +181,36 @@
 
         <!-- 实物资产特殊字段 -->
         <block wx:if="{{formData.categoryL1 === 'physical_assets'}}">
-          <!-- 消费型资产折旧设置 -->
+          <!-- 消费型资产特殊字段 -->
           <block wx:if="{{formData.categoryL2 === 'consumer_assets'}}">
-            <view class="depreciation-section">
-              <text class="section-subtitle">📉 折旧设置</text>
-              <view class="form-group">
+            <view class="form-group">
+              <text class="form-label">月度运营成本</text>
+              <input 
+                value="{{formData.monthlyOperatingCost}}" 
+                placeholder="如：话费、维修费等" 
+                class="form-input"
+                type="digit"
+                bindinput="onMonthlyOperatingCostInput"
+              />
+            </view>
+
+            <view class="form-group">
+              <view class="form-label-with-tip">
                 <text class="form-label">年折旧率 (%)</text>
-                <input 
-                  value="{{formData.depreciationRate}}" 
-                  placeholder="系统将自动设置" 
-                  class="form-input"
-                  type="digit"
-                  bindinput="onDepreciationRateInput"
-                />
-                <text class="form-hint">系统会根据物品类型自动设置折旧率</text>
+                <view class="tip-btn" bindtap="showDepreciationTip">💡 参考</view>
               </view>
+              <input 
+                value="{{formData.depreciationRate}}" 
+                placeholder="如：手机25%，电脑20%等" 
+                class="form-input"
+                type="digit"
+                bindinput="onDepreciationRateInput"
+              />
+            </view>
+
+            <view class="depreciation-warning">
+              <text class="warning-icon">⚠️</text>
+              <text class="warning-text">提醒：设置合理的折旧率有助于准确计算资产价值变化</text>
             </view>
           </block>
           
@@ -358,27 +373,7 @@
         </view>
       </view>
 
-      <!-- 消费性资产运营成本 -->
-      <view wx:if="{{formData.categoryL1 === 'physical_assets' && formData.categoryL2 === 'consumer_assets'}}" class="form-section consumer-asset-section">
-        <text class="section-title">🛍️ 消费性资产管理</text>
-        <text class="section-desc">记录运营成本，不计算预期收益</text>
-        
-        <view class="form-group">
-          <text class="form-label">月度运营成本</text>
-          <input 
-            value="{{formData.monthlyOperatingCost}}" 
-            placeholder="如：话费、维修费等" 
-            class="form-input"
-            type="digit"
-            bindinput="onMonthlyOperatingCostInput"
-          />
-        </view>
 
-        <view class="depreciation-warning">
-          <text class="warning-icon">⚠️</text>
-          <text class="warning-text">提醒：消费性资产通常快速贬值，请定期更新当前价值</text>
-        </view>
-      </view>
     </block>
 
     <!-- 负债特有字段 -->
@@ -616,5 +611,75 @@
   <view class="button-group">
     <button class="btn btn-cancel" bindtap="goBack">取消</button>
     <button class="btn btn-save" bindtap="handleSave">保存</button>
+  </view>
+</view>
+
+<!-- 折旧率参考弹窗 -->
+<view class="modal-overlay {{showDepreciationModal ? 'show' : ''}}" bindtap="hideDepreciationTip">
+  <view class="modal-content depreciation-modal" catchtap="">
+    <view class="modal-header">
+      <text class="modal-title">📚 常见消费品折旧率参考</text>
+      <view class="close-btn" bindtap="hideDepreciationTip">✕</view>
+    </view>
+    
+    <view class="modal-body">
+      <view class="depreciation-category">
+        <text class="category-title">📱 电子产品</text>
+        <view class="depreciation-list">
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="25">
+            <text class="item-name">智能手机</text>
+            <text class="item-rate">25%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="20">
+            <text class="item-name">笔记本电脑</text>
+            <text class="item-rate">20%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="15">
+            <text class="item-name">台式电脑</text>
+            <text class="item-rate">15%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="18">
+            <text class="item-name">平板电脑</text>
+            <text class="item-rate">18%/年</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="depreciation-category">
+        <text class="category-title">🚗 交通工具</text>
+        <view class="depreciation-list">
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="12">
+            <text class="item-name">家用汽车</text>
+            <text class="item-rate">12%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="20">
+            <text class="item-name">摩托车/电动车</text>
+            <text class="item-rate">20%/年</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="depreciation-category">
+        <text class="category-title">🏠 家具家电</text>
+        <view class="depreciation-list">
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="10">
+            <text class="item-name">冰箱/洗衣机</text>
+            <text class="item-rate">10%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="15">
+            <text class="item-name">空调/电视</text>
+            <text class="item-rate">15%/年</text>
+          </view>
+          <view class="depreciation-item" bindtap="selectDepreciationRate" data-rate="8">
+            <text class="item-name">家具</text>
+            <text class="item-rate">8%/年</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="modal-footer">
+      <text class="footer-note">💡 这些只是参考值，实际折旧率可能因品牌、使用频率等因素而异</text>
+    </view>
   </view>
 </view>

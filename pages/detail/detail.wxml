@@ -16,89 +16,60 @@
     <view class="value-analysis-grid">
       <block wx:if="{{type === 'asset'}}">
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.originalValue || 0}}</text>
+          <text class="value-amount">¥{{valueAnalysis.purchasePriceText || '0.00'}}</text>
           <text class="value-label">购买价格</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.currentValue || 0}}</text>
-          <text class="value-label">预计残值</text>
+          <text class="value-amount">¥{{valueAnalysis.currentMarketValueText || '0.00'}}</text>
+          <text class="value-label">当前市值</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.totalValue || 0}}</text>
-          <text class="value-label">当前总价</text>
+          <text class="value-amount">¥{{valueAnalysis.accumulatedDepreciationText || '0.00'}}</text>
+          <text class="value-label">累计折旧</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.dailyCost || 0}}</text>
-          <text class="value-label">按天成本</text>
+          <text class="value-amount">¥{{valueAnalysis.operatingCostText || '0.00'}}</text>
+          <text class="value-label">运营成本</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">-</text>
-          <text class="value-label">按次成本</text>
+          <text class="value-amount">{{valueAnalysis.usageDaysText || '0'}}天</text>
+          <text class="value-label">使用天数</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.projectedCost || 0}}</text>
-          <text class="value-label">预计成本</text>
+          <text class="value-amount">¥{{valueAnalysis.dailyCostText || '0.00'}}</text>
+          <text class="value-label">每日成本</text>
         </view>
       </block>
       <block wx:if="{{type === 'liability'}}">
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.originalAmount || 0}}</text>
+          <text class="value-amount">¥{{valueAnalysis.originalAmountText || '0.00'}}</text>
           <text class="value-label">借款金额</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.totalInterest || 0}}</text>
+          <text class="value-amount">¥{{valueAnalysis.totalInterestText || '0.00'}}</text>
           <text class="value-label">总利息</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.paidAmount || 0}}</text>
+          <text class="value-amount">¥{{valueAnalysis.paidAmountText || '0.00'}}</text>
           <text class="value-label">已还本金</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.remainingAmount || 0}}</text>
+          <text class="value-amount">¥{{valueAnalysis.remainingAmountText || '0.00'}}</text>
           <text class="value-label">剩余本金</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">{{valueAnalysis.completionRate || 0}}%</text>
+          <text class="value-amount">{{valueAnalysis.completionRateText || '0'}}%</text>
           <text class="value-label">完成度</text>
         </view>
         <view class="value-item">
-          <text class="value-amount">{{valueAnalysis.remainingMonths || 0}}期</text>
+          <text class="value-amount">{{valueAnalysis.remainingMonthsText || '0'}}期</text>
           <text class="value-label">剩余期数</text>
         </view>
       </block>
     </view>
   </view>
 
-  <!-- 使用记录 -->
-  <view wx:if="{{type === 'asset'}}" class="info-section">
-    <view class="section-title">📅 使用记录</view>
-    <view class="usage-record-grid">
-      <view class="usage-item">
-        <text class="usage-date">{{formatDate(itemData.createDate || itemData.createTime)}}</text>
-        <text class="usage-label">购买时间</text>
-      </view>
-      <view class="usage-item">
-        <text class="usage-count">{{usageRecord.daysUsed || 0}}天</text>
-        <text class="usage-label">使用天数</text>
-      </view>
-      <view class="usage-item">
-        <text class="usage-count">-</text>
-        <text class="usage-label">使用次数</text>
-      </view>
-      <view class="usage-item">
-        <text class="usage-date">{{formatDate(itemData.createDate || itemData.createTime)}}</text>
-        <text class="usage-label">开始使用</text>
-      </view>
-      <view class="usage-item">
-        <text class="warranty-status">{{warrantyInfo.status}}</text>
-        <text class="usage-label">保修剩余</text>
-      </view>
-      <view class="usage-item">
-        <text class="warranty-status">{{usageRecord.status}}</text>
-        <text class="usage-label">还需使用</text>
-      </view>
-    </view>
-  </view>
+
 
   <!-- 其他费用 -->
   <view class="info-section">
@@ -113,13 +84,13 @@
       <view wx:for="{{otherCosts}}" wx:key="id" class="cost-item">
         <view class="cost-info">
           <text class="cost-name">{{item.name}}</text>
-          <text class="cost-amount">¥{{formatNumber(item.amount)}}</text>
+          <text class="cost-amount">¥{{item.amountText}}</text>
         </view>
-        <text class="cost-date">{{formatDate(item.date)}}</text>
+        <text class="cost-date">{{item.dateText}}</text>
       </view>
       <view class="costs-summary">
         <text class="summary-label">总计：</text>
-        <text class="summary-amount">¥{{formatNumber(otherCostsTotal)}}</text>
+        <text class="summary-amount">¥{{otherCostsTotalText}}</text>
       </view>
     </view>
   </view>
@@ -131,11 +102,11 @@
     <view class="chart-container">
       <view class="chart-area">
         <view class="y-axis">
-          <text class="y-label">¥{{formatNumber(trendData.maxValue || 0)}}</text>
-          <text class="y-label">¥{{formatNumber((trendData.maxValue || 0) * 0.8)}}</text>
-          <text class="y-label">¥{{formatNumber((trendData.maxValue || 0) * 0.6)}}</text>
-          <text class="y-label">¥{{formatNumber((trendData.maxValue || 0) * 0.4)}}</text>
-          <text class="y-label">¥{{formatNumber((trendData.maxValue || 0) * 0.2)}}</text>
+          <text class="y-label">¥{{trendData.maxValueText}}</text>
+          <text class="y-label">¥{{trendData.maxValue80Text}}</text>
+          <text class="y-label">¥{{trendData.maxValue60Text}}</text>
+          <text class="y-label">¥{{trendData.maxValue40Text}}</text>
+          <text class="y-label">¥{{trendData.maxValue20Text}}</text>
           <text class="y-label">¥0.00</text>
         </view>
         <view class="chart-main">
@@ -185,11 +156,11 @@
         </view>
         <view wx:if="{{itemData.costPrice}}" class="special-item">
           <text class="special-label">成本价</text>
-          <text class="special-value">¥{{formatNumber(itemData.costPrice)}}</text>
+          <text class="special-value">¥{{itemData.costPriceText}}</text>
         </view>
         <view wx:if="{{itemData.currentPrice}}" class="special-item">
           <text class="special-label">当前价</text>
-          <text class="special-value">¥{{formatNumber(itemData.currentPrice)}}</text>
+          <text class="special-value">¥{{itemData.currentPriceText}}</text>
         </view>
       </block>
 
@@ -205,7 +176,7 @@
         </view>
         <view wx:if="{{itemData.loanDate}}" class="special-item">
           <text class="special-label">放款日期</text>
-          <text class="special-value">{{formatDate(itemData.loanDate)}}</text>
+          <text class="special-value">{{itemData.loanDateText}}</text>
         </view>
         <view wx:if="{{itemData.relatedAssetName}}" class="special-item">
           <text class="special-label">关联资产</text>
@@ -222,11 +193,11 @@
         <view wx:if="{{depreciationInfo}}" class="depreciation-info">
           <view class="special-item">
             <text class="special-label">累计折旧</text>
-            <text class="special-value negative">¥{{formatNumber(depreciationInfo.totalDepreciation)}}</text>
+            <text class="special-value negative">¥{{depreciationInfo.totalDepreciationText}}</text>
           </view>
           <view class="special-item">
             <text class="special-label">月均折旧</text>
-            <text class="special-value">¥{{formatNumber(depreciationInfo.monthlyDepreciation)}}</text>
+            <text class="special-value">¥{{depreciationInfo.monthlyDepreciationText}}</text>
           </view>
           <view class="special-item">
             <text class="special-label">折旧进度</text>

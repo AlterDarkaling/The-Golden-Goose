@@ -18,8 +18,7 @@ Page({
     specialInfoTitle: '',
     // 新增数据
     valueAnalysis: {},
-    usageRecord: {},
-    warrantyInfo: {},
+
     otherCosts: [],
     otherCostsTotal: 0,
     trendData: {
@@ -54,20 +53,45 @@ Page({
       
       // 计算扩展数据
       const valueAnalysis = this.calculateValueAnalysis(item)
-      const usageRecord = this.calculateUsageRecord(item)
-      const warrantyInfo = this.calculateWarrantyInfo(item)
+
       const otherCosts = this.loadOtherCosts(item.id)
       const trendData = this.calculateTrendData(item)
       
+      // 预格式化其他费用数据
+      const formattedOtherCosts = otherCosts.map(cost => ({
+        ...cost,
+        amountText: this.formatNumber(cost.amount || 0),
+        dateText: this.formatDate(cost.date)
+      }))
+      
+      const otherCostsTotal = otherCosts.reduce((sum, cost) => sum + (cost.amount || 0), 0)
+      
+      // 预格式化趋势图数据
+      const formattedTrendData = {
+        ...trendData,
+        maxValueText: this.formatNumber(trendData.maxValue || 0),
+        maxValue80Text: this.formatNumber((trendData.maxValue || 0) * 0.8),
+        maxValue60Text: this.formatNumber((trendData.maxValue || 0) * 0.6),
+        maxValue40Text: this.formatNumber((trendData.maxValue || 0) * 0.4),
+        maxValue20Text: this.formatNumber((trendData.maxValue || 0) * 0.2)
+      }
+      
+      // 预格式化专项信息
+      const formattedItemData = {
+        ...item,
+        costPriceText: this.formatNumber(item.costPrice || 0),
+        currentPriceText: this.formatNumber(item.currentPrice || 0),
+        loanDateText: this.formatDate(item.loanDate)
+      }
+      
       this.setData({
-        itemData: item,
+        itemData: formattedItemData,
         displayAmount: this.formatNumber(this.data.type === 'asset' ? (item.currentValue || item.originalValue || item.initialValue) : (item.currentAmount || item.originalAmount || item.initialAmount)),
         valueAnalysis: valueAnalysis,
-        usageRecord: usageRecord,
-        warrantyInfo: warrantyInfo,
-        otherCosts: otherCosts,
-        otherCostsTotal: otherCosts.reduce((sum, cost) => sum + (cost.amount || 0), 0),
-        trendData: trendData,
+        otherCosts: formattedOtherCosts,
+        otherCostsTotal: otherCostsTotal,
+        otherCostsTotalText: this.formatNumber(otherCostsTotal),
+        trendData: formattedTrendData,
         ...financialData
       })
     } else {
@@ -163,7 +187,10 @@ Page({
     return {
       totalDepreciation,
       monthlyDepreciation,
-      depreciationPercent
+      depreciationPercent,
+      // 预格式化文本
+      totalDepreciationText: this.formatNumber(totalDepreciation),
+      monthlyDepreciationText: this.formatNumber(monthlyDepreciation)
     }
   },
 
@@ -329,26 +356,44 @@ Page({
       const currentValue = item.currentValue || originalValue
       const daysUsed = this.getDaysUsed(item.createDate || item.createTime)
       
-      // 计算预计残值（基于折旧率）
-      let projectedValue = currentValue
+      // 计算累计折旧
+      let accumulatedDepreciation = 0
       if (item.depreciationRate && daysUsed > 0) {
         const monthlyRate = item.depreciationRate / 100 / 12
         const monthsUsed = daysUsed / 30
-        projectedValue = originalValue * Math.pow(1 - monthlyRate, monthsUsed)
+        const deprecatedValue = originalValue * (1 - Math.pow(1 - monthlyRate, monthsUsed))
+        accumulatedDepreciation = Math.min(deprecatedValue, originalValue * 0.95) // 最多折旧95%
+      } else {
+        // 如果没有设置折旧率，按购买价格和当前市值计算
+        accumulatedDepreciation = Math.max(0, originalValue - currentValue)
       }
       
-      result.originalValue = originalValue          // 购买价格
-      result.currentValue = projectedValue         // 预计残值
-      result.totalValue = currentValue             // 当前总价
-      result.dailyCost = daysUsed > 0 ? (originalValue - projectedValue) / daysUsed : 0  // 按天成本
-      result.usageCost = 0                        // 按次成本（暂时为0）
-      result.projectedCost = originalValue        // 预计成本
-      
-      // 加上运营成本
+      // 计算运营成本
+      let operatingCost = 0
       if (item.monthlyOperatingCost && daysUsed > 0) {
         const monthsUsed = daysUsed / 30
-        result.projectedCost += monthsUsed * item.monthlyOperatingCost
+        operatingCost = monthsUsed * item.monthlyOperatingCost
       }
+      
+      // 计算每日成本（综合成本：折旧+运营）
+      const totalCostLoss = accumulatedDepreciation + operatingCost
+      const dailyCost = daysUsed > 0 ? totalCostLoss / daysUsed : 0
+      
+      // 预格式化所有数值为字符串（避免WXML函数调用问题）
+      result.purchasePrice = originalValue          // 原始数值
+      result.currentMarketValue = currentValue      // 原始数值
+      result.accumulatedDepreciation = accumulatedDepreciation  // 原始数值
+      result.operatingCost = operatingCost          // 原始数值
+      result.usageDays = daysUsed                   // 原始数值
+      result.dailyCost = dailyCost                  // 原始数值
+      
+      // 格式化文本（直接在WXML中使用）
+      result.purchasePriceText = this.formatNumber(originalValue)
+      result.currentMarketValueText = this.formatNumber(currentValue)
+      result.accumulatedDepreciationText = this.formatNumber(accumulatedDepreciation)
+      result.operatingCostText = this.formatNumber(operatingCost)
+      result.usageDaysText = daysUsed.toString()
+      result.dailyCostText = this.formatNumber(dailyCost)
     } else {
       const originalAmount = item.originalAmount || 0
       const currentAmount = item.currentAmount || originalAmount
@@ -370,37 +415,20 @@ Page({
       if (item.monthlyPayment && item.monthlyPayment > 0 && currentAmount > 0) {
         result.remainingMonths = Math.ceil(currentAmount / item.monthlyPayment)
       }
+      
+      // 格式化文本（直接在WXML中使用）
+      result.originalAmountText = this.formatNumber(originalAmount)
+      result.totalInterestText = this.formatNumber(result.totalInterest)
+      result.paidAmountText = this.formatNumber(paidAmount)
+      result.remainingAmountText = this.formatNumber(currentAmount)
+      result.completionRateText = result.completionRate.toString()
+      result.remainingMonthsText = result.remainingMonths.toString()
     }
     
     return result
   },
 
-  // 计算使用记录
-  calculateUsageRecord(item) {
-    const daysUsed = this.getDaysUsed(item.createDate || item.createTime)
-    const result = {
-      daysUsed: daysUsed,
-      status: '已达标' // 可以根据实际情况计算
-    }
-    
-    return result
-  },
 
-  // 计算保修信息
-  calculateWarrantyInfo(item) {
-    const result = {
-      status: '无保' // 默认无保修，可以根据item的保修期字段计算
-    }
-    
-    // 如果有保修期字段，可以计算剩余保修时间
-    if (item.warrantyMonths) {
-      const monthsUsed = this.getDaysUsed(item.createDate || item.createTime) / 30
-      const remainingMonths = Math.max(0, item.warrantyMonths - monthsUsed)
-      result.status = remainingMonths > 0 ? `${Math.ceil(remainingMonths)}个月` : '已过保'
-    }
-    
-    return result
-  },
 
   // 加载其他费用
   loadOtherCosts(itemId) {

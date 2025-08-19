@@ -11,6 +11,7 @@ Page({
     incomeTypeIndex: 0,
     debtTypeIndex: 0,
     isConsumerAsset: false, // 是否为消费性资产
+    showDepreciationModal: false, // 折旧率参考弹窗
     formData: {
       name: '',
       status: 'active',
@@ -832,5 +833,39 @@ Page({
 
   handleCancel() {
     wx.navigateBack()
+  },
+
+  // 折旧率输入
+  onDepreciationRateInput(e) {
+    this.setData({
+      'formData.depreciationRate': e.detail.value
+    })
+  },
+
+  // 显示折旧率参考
+  showDepreciationTip() {
+    this.setData({
+      showDepreciationModal: true
+    })
+  },
+
+  // 隐藏折旧率参考
+  hideDepreciationTip() {
+    this.setData({
+      showDepreciationModal: false
+    })
+  },
+
+  // 选择折旧率
+  selectDepreciationRate(e) {
+    const rate = e.currentTarget.dataset.rate
+    this.setData({
+      'formData.depreciationRate': rate.toString(),
+      showDepreciationModal: false
+    })
+    wx.showToast({
+      title: `已设置折旧率为${rate}%`,
+      icon: 'success'
+    })
   }
 })
