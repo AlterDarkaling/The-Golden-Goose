@@ -859,42 +859,7 @@
   font-weight: 500;
 }
 
-/* 演示数据按钮 */
-.demo-section {
-  padding: 20rpx;
-  text-align: center;
-}
 
-.demo-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 20rpx 40rpx;
-  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-  color: #E65100;
-  border: 2rpx solid #FFB74D;
-  border-radius: 25rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.demo-btn::after {
-  border: none;
-}
-
-.demo-btn:active {
-  transform: scale(0.98);
-  background: linear-gradient(135deg, #FFE0B2 0%, #FFCC02 100%);
-}
-
-.demo-icon {
-  font-size: 28rpx;
-}
-
-.demo-text {
-  font-size: 24rpx;
-}
 
 /* 响应式适配 */
 @media (max-width: 750rpx) {

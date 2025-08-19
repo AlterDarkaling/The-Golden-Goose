@@ -30,8 +30,8 @@
     </scroll-view>
   </view>
 
-  <!-- 时间段选择 -->
-  <view class="period-selector">
+  <!-- 时间段选择（仅在概览、利润表、现金流量表显示） -->
+  <view wx:if="{{activeReport === 'overview' || activeReport === 'income' || activeReport === 'cashflow'}}" class="period-selector">
     <view class="period-item {{periodType === 'monthly' ? 'active' : ''}}" 
           bindtap="switchPeriod" data-period="monthly">月度</view>
     <view class="period-item {{periodType === 'quarterly' ? 'active' : ''}}" 
@@ -40,9 +40,10 @@
           bindtap="switchPeriod" data-period="yearly">年度</view>
   </view>
 
-  <!-- 财务概览 -->
+
+
+  <!-- 财务概览（极简版） -->
   <view wx:if="{{activeReport === 'overview'}}" class="report-content">
-    <!-- 核心指标卡片 -->
     <view class="overview-cards">
       <view class="overview-card main-card">
         <view class="card-header">
@@ -50,17 +51,15 @@
           <text class="card-icon">💎</text>
         </view>
         <view class="card-content">
-          <text class="main-value {{reportData.netWorth >= 0 ? 'positive' : 'negative'}}">
-            ¥{{formatMoney(reportData.netWorth)}}
-          </text>
+          <text class="main-value">{{text.netWorth}}</text>
           <view class="sub-values">
             <view class="sub-item">
               <text class="sub-label">总资产</text>
-              <text class="sub-value positive">¥{{formatMoney(reportData.totalAssets)}}</text>
+              <text class="sub-value">{{text.totalAssets}}</text>
             </view>
             <view class="sub-item">
               <text class="sub-label">总负债</text>
-              <text class="sub-value negative">¥{{formatMoney(reportData.totalLiabilities)}}</text>
+              <text class="sub-value">{{text.totalLiabilities}}</text>
             </view>
           </view>
         </view>
@@ -68,114 +67,40 @@
 
       <view class="overview-card">
         <view class="card-header">
-          <text class="card-title">月现金流</text>
+          <text class="card-title">{{periodLabel}}现金流</text>
           <text class="card-icon">💸</text>
         </view>
         <view class="card-content">
-          <text class="main-value {{reportData.monthlyCashFlow >= 0 ? 'positive' : 'negative'}}">
-            {{reportData.monthlyCashFlow >= 0 ? '+' : ''}}¥{{formatMoney(reportData.monthlyCashFlow)}}
-          </text>
+          <text class="main-value">{{text.monthlyCashFlow}}</text>
           <view class="sub-values">
             <view class="sub-item">
-              <text class="sub-label">月收入</text>
-              <text class="sub-value positive">¥{{formatMoney(reportData.monthlyIncome)}}</text>
+              <text class="sub-label">{{periodLabel}}收入</text>
+              <text class="sub-value">{{text.monthlyIncome}}</text>
             </view>
             <view class="sub-item">
-              <text class="sub-label">月支出</text>
-              <text class="sub-value negative">¥{{formatMoney(reportData.monthlyExpenses)}}</text>
+              <text class="sub-label">{{periodLabel}}支出</text>
+              <text class="sub-value">{{text.monthlyExpenses}}</text>
             </view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 财务健康度 -->
-    <view class="health-indicator">
-      <view class="health-header">
-        <text class="health-title">财务健康度</text>
-        <text class="health-score {{reportData.netWorth > 0 && reportData.monthlyCashFlow > 0 ? 'excellent' : reportData.netWorth > 0 ? 'good' : 'warning'}}">
-          {{reportData.netWorth > 0 && reportData.monthlyCashFlow > 0 ? '优秀' : reportData.netWorth > 0 ? '良好' : '需改善'}}
-        </text>
-      </view>
-      <view class="health-metrics">
-        <view class="metric-item">
-          <text class="metric-label">资产负债率</text>
-          <text class="metric-value">{{formatPercentage(financialRatios.debtToAssetRatio * 100)}}</text>
-        </view>
-        <view class="metric-item">
-          <text class="metric-label">资产收益率</text>
-          <text class="metric-value">{{formatPercentage(financialRatios.returnOnAssets * 100)}}</text>
-        </view>
-        <view class="metric-item">
-          <text class="metric-label">收入稳定性</text>
-          <text class="metric-value">{{formatPercentage(financialRatios.incomeStability * 100)}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 资产分布图 -->
-    <view class="chart-card">
-      <view class="chart-header">
-        <text class="chart-title">资产分布</text>
-      </view>
-      <view class="chart-content">
-        <view wx:for="{{detailedAnalysis.assetStructure}}" wx:key="name" class="chart-item">
-          <view class="chart-bar">
-            <view class="bar-fill" style="width: {{item.percentage}}%; background: linear-gradient(90deg, #4CAF50, #8BC34A);"></view>
-          </view>
-          <view class="chart-info">
-            <text class="chart-name">{{item.name}}</text>
-            <text class="chart-value">¥{{formatMoneyShort(item.value)}}</text>
-            <text class="chart-percentage">{{formatPercentage(item.percentage)}}</text>
           </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 资产负债表 -->
+  <!-- 资产负债表（极简版） -->
   <view wx:if="{{activeReport === 'balance'}}" class="report-content">
     <view class="balance-sheet">
       <view class="balance-section">
         <view class="section-header">
           <text class="section-title">资产 Assets</text>
-          <text class="section-total">¥{{formatMoney(reportData.totalAssets)}}</text>
+          <text class="section-total">{{text.totalAssets}}</text>
         </view>
         <view class="balance-items">
-          <view class="balance-item">
+          <view wx:for="{{breakdown.assets}}" wx:key="name" class="balance-item">
             <view class="item-info">
-              <text class="item-name">流动资产</text>
-              <text class="item-desc">Cash & Short-term Assets</text>
+              <text class="item-name">{{item.name}}</text>
             </view>
-            <text class="item-value">¥{{formatMoney(balanceSheet.currentAssets)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">金融资产</text>
-              <text class="item-desc">Financial Assets</text>
-            </view>
-            <text class="item-value">¥{{formatMoney(balanceSheet.financialAssets)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">实物资产</text>
-              <text class="item-desc">Physical Assets</text>
-            </view>
-            <text class="item-value">¥{{formatMoney(balanceSheet.physicalAssets)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">工作收入价值</text>
-              <text class="item-desc">Human Capital Value</text>
-            </view>
-            <text class="item-value">¥{{formatMoney(balanceSheet.workIncome)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">其他资产</text>
-              <text class="item-desc">Other Assets</text>
-            </view>
-            <text class="item-value">¥{{formatMoney(balanceSheet.otherAssets)}}</text>
+            <text class="item-value">{{item.valueText}}</text>
           </view>
         </view>
       </view>
@@ -185,29 +110,14 @@
       <view class="balance-section">
         <view class="section-header">
           <text class="section-title">负债 Liabilities</text>
-          <text class="section-total negative">¥{{formatMoney(reportData.totalLiabilities)}}</text>
+          <text class="section-total">{{text.totalLiabilities}}</text>
         </view>
         <view class="balance-items">
-          <view class="balance-item">
+          <view wx:for="{{breakdown.liabilities}}" wx:key="name" class="balance-item">
             <view class="item-info">
-              <text class="item-name">流动负债</text>
-              <text class="item-desc">Current Liabilities</text>
+              <text class="item-name">{{item.name}}</text>
             </view>
-            <text class="item-value negative">¥{{formatMoney(balanceSheet.currentLiabilities)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">长期负债</text>
-              <text class="item-desc">Long-term Liabilities</text>
-            </view>
-            <text class="item-value negative">¥{{formatMoney(balanceSheet.longTermLiabilities)}}</text>
-          </view>
-          <view class="balance-item">
-            <view class="item-info">
-              <text class="item-name">其他负债</text>
-              <text class="item-desc">Other Liabilities</text>
-            </view>
-            <text class="item-value negative">¥{{formatMoney(balanceSheet.otherLiabilities)}}</text>
+            <text class="item-value">{{item.valueText}}</text>
           </view>
         </view>
       </view>
@@ -217,34 +127,32 @@
       <view class="balance-section">
         <view class="section-header net-worth">
           <text class="section-title">净资产 Net Worth</text>
-          <text class="section-total {{reportData.netWorth >= 0 ? 'positive' : 'negative'}}">
-            ¥{{formatMoney(reportData.netWorth)}}
-          </text>
+          <text class="section-total">{{text.netWorth}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 利润表 -->
+  <!-- 利润表（基础版） -->
   <view wx:if="{{activeReport === 'income'}}" class="report-content">
     <view class="income-statement">
       <view class="income-section">
         <view class="section-header">
           <text class="section-title">收入 Revenue</text>
-          <text class="section-total positive">¥{{formatMoney(incomeStatement.totalIncome)}}</text>
+          <text class="section-total positive">{{textIncome.totalIncome}}</text>
         </view>
         <view class="income-items">
           <view class="income-item">
             <text class="item-name">工作收入</text>
-            <text class="item-value positive">¥{{formatMoney(incomeStatement.workIncome)}}</text>
+            <text class="item-value positive">{{textIncome.workIncome}}</text>
           </view>
           <view class="income-item">
             <text class="item-name">投资收入</text>
-            <text class="item-value positive">¥{{formatMoney(incomeStatement.investmentIncome)}}</text>
+            <text class="item-value positive">{{textIncome.investmentIncome}}</text>
           </view>
           <view class="income-item">
             <text class="item-name">经营收入</text>
-            <text class="item-value positive">¥{{formatMoney(incomeStatement.operatingIncome)}}</text>
+            <text class="item-value positive">{{textIncome.operatingIncome}}</text>
           </view>
         </view>
       </view>
@@ -252,20 +160,20 @@
       <view class="income-section">
         <view class="section-header">
           <text class="section-title">费用 Expenses</text>
-          <text class="section-total negative">¥{{formatMoney(incomeStatement.totalExpenses)}}</text>
+          <text class="section-total negative">{{textIncome.totalExpenses}}</text>
         </view>
         <view class="income-items">
           <view class="income-item">
             <text class="item-name">经营费用</text>
-            <text class="item-value negative">¥{{formatMoney(incomeStatement.operatingExpenses)}}</text>
+            <text class="item-value negative">{{textIncome.operatingExpenses}}</text>
           </view>
           <view class="income-item">
             <text class="item-name">财务费用</text>
-            <text class="item-value negative">¥{{formatMoney(incomeStatement.financialExpenses)}}</text>
+            <text class="item-value negative">{{textIncome.financialExpenses}}</text>
           </view>
           <view class="income-item">
             <text class="item-name">折旧费用</text>
-            <text class="item-value negative">¥{{formatMoney(incomeStatement.depreciationExpenses)}}</text>
+            <text class="item-value negative">{{textIncome.depreciationExpenses}}</text>
           </view>
         </view>
       </view>
@@ -275,40 +183,13 @@
       <view class="income-section">
         <view class="section-header net-income">
           <text class="section-title">净收入 Net Income</text>
-          <text class="section-total {{incomeStatement.netIncome >= 0 ? 'positive' : 'negative'}}">
-            {{incomeStatement.netIncome >= 0 ? '+' : ''}}¥{{formatMoney(incomeStatement.netIncome)}}
-          </text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 收入费用饼图 -->
-    <view class="pie-charts">
-      <view class="pie-chart">
-        <text class="pie-title">收入结构</text>
-        <view class="pie-content">
-          <view wx:for="{{detailedAnalysis.incomeStructure}}" wx:key="name" class="pie-item">
-            <view class="pie-color" style="background: {{item.color || '#4CAF50'}};"></view>
-            <text class="pie-name">{{item.name}}</text>
-            <text class="pie-percentage">{{formatPercentage(item.percentage)}}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="pie-chart">
-        <text class="pie-title">费用结构</text>
-        <view class="pie-content">
-          <view wx:for="{{detailedAnalysis.expenseStructure}}" wx:key="name" class="pie-item">
-            <view class="pie-color" style="background: {{item.color || '#F44336'}};"></view>
-            <text class="pie-name">{{item.name}}</text>
-            <text class="pie-percentage">{{formatPercentage(item.percentage)}}</text>
-          </view>
+          <text class="section-total">{{textIncome.netIncome}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 现金流量表 -->
+  <!-- 现金流量表（基础版） -->
   <view wx:if="{{activeReport === 'cashflow'}}" class="report-content">
     <view class="cashflow-statement">
       <view class="cashflow-item">
@@ -316,9 +197,7 @@
           <text class="cashflow-title">经营活动现金流</text>
           <text class="cashflow-subtitle">Operating Cash Flow</text>
         </view>
-        <text class="cashflow-value {{cashFlowStatement.operatingCashFlow >= 0 ? 'positive' : 'negative'}}">
-          {{cashFlowStatement.operatingCashFlow >= 0 ? '+' : ''}}¥{{formatMoney(cashFlowStatement.operatingCashFlow)}}
-        </text>
+        <text class="cashflow-value">{{textCashflow.operatingCashFlow}}</text>
       </view>
 
       <view class="cashflow-item">
@@ -326,9 +205,7 @@
           <text class="cashflow-title">投资活动现金流</text>
           <text class="cashflow-subtitle">Investing Cash Flow</text>
         </view>
-        <text class="cashflow-value {{cashFlowStatement.investingCashFlow >= 0 ? 'positive' : 'negative'}}">
-          {{cashFlowStatement.investingCashFlow >= 0 ? '+' : ''}}¥{{formatMoney(cashFlowStatement.investingCashFlow)}}
-        </text>
+        <text class="cashflow-value">{{textCashflow.investingCashFlow}}</text>
       </view>
 
       <view class="cashflow-item">
@@ -336,9 +213,7 @@
           <text class="cashflow-title">筹资活动现金流</text>
           <text class="cashflow-subtitle">Financing Cash Flow</text>
         </view>
-        <text class="cashflow-value {{cashFlowStatement.financingCashFlow >= 0 ? 'positive' : 'negative'}}">
-          {{cashFlowStatement.financingCashFlow >= 0 ? '+' : ''}}¥{{formatMoney(cashFlowStatement.financingCashFlow)}}
-        </text>
+        <text class="cashflow-value">{{textCashflow.financingCashFlow}}</text>
       </view>
 
       <view class="cashflow-divider"></view>
@@ -348,137 +223,102 @@
           <text class="cashflow-title">净现金流</text>
           <text class="cashflow-subtitle">Net Cash Flow</text>
         </view>
-        <text class="cashflow-value {{cashFlowStatement.netCashFlow >= 0 ? 'positive' : 'negative'}}">
-          {{cashFlowStatement.netCashFlow >= 0 ? '+' : ''}}¥{{formatMoney(cashFlowStatement.netCashFlow)}}
-        </text>
-      </view>
-    </view>
-
-    <!-- 现金流趋势 -->
-    <view class="trend-chart">
-      <text class="trend-title">现金流趋势</text>
-      <view class="trend-content">
-        <view wx:for="{{trendAnalysis.cashFlowTrend}}" wx:key="month" class="trend-bar">
-          <view class="bar-container">
-            <view class="bar-fill {{item.value >= 0 ? 'positive' : 'negative'}}" 
-                  style="height: {{Math.abs(item.value) / 1000}}rpx;"></view>
-          </view>
-          <text class="bar-label">{{item.month}}</text>
-          <text class="bar-value">{{formatMoneyShort(item.value)}}</text>
-        </view>
+        <text class="cashflow-value">{{textCashflow.netCashFlow}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 财务分析 -->
+  <!-- 财务分析（折旧简版） -->
   <view wx:if="{{activeReport === 'analysis'}}" class="report-content">
-    <!-- 财务比率 -->
     <view class="ratio-analysis">
       <text class="analysis-title">财务比率分析</text>
       <view class="ratio-grid">
         <view class="ratio-item">
           <text class="ratio-name">流动比率</text>
-          <text class="ratio-value">{{formatRatio(financialRatios.currentRatio)}}</text>
+          <text class="ratio-value">{{textRatios.currentRatio}}</text>
           <text class="ratio-desc">Current Ratio</text>
         </view>
         <view class="ratio-item">
           <text class="ratio-name">资产负债率</text>
-          <text class="ratio-value">{{formatPercentage(financialRatios.debtToAssetRatio * 100)}}</text>
+          <text class="ratio-value">{{textRatios.debtToAssetRatio}}</text>
           <text class="ratio-desc">Debt-to-Asset</text>
         </view>
         <view class="ratio-item">
           <text class="ratio-name">资产收益率</text>
-          <text class="ratio-value">{{formatPercentage(financialRatios.returnOnAssets * 100)}}</text>
+          <text class="ratio-value">{{textRatios.returnOnAssets}}</text>
           <text class="ratio-desc">Return on Assets</text>
         </view>
         <view class="ratio-item">
           <text class="ratio-name">资产周转率</text>
-          <text class="ratio-value">{{formatRatio(financialRatios.assetTurnover)}}</text>
+          <text class="ratio-value">{{textRatios.assetTurnover}}</text>
           <text class="ratio-desc">Asset Turnover</text>
+        </view>
+        <view class="ratio-item">
+          <text class="ratio-name">收入稳定性</text>
+          <text class="ratio-value">{{textRatios.incomeStability}}</text>
+          <text class="ratio-desc">Income Stability</text>
+        </view>
+      </view>
+    </view>
+    <view class="trend-chart">
+      <text class="trend-title">净资产趋势</text>
+      <view class="trend-content">
+        <view wx:for="{{trendNetWorth}}" wx:key="month" class="trend-bar">
+          <view class="bar-container">
+            <view class="bar-fill {{item.barClass}}" style="height: {{item.barHeight}};"></view>
+          </view>
+          <text class="bar-label">{{item.month}}</text>
+          <text class="bar-value">{{item.valueText}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 折旧明细 -->
-    <view wx:if="{{detailedAnalysis.depreciationDetails.length > 0}}" class="depreciation-analysis">
+    <view class="trend-chart">
+      <text class="trend-title">现金流趋势</text>
+      <view class="trend-content">
+        <view wx:for="{{trendCashFlow}}" wx:key="month" class="trend-bar">
+          <view class="bar-container">
+            <view class="bar-fill {{item.barClass}}" style="height: {{item.barHeight}};"></view>
+          </view>
+          <text class="bar-label">{{item.month}}</text>
+          <text class="bar-value">{{item.valueText}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{depreciationList.length > 0}}" class="depreciation-analysis">
       <text class="analysis-title">折旧明细分析</text>
       <view class="depreciation-list">
-        <view wx:for="{{detailedAnalysis.depreciationDetails}}" wx:key="name" class="depreciation-item">
+        <view wx:for="{{depreciationList}}" wx:key="name" class="depreciation-item">
           <view class="depreciation-header">
             <text class="asset-name">{{item.name}}</text>
-            <text class="depreciation-rate">年折旧率 {{formatPercentage(item.depreciationRate * 100)}}</text>
+            <text class="depreciation-rate">{{item.rateText}}</text>
           </view>
           <view class="depreciation-values">
             <view class="depreciation-value">
               <text class="value-label">原值</text>
-              <text class="value-amount">¥{{formatMoney(item.originalValue)}}</text>
+              <text class="value-amount">{{item.originalText}}</text>
             </view>
             <view class="depreciation-value">
               <text class="value-label">现值</text>
-              <text class="value-amount">¥{{formatMoney(item.currentValue)}}</text>
+              <text class="value-amount">{{item.currentText}}</text>
             </view>
             <view class="depreciation-value">
               <text class="value-label">累计折旧</text>
-              <text class="value-amount negative">¥{{formatMoney(item.totalDepreciation)}}</text>
+              <text class="value-amount negative">{{item.totalDepreciationText}}</text>
             </view>
             <view class="depreciation-value">
               <text class="value-label">月折旧</text>
-              <text class="value-amount negative">¥{{formatMoney(item.monthlyDepreciation)}}</text>
+              <text class="value-amount negative">{{item.monthlyDepreciationText}}</text>
             </view>
           </view>
+          <text class="ratio-desc">使用月数：{{item.usageMonthsText}}</text>
         </view>
       </view>
     </view>
-
-    <!-- 贷款明细 -->
-    <view wx:if="{{detailedAnalysis.loanDetails.length > 0}}" class="loan-analysis">
-      <text class="analysis-title">贷款明细分析</text>
-      <view class="loan-list">
-        <view wx:for="{{detailedAnalysis.loanDetails}}" wx:key="name" class="loan-item">
-          <view class="loan-header">
-            <text class="loan-name">{{item.name}}</text>
-            <text class="loan-rate">年利率 {{formatPercentage(item.annualRate)}}</text>
-          </view>
-          <view class="loan-values">
-            <view class="loan-value">
-              <text class="value-label">原贷款额</text>
-              <text class="value-amount">¥{{formatMoney(item.originalAmount)}}</text>
-            </view>
-            <view class="loan-value">
-              <text class="value-label">剩余本金</text>
-              <text class="value-amount negative">¥{{formatMoney(item.remainingPrincipal)}}</text>
-            </view>
-            <view class="loan-value">
-              <text class="value-label">月还款</text>
-              <text class="value-amount negative">¥{{formatMoney(item.monthlyPayment)}}</text>
-            </view>
-            <view class="loan-value">
-              <text class="value-label">总利息</text>
-              <text class="value-amount negative">¥{{formatMoney(item.totalInterest)}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
+    <view wx:else class="ratio-analysis">
+      <text class="analysis-title">暂无可分析的折旧资产</text>
     </view>
   </view>
 
-  <!-- 操作按钮 -->
-  <view class="action-section">
-    <button class="action-btn primary" bindtap="showSmartAnalysis">
-      <text class="btn-icon">🤖</text>
-      <text class="btn-text">AI智能分析</text>
-    </button>
-    <button class="action-btn secondary" bindtap="exportReport">
-      <text class="btn-icon">📊</text>
-      <text class="btn-text">导出报告</text>
-    </button>
-  </view>
-
-  <!-- 演示数据按钮 -->
-  <view class="demo-section">
-    <button class="demo-btn" bindtap="createDemoData">
-      <text class="demo-icon">🎯</text>
-      <text class="demo-text">加载演示数据</text>
-    </button>
-  </view>
+  
 </scroll-view>

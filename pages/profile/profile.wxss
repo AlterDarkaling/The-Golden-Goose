@@ -295,7 +295,7 @@
   text-align: center;
 }
 
-/* 设置列表 */
+/* 功能列表 */
 .settings-section {
   margin: 20rpx;
   background: white;

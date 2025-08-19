@@ -6,13 +6,13 @@
         <view class="goal-info">
           <text class="goal-icon">{{item.categoryInfo.icon}}</text>
           <view class="goal-details">
-            <text class="goal-title">{{item.title}}</text>
+            <text class="goal-title">{{item.title}}<text class="deadline {{item.daysLeft < 0 ? 'expired' : item.daysLeft <= 7 ? 'urgent' : ''}}">({{item.daysLeftText}})</text></text>
             <text class="goal-category">{{item.categoryInfo.label}}</text>
           </view>
         </view>
         <view class="goal-amount">
-          <text class="current-amount">¥{{formatMoney(item.currentAmount)}}</text>
-          <text class="target-amount">/ ¥{{formatMoney(item.targetAmount)}}</text>
+          <text class="current-amount">¥{{item.currentAmountText}}</text>
+          <text class="target-amount">/ ¥{{item.targetAmountText}}</text>
         </view>
       </view>
       
@@ -20,7 +20,7 @@
         <view class="progress-bar">
           <view class="progress-fill" style="width: {{item.progress}}%;"></view>
         </view>
-        <text class="progress-text">{{item.progress.toFixed(1)}}%</text>
+        <text class="progress-text">{{item.progressText}}%</text>
       </view>
       
       <!-- 储蓄建议 -->
@@ -33,11 +33,11 @@
         <view class="advice-content">
           <view class="advice-item">
             <text class="advice-label">每日储蓄：</text>
-            <text class="advice-value">¥{{item.advice.dailyNeeded.toFixed(2)}}</text>
+            <text class="advice-value">¥{{item.dailyAdviceText}}</text>
           </view>
           <view class="advice-item">
             <text class="advice-label">每月储蓄：</text>
-            <text class="advice-value">¥{{item.advice.monthlyNeeded.toFixed(2)}}</text>
+            <text class="advice-value">¥{{item.monthlyAdviceText}}</text>
           </view>
         </view>
         <view wx:if="{{item.analysis.suggestions.length > 0}}" class="suggestions">
@@ -46,9 +46,6 @@
       </view>
       
       <view class="goal-footer">
-        <text class="deadline {{item.daysLeft < 0 ? 'expired' : item.daysLeft <= 7 ? 'urgent' : ''}}">
-          {{item.daysLeft > 0 ? '还有' + item.daysLeft + '天' : item.daysLeft === 0 ? '今天到期' : '已过期' + Math.abs(item.daysLeft) + '天'}}
-        </text>
         <view class="goal-actions">
           <button class="action-btn advice-btn" bindtap="showAdviceDetail" data-goal-id="{{item.id}}" catchtap>建议</button>
           <button class="action-btn update-btn" bindtap="updateProgress" data-goal-id="{{item.id}}" catchtap>更新</button>
@@ -103,7 +100,7 @@
           <view class="template-grid">
             <view wx:for="{{goalTemplates}}" wx:key="name" class="template-item" bindtap="selectTemplate" data-template="{{item}}">
               <text class="template-name">{{item.name}}</text>
-              <text class="template-amount">¥{{formatMoney(item.amount || item.months * item.multiplier)}}</text>
+              <text class="template-amount">¥{{item.amountText}}</text>
             </view>
           </view>
         </view>
@@ -137,6 +134,73 @@
       <view class="modal-footer">
         <button class="modal-btn cancel-btn" bindtap="hideAddGoalForm">取消</button>
         <button class="modal-btn save-btn" bindtap="saveGoal">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 更新进度弹窗 -->
+  <view wx:if="{{showUpdateGoal}}" class="modal-overlay" bindtap="hideUpdateGoal">
+    <view class="update-modal" catchtap>
+      <view class="update-header">
+        <view class="update-goal-info">
+          <text class="update-goal-icon">{{currentGoal.categoryInfo.icon}}</text>
+          <view class="update-goal-details">
+            <text class="update-goal-title">{{currentGoal.title}}</text>
+            <text class="update-goal-target">目标：¥{{currentGoal.targetAmountText}}</text>
+          </view>
+        </view>
+        <view class="close-btn" bindtap="hideUpdateGoal">×</view>
+      </view>
+
+      <view class="update-content">
+        <!-- 当前进度显示 -->
+        <view class="current-progress">
+          <view class="progress-visual">
+            <view class="progress-circle">
+              <text class="progress-percent">{{currentGoal.progressPercent}}%</text>
+            </view>
+            <view class="progress-bar-container">
+              <view class="progress-bar-bg">
+                <view class="progress-bar-fill" style="width: {{currentGoal.progress}}%;"></view>
+              </view>
+            </view>
+          </view>
+          <view class="progress-info">
+            <text class="current-text">当前：¥{{currentGoal.currentAmountText}}</text>
+            <text class="remaining-text">还需：¥{{currentGoal.remainingAmountText}}</text>
+          </view>
+        </view>
+
+        <!-- 金额输入 -->
+        <view class="amount-input-section">
+          <text class="input-label">添加金额</text>
+          <view class="amount-input-container">
+            <text class="currency-symbol">¥</text>
+            <input 
+              class="amount-input" 
+              type="digit" 
+              value="{{addAmount}}" 
+              placeholder="0.00"
+              bindinput="onAddAmountInput"
+            />
+          </view>
+        </view>
+
+
+
+        <!-- 预览效果 -->
+        <view class="update-preview">
+          <text class="preview-label">添加后总额</text>
+          <view class="preview-progress">
+            <text class="preview-amount">¥{{previewAmountText}}</text>
+            <text class="preview-percent">{{previewProgress}}%</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="update-footer">
+        <button class="cancel-btn" bindtap="hideUpdateGoal">取消</button>
+        <button class="confirm-btn" bindtap="confirmUpdate">确认添加</button>
       </view>
     </view>
   </view>

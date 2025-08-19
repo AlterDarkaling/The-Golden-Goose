@@ -189,7 +189,5 @@ Page({
     wx.setStorageSync('assets_data', sampleAssets)
     wx.setStorageSync('liabilities_data', sampleLiabilities)
     wx.setStorageSync('has_sample_data', true)
-    
-    console.log('示例数据创建完成')
   }
 })

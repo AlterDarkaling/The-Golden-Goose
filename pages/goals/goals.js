@@ -4,7 +4,12 @@ Page({
   data: {
     goals: [],
     showAddGoal: false,
+    showUpdateGoal: false,
     goalTemplates: [],
+    currentGoal: null,
+    addAmount: '',
+    previewProgress: '0.0',
+    previewAmountText: '0.00',
     newGoal: {
       title: '',
       targetAmount: '',
@@ -48,13 +53,38 @@ Page({
         const categoryInfo = this.getCategoryInfo(goal.category)
         const analysis = this.analyzeGoal(goal)
         
+        // 预计算显示文本
+        const progressText = progress.toFixed(1)
+        const progressPercent = progress.toFixed(0)
+        const dailyAdviceText = analysis && analysis.advice ? analysis.advice.dailyNeeded.toFixed(2) : '0.00'
+        const monthlyAdviceText = analysis && analysis.advice ? analysis.advice.monthlyNeeded.toFixed(2) : '0.00'
+        
+        // 计算剩余天数显示文本
+        let daysLeftText = ''
+        if (daysLeft > 0) {
+          daysLeftText = `还有${daysLeft}天`
+        } else if (daysLeft === 0) {
+          daysLeftText = '今天到期'
+        } else {
+          daysLeftText = `已过期${Math.abs(daysLeft)}天`
+        }
+        
         return {
           ...goal,
           progress,
           daysLeft,
           categoryInfo,
           analysis,
-          advice: analysis ? analysis.advice : null
+          advice: analysis ? analysis.advice : null,
+          // 预计算的显示文本
+          progressText,
+          progressPercent,
+          dailyAdviceText,
+          monthlyAdviceText,
+          daysLeftText,
+          // 预格式化的金额显示文本
+          currentAmountText: this.formatMoney(goal.currentAmount),
+          targetAmountText: this.formatMoney(goal.targetAmount)
         }
       })
       
@@ -262,30 +292,74 @@ Page({
     }
   },
 
-  // 更新目标进度
+  // 显示更新进度界面
   updateProgress(e) {
     const { goalId } = e.currentTarget.dataset
     const goal = this.data.goals.find(g => g.id === goalId)
     
     if (!goal) return
 
-    wx.showModal({
-      title: '更新进度',
-      content: `当前进度：¥${goal.currentAmount.toFixed(2)}\n目标金额：¥${goal.targetAmount.toFixed(2)}`,
-      editable: true,
-      placeholderText: '请输入当前金额',
-      success: (res) => {
-        if (res.confirm && res.content) {
-          const newAmount = parseFloat(res.content)
-          if (isNaN(newAmount) || newAmount < 0) {
-            wx.showToast({ title: '请输入有效金额', icon: 'none' })
-            return
-          }
-          
-          this.updateGoalAmount(goalId, newAmount)
-        }
-      }
+    const previewProgress = ((goal.currentAmount / goal.targetAmount) * 100).toFixed(1)
+    
+    // 预计算显示文本，避免WXML中的复杂计算
+    const goalWithDisplayText = {
+      ...goal,
+      currentAmountText: this.formatMoney(goal.currentAmount),
+      targetAmountText: this.formatMoney(goal.targetAmount),
+      remainingAmountText: this.formatMoney(goal.targetAmount - goal.currentAmount)
+    }
+
+    this.setData({
+      showUpdateGoal: true,
+      currentGoal: goalWithDisplayText,
+      addAmount: '',
+      previewProgress: previewProgress,
+      previewAmountText: goalWithDisplayText.currentAmountText
     })
+  },
+
+  // 隐藏更新界面
+  hideUpdateGoal() {
+    this.setData({
+      showUpdateGoal: false,
+      currentGoal: null,
+      addAmount: '',
+      previewProgress: '0.0',
+      previewAmountText: '0.00'
+    })
+  },
+
+  // 添加金额输入
+  onAddAmountInput(e) {
+    const addAmount = e.detail.value
+    const { currentGoal } = this.data
+    const addAmountNum = parseFloat(addAmount || 0)
+    const newTotalAmount = currentGoal.currentAmount + addAmountNum
+    const previewProgress = currentGoal ? ((newTotalAmount / currentGoal.targetAmount) * 100).toFixed(1) : '0.0'
+    const previewAmountText = this.formatMoney(newTotalAmount)
+    
+    this.setData({
+      addAmount: addAmount,
+      previewProgress: previewProgress,
+      previewAmountText: previewAmountText
+    })
+  },
+
+
+
+  // 确认添加
+  confirmUpdate() {
+    const { addAmount, currentGoal } = this.data
+    const addAmountNum = parseFloat(addAmount)
+    
+    if (isNaN(addAmountNum) || addAmountNum <= 0) {
+      wx.showToast({ title: '请输入有效的添加金额', icon: 'none' })
+      return
+    }
+    
+    const newTotalAmount = currentGoal.currentAmount + addAmountNum
+    this.updateGoalAmount(currentGoal.id, newTotalAmount)
+    this.hideUpdateGoal()
   },
 
   updateGoalAmount(goalId, newAmount) {
@@ -363,7 +437,8 @@ Page({
   },
 
   formatMoney(amount) {
-    return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    const num = parseFloat(amount) || 0
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
 
   // 计算储蓄建议
@@ -456,7 +531,16 @@ Page({
       ]
     }
     
-    return templates[category] || []
+    const categoryTemplates = templates[category] || []
+    
+    // 为每个模板预格式化金额显示文本
+    return categoryTemplates.map(template => {
+      const amount = template.amount || (template.months * template.multiplier)
+      return {
+        ...template,
+        amountText: this.formatMoney(amount)
+      }
+    })
   },
 
   // 智能目标分析

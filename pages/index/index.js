@@ -144,6 +144,7 @@ Page({
   },
 
   onShow() {
+    this.checkLogin()  // 重新检查登录状态和加载用户信息
     this.loadData()
   },
 
@@ -161,8 +162,10 @@ Page({
     // 加载用户信息
     const user = StorageManager.getUser()
     if (user) {
-      // 计算显示头像：优先使用微信头像（如果用户选择使用），否则使用自定义头像
-      const displayAvatar = user.useWechatInfo && user.wechatAvatar ? user.wechatAvatar : user.avatar
+      // 计算显示头像：优先使用自定义头像，如果没有则使用微信头像
+      const displayAvatar = user.avatar || user.wechatAvatar
+      
+
       
       this.setData({
         userInfo: {

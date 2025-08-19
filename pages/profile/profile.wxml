@@ -113,14 +113,15 @@
         <view class="menu-icon">💾</view>
         <text class="menu-label">数据备份</text>
       </view>
-      <view class="menu-item" bindtap="handleSettings">
-        <view class="menu-icon">⚙️</view>
-        <text class="menu-label">应用设置</text>
+      <view class="menu-item" bindtap="handleDataRestore">
+        <view class="menu-icon">📥</view>
+        <text class="menu-label">数据恢复</text>
       </view>
+
     </view>
   </view>
 
-  <!-- 设置列表 -->
+  <!-- 功能列表 -->
   <view class="settings-section">
     <view class="setting-item" bindtap="handleAboutBooks">
       <view class="setting-left">
@@ -138,7 +139,7 @@
         <view class="setting-icon">👥</view>
         <view class="setting-content">
           <text class="setting-title">意见反馈</text>
-          <text class="setting-desc">抢先体验新功能、免费领取会员</text>
+          <text class="setting-desc">目前还是测试版</text>
         </view>
       </view>
       <text class="setting-arrow">></text>

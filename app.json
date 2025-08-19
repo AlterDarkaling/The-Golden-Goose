@@ -7,7 +7,8 @@
     "pages/profile/profile",
     "pages/report/report",
     "pages/goals/goals",
-    "pages/about/about"
+    "pages/about/about",
+    "pages/add-cost/add-cost"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -15,11 +16,6 @@
     "navigationBarTitleText": "会下金蛋的鹅",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#F5F5F5"
-  },
-  "permission": {
-    "scope.userInfo": {
-      "desc": "用于完善用户资料和提供个性化服务"
-    }
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

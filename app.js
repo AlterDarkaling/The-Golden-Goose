@@ -1,7 +1,6 @@
 // app.js
 App({
   onLaunch() {
-    console.log('App Launch')
     // 初始化应用
     this.initApp()
     // 迁移分类数据到新的二级分类格式
@@ -10,11 +9,11 @@ App({
   },
 
   onShow() {
-    console.log('App Show')
+    // App显示时的逻辑
   },
 
   onHide() {
-    console.log('App Hide')
+    // App隐藏时的逻辑
   },
 
   globalData: {
@@ -35,6 +34,5 @@ App({
 
   initDefaultSettings() {
     // 初始化默认设置
-    console.log('应用默认设置已初始化')
   }
 })
