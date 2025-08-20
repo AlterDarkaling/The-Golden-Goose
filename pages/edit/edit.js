@@ -1453,13 +1453,18 @@ Page({
 
     // 如果有薪资历史记录，使用精确计算
     if (formData.salaryHistory && formData.salaryHistory.length > 0) {
-      totalValue = this.calculateAccurateEarnings(formData.salaryHistory, startDate, endDate)
+      const workingMonthsPerYear = parseFloat(formData.workingMonthsPerYear) || 12
+      totalValue = this.calculateAccurateEarnings(formData.salaryHistory, startDate, endDate, workingMonthsPerYear)
     } else {
       // 如果没有薪资历史，使用简单平均值计算
       const currentSalary = parseFloat(formData.monthlyIncome) || 0
       const initialSalary = parseFloat(formData.initialSalary) || currentSalary
       const averageSalary = (initialSalary + currentSalary) / 2
-      totalValue = totalMonths * averageSalary
+      const workingMonthsPerYear = parseFloat(formData.workingMonthsPerYear) || 12
+      
+      // 按实际工作月数比例计算
+      const workingRatio = workingMonthsPerYear / 12
+      totalValue = totalMonths * averageSalary * workingRatio
     }
 
     // 格式化显示
@@ -1489,7 +1494,7 @@ Page({
   },
 
   // 精确计算历史收入
-  calculateAccurateEarnings(salaryHistory, startDate, currentDate) {
+  calculateAccurateEarnings(salaryHistory, startDate, currentDate, workingMonthsPerYear = 12) {
     if (!salaryHistory || salaryHistory.length === 0) {
       return 0
     }
@@ -1499,6 +1504,7 @@ Page({
     
     let totalEarnings = 0
     let periodStart = startDate
+    const workingRatio = workingMonthsPerYear / 12
 
     for (let i = 0; i < sortedHistory.length; i++) {
       const record = sortedHistory[i]
@@ -1526,7 +1532,8 @@ Page({
       const monthsInPeriod = (actualEndYear - periodStartYear) * 12 + (actualEndMonth - periodStartMonth)
       
       if (monthsInPeriod > 0) {
-        totalEarnings += monthsInPeriod * record.amount
+        // 按实际工作月数比例计算收入
+        totalEarnings += monthsInPeriod * record.amount * workingRatio
       }
 
       // 更新下一段的开始时间

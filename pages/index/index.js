@@ -182,22 +182,25 @@ Page({
     const liabilities = StorageManager.getLiabilities()
     
     // 处理数据，添加显示字段
+    const self = this
     const processedAssets = assets.map(asset => ({
       ...asset,
       type: 'asset',
       typeText: asset.categoryL1 === 'work_income' ? '工作' : '资产',
-      categoryName: this.getCategoryName(asset.categoryL1, asset.categoryL2, true),
-      displayAmount: this.formatNumber(asset.currentValue || asset.initialValue),
-      originalPrice: this.formatNumber(asset.originalValue || asset.initialValue || 0),
+      categoryName: self.getCategoryName(asset.categoryL1, asset.categoryL2, true),
+      displayAmount: self.formatNumber(asset.currentValue || asset.initialValue),
+      originalPrice: self.formatNumber(asset.originalValue || asset.initialValue || 0),
       // 计算实际月收入（针对工作收入）
       monthlyIncome: asset.categoryL1 === 'work_income' ? 
-        this.calculateActualMonthlyIncome(asset) : asset.monthlyIncome,
-      statusText: this.getStatusText(asset.status),
-      createTimeText: StorageManager.formatPurchaseDate(asset.createDate, asset.createTime),
+        self.calculateActualMonthlyIncome(asset) : asset.monthlyIncome,
+      statusText: self.getStatusText(asset.status),
+      // 工作收入优先显示入职日期，其他资产显示购买日期
+      createTimeText: asset.categoryL1 === 'work_income' ? 
+        self.formatWorkStartDate(asset) : StorageManager.formatPurchaseDate(asset.createDate, asset.createTime),
       // 排序用的数值字段
       amountValue: asset.currentValue || asset.initialValue || 0,
-      daysValue: this.calculateDaysSinceCreate(asset.createTime),
-      purchaseDateValue: this.getPurchaseDateValue(asset.createDate, asset.createTime),
+      daysValue: self.calculateDaysSinceCreate(asset.createTime),
+      purchaseDateValue: self.getPurchaseDateValue(asset.createDate, asset.createTime),
       dailyCostValue: asset.dailyIncome || 0 // 资产用每日收益
     }))
     
@@ -205,15 +208,15 @@ Page({
       ...liability,
       type: 'liability',
       typeText: '负债',
-      categoryName: this.getCategoryName(liability.categoryL1, liability.categoryL2, false),
-      displayAmount: this.formatNumber(liability.currentAmount || liability.initialAmount),
-      originalAmount: this.formatNumber(liability.originalAmount || liability.initialAmount || 0),
-      statusText: this.getStatusText(liability.status),
+      categoryName: self.getCategoryName(liability.categoryL1, liability.categoryL2, false),
+      displayAmount: self.formatNumber(liability.currentAmount || liability.initialAmount),
+      originalAmount: self.formatNumber(liability.originalAmount || liability.initialAmount || 0),
+      statusText: self.getStatusText(liability.status),
       createTimeText: StorageManager.formatPurchaseDate(liability.createDate, liability.createTime),
       // 排序用的数值字段
       amountValue: liability.currentAmount || liability.initialAmount || 0,
-      daysValue: this.calculateDaysSinceCreate(liability.createTime),
-      purchaseDateValue: this.getPurchaseDateValue(liability.createDate, liability.createTime),
+      daysValue: self.calculateDaysSinceCreate(liability.createTime),
+      purchaseDateValue: self.getPurchaseDateValue(liability.createDate, liability.createTime),
       dailyCostValue: liability.dailyCost || 0 // 负债用每日成本
     }))
 
@@ -602,6 +605,23 @@ Page({
     wx.navigateTo({
       url: '/pages/edit/edit'
     })
+  },
+
+  // 格式化工作收入的入职日期
+  formatWorkStartDate(asset) {
+    // 优先使用入职日期，如果没有则使用创建日期
+    const startDate = asset.startDate || asset.createDate
+    if (startDate) {
+      const date = new Date(startDate)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day} 入职`
+    } else if (asset.createTime) {
+      // 如果都没有，使用创建时间
+      return StorageManager.formatPurchaseDate(null, asset.createTime) + ' 入职'
+    }
+    return '入职日期未知'
   },
 
   // 计算工作收入的实际月收入

@@ -319,6 +319,11 @@
   color: #adb5bd;
 }
 
+.item-start-date {
+  font-size: 22rpx;
+  color: #adb5bd;
+}
+
 .item-borrow-date {
   font-size: 22rpx;
   color: #adb5bd;

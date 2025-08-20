@@ -464,7 +464,7 @@
             type="digit"
             bindinput="onWorkingMonthsPerYearInput"
           />
-          <text class="form-hint">💡 教师约10个月，其他职业一般12个月</text>
+          <text class="form-hint">💡 可以根据假期调整，默认12个月</text>
         </view>
 
         <view class="form-group">

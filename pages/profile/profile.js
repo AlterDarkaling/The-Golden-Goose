@@ -642,7 +642,7 @@ Page({
   generateBackupContent(backupData) {
     const { stats } = backupData
     
-    return `🦢 会下金蛋的鹅 - 数据备份
+    return `🦢 大鹅爱记账 - 数据备份
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 备份时间：${new Date(backupData.timestamp).toLocaleString()}
 📱 设备信息：${backupData.deviceInfo.platform} ${backupData.deviceInfo.version}
@@ -1263,7 +1263,7 @@ ${this.generateDetailedBackupContent(backupData)}
   handleFeedback() {
     wx.showModal({
       title: '意见反馈',
-      content: '感谢您使用会下金蛋的鹅！如有建议或问题，请通过以下方式联系我们：\n\n邮箱：darkaling@qq.com',
+      content: '感谢您使用大鹅爱记账！如有建议或问题，请通过以下方式联系我们：\n\n邮箱：darkaling@qq.com',
       confirmText: '复制邮箱',
       cancelText: '关闭',
       showCancel: true,

@@ -13,7 +13,7 @@
       </view>
       <view class="user-info">
         <view class="nickname-container">
-          <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '会下金蛋的鹅用户'}}</text>
+          <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '大鹅爱记账用户'}}</text>
           <!-- 隐藏的微信原生昵称输入，用于直接触发微信昵称选择 -->
           <input 
             type="nickname" 

@@ -126,7 +126,7 @@
               <text class="item-type-tag {{item.categoryL1 === 'work_income' ? 'income-tag' : 'asset-tag'}}">{{item.typeText}}</text>
             </view>
             <text class="item-category">{{item.categoryName}}</text>
-            <text class="item-purchase-date">{{item.createTimeText}}</text>
+            <text class="{{item.categoryL1 === 'work_income' ? 'item-start-date' : 'item-purchase-date'}}">{{item.createTimeText}}</text>
             <!-- 现金流信息 -->
             <view class="item-cashflow">
               <text class="cashflow-label">月收入: </text>

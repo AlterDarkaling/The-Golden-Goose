@@ -37,15 +37,20 @@
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    }
+    },
+    "condition": true
   },
   "compileType": "miniprogram",
   "libVersion": "2.19.4",
   "appid": "wx90559224c6a30a74",
-  "projectname": "会下金蛋的鹅",
+  "projectname": "大鹅爱记账",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
+  },
+  "projectArchitecture": "multiPlatform",
+  "simulatorPluginLibVersion": {
+    "wxext14566970e7e9f62": "3.6.5-39"
   }
 }

@@ -514,14 +514,17 @@ Page({
 
     // 如果有薪资历史记录，使用精确计算
     if (item.salaryHistory && item.salaryHistory.length > 0) {
-      totalEarnings = this.calculateAccurateEarnings(item.salaryHistory, startDate, endDate)
+      const workingMonthsPerYear = parseFloat(item.workingMonthsPerYear) || 12
+      totalEarnings = this.calculateAccurateEarnings(item.salaryHistory, startDate, endDate, workingMonthsPerYear)
       // 获取第一条记录作为初始薪资
       const sortedHistory = [...item.salaryHistory].sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate))
       initialSalary = sortedHistory[0]?.amount || currentSalary
     } else {
       // 如果没有薪资历史，使用简单平均值计算
       const averageSalary = (initialSalary + currentSalary) / 2
-      totalEarnings = totalMonths * averageSalary
+      const workingMonthsPerYear = parseFloat(item.workingMonthsPerYear) || 12
+      const workingRatio = workingMonthsPerYear / 12
+      totalEarnings = totalMonths * averageSalary * workingRatio
     }
     
     // 计算薪资增长
@@ -553,7 +556,7 @@ Page({
   },
 
   // 精确计算历史收入
-  calculateAccurateEarnings(salaryHistory, startDate, currentDate) {
+  calculateAccurateEarnings(salaryHistory, startDate, currentDate, workingMonthsPerYear = 12) {
     if (!salaryHistory || salaryHistory.length === 0) {
       return 0
     }
@@ -563,6 +566,7 @@ Page({
     
     let totalEarnings = 0
     let periodStart = startDate
+    const workingRatio = workingMonthsPerYear / 12
 
     for (let i = 0; i < sortedHistory.length; i++) {
       const record = sortedHistory[i]
@@ -590,7 +594,8 @@ Page({
       const monthsInPeriod = (actualEndYear - periodStartYear) * 12 + (actualEndMonth - periodStartMonth)
       
       if (monthsInPeriod > 0) {
-        totalEarnings += monthsInPeriod * record.amount
+        // 按实际工作月数比例计算收入
+        totalEarnings += monthsInPeriod * record.amount * workingRatio
       }
 
       // 更新下一段的开始时间
@@ -929,7 +934,8 @@ Page({
 
     // 达到50%残值时间
     if (depreciationRate > 0) {
-      const halfValueMonths = Math.log(0.5) / Math.log(1 - depreciationRate / 12)
+      const monthlyRate = depreciationRate / 12
+      const halfValueMonths = Math.log(0.5) / Math.log(1 - monthlyRate)
       const halfValueDate = new Date(purchaseTime)
       halfValueDate.setMonth(halfValueDate.getMonth() + Math.ceil(halfValueMonths))
       if (halfValueDate > now) {
@@ -943,7 +949,8 @@ Page({
 
     // 建议更换时间（当残值低于30%时）
     if (depreciationRate > 0) {
-      const replaceMonths = Math.log(0.3) / Math.log(1 - depreciationRate / 12)
+      const monthlyRate = depreciationRate / 12
+      const replaceMonths = Math.log(0.3) / Math.log(1 - monthlyRate)
       const replaceDate = new Date(purchaseTime)
       replaceDate.setMonth(replaceDate.getMonth() + Math.ceil(replaceMonths))
       if (replaceDate > now) {
