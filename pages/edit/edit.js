@@ -12,9 +12,23 @@ Page({
     debtTypeIndex: 0,
     isConsumerAsset: false, // 是否为消费性资产
     showDepreciationModal: false, // 折旧率参考弹窗
+    showLogoModal: false, // logo选择弹窗
+    logoSelectorType: 'emoji', // 当前选择类型：emoji 或 image
+    showSalaryHistoryModal: false, // 薪资历史管理弹窗
+    emojiCategories: {
+      finance: ['💰', '💳', '💎', '💸', '💵', '💴', '💶', '💷', '🪙', '💹'],
+      property: ['🏠', '🏢', '🏭', '🏪', '🚗', '🚙', '🚕', '🛻', '🏍️', '🚲'],
+      electronics: ['📱', '💻', '⌚', '🖥️', '📺', '📷', '🎧', '⌨️', '🖱️', '💿'],
+      fashion: ['👔', '👗', '👟', '👠', '👜', '🎒', '💍', '👑', '🕶️', '🧳'],
+      lifestyle: ['🛏️', '🪑', '🛋️', '🚿', '🛁', '🔧', '🔨', '⚒️', '🛠️', '🔩']
+    },
     formData: {
       name: '',
       status: 'active',
+      // Logo字段
+      logoType: '', // 'emoji' 或 'image'
+      logoEmoji: '', // 选择的emoji
+      logoUrl: '', // 上传的图片URL
       // 资产字段
       initialValue: '',
       currentValue: '',
@@ -25,7 +39,17 @@ Page({
       depreciationRate: '', // 年折旧率
       // 工作收入特有字段
       workUnit: '', // 工作单位
-      position: '', // 职位
+      salaryStructure: '', // 薪资结构
+      startDate: '', // 入职日期
+      endDate: '', // 离职日期（可选）
+      initialSalary: '', // 入职薪资（保留兼容性）
+      salaryHistory: [], // 薪资历史记录
+      dailyWorkHours: '8', // 每日工作时间（小时）
+      weeklyWorkDays: '5', // 每周工作天数
+      workingMonthsPerYear: '12', // 每年工作月数（默认12个月）
+      // 额外收入管理
+      fixedAllowances: '0', // 固定额外收入（津贴、补助等，月度金额）
+      variableIncomeHistory: [], // 可变额外收入历史记录（提成、奖金等）
       // 增值型资产特有字段
       incomeType: 'monthly_income', // 收入方式：monthly_income(产生收入) 或 annual_return(年化收益)
       // 负债字段
@@ -38,6 +62,21 @@ Page({
       createDate: '',
       categoryL1: '',
       categoryL2: ''
+    },
+    
+    // 新薪资记录数据
+    newSalaryRecord: {
+      effectiveDate: '',
+      amount: '',
+      reason: ''
+    },
+    // 可变收入管理
+    showVariableIncomeModal: false,
+    newVariableRecord: {
+      date: '',
+      amount: '',
+      type: '',
+      description: ''
     },
     // 资产状态选项
     assetStatusOptions: [
@@ -57,10 +96,35 @@ Page({
       { label: '逾期未还', value: 'overdue' },
       { label: '提前还清', value: 'prepaid' }
     ],
+    // 基础薪资结构选项（按时间单位从小到大排序：时、日、月）
+    salaryStructureOptions: [
+      { label: '时薪制', value: 'hourly_wage' },
+      { label: '日薪制', value: 'daily_wage' },
+      { label: '月薪制', value: 'monthly_salary' }
+    ],
+    // 可变收入类型选项
+    variableIncomeTypes: [
+      { label: '销售提成', value: 'commission' },
+      { label: '绩效奖金', value: 'performance_bonus' },
+      { label: '项目奖金', value: 'project_bonus' },
+      { label: '年终奖', value: 'year_end_bonus' },
+      { label: '加班费', value: 'overtime_pay' },
+      { label: '其他奖励', value: 'other_reward' }
+    ],
     // 分类数据将根据资产/负债类型动态设置
     categoryLevelOne: [],
     categoryLevelTwo: [],
     categoryDisplayText: '请选择分类',
+    // 薪资结构选择索引
+    salaryStructureIndex: -1,
+    // 动态薪资输入标签
+    salaryInputLabel: '当前月薪 *',
+    salaryInputPlaceholder: '当前每月收入',
+    // 薪资单位文本
+    salaryUnitText: '/月',
+    // 薪资历史记录弹窗标签
+    salaryHistoryLabel: '月薪金额',
+    salaryHistoryPlaceholder: '请输入月薪',
     // 收入类型选项（资产）
     incomeTypeOptions: [
       { label: '租金收入', value: 'rental' },
@@ -119,6 +183,10 @@ Page({
     }
   },
 
+  onShow() {
+    // 页面显示时的处理
+  },
+
   // 选择类型（资产或负债）
   selectType(e) {
     const type = e.currentTarget.dataset.type
@@ -138,18 +206,12 @@ Page({
     if (type === 'asset') {
       const assetL1Categories = AccountingCategories.getAssetL1Categories()
       this.setData({
-        categoryLevelOne: [
-          { label: '全部类别', value: 'all' },
-          ...assetL1Categories
-        ],
+        categoryLevelOne: assetL1Categories,
         categoryLevelTwo: (() => {
-          const categoryLevelTwo = [[{ label: '全部', value: 'all' }]]
+          const categoryLevelTwo = []
           assetL1Categories.forEach(l1Category => {
             const l2Categories = AccountingCategories.getAssetL2Categories(l1Category.value)
-            categoryLevelTwo.push([
-              { label: '全部', value: 'all' },
-              ...l2Categories
-            ])
+            categoryLevelTwo.push(l2Categories)
           })
           return categoryLevelTwo
         })()
@@ -158,18 +220,12 @@ Page({
       const liabilityL1Categories = AccountingCategories.getLiabilityL1Categories()
       
       this.setData({
-        categoryLevelOne: [
-          { label: '全部类别', value: 'all' },
-          ...liabilityL1Categories
-        ],
+        categoryLevelOne: liabilityL1Categories,
         categoryLevelTwo: (() => {
-          const categoryLevelTwo = [[{ label: '全部', value: 'all' }]]
+          const categoryLevelTwo = []
           liabilityL1Categories.forEach(l1Category => {
             const l2Categories = AccountingCategories.getLiabilityL2Categories(l1Category.value)
-            categoryLevelTwo.push([
-              { label: '全部', value: 'all' },
-              ...l2Categories
-            ])
+            categoryLevelTwo.push(l2Categories)
           })
           return categoryLevelTwo
         })()
@@ -183,13 +239,17 @@ Page({
     const { categoryIndex, categoryLevelOne, categoryLevelTwo } = this.data
     let displayText = '请选择分类'
     
-    if (categoryLevelOne.length > 0) {
+    if (categoryLevelOne.length > 0 && categoryIndex[0] >= 0) {
       const level1 = categoryLevelOne[categoryIndex[0]]
-      if (level1 && categoryIndex[0] > 0) {
+      if (level1) {
         const level2List = categoryLevelTwo[categoryIndex[0]] || []
-        const level2 = level2List[categoryIndex[1]]
-        if (level2 && categoryIndex[1] > 0) {
-          displayText = `${level1.label} - ${level2.label}`
+        if (level2List.length > 0 && categoryIndex[1] >= 0) {
+          const level2 = level2List[categoryIndex[1]]
+          if (level2) {
+            displayText = `${level1.label} - ${level2.label}`
+          } else {
+            displayText = level1.label
+          }
         } else {
           displayText = level1.label
         }
@@ -222,7 +282,8 @@ Page({
         this.setData({
           formData: {
             ...item,
-            createDate: item.createDate || item.createTime?.split('T')[0] || this.data.formData.createDate
+            createDate: item.createDate || item.createTime?.split('T')[0] || this.data.formData.createDate,
+            salaryHistory: item.salaryHistory || [] // 确保薪资历史数据被加载
           }
         })
         
@@ -237,6 +298,18 @@ Page({
         if (item.categoryL1 === 'physical_assets' && item.categoryL2 === 'appreciating_assets') {
           const incomeTypeIndex = item.incomeType === 'annual_return' ? 1 : 0
           this.setData({ incomeTypeIndex })
+        }
+        
+        // 如果是工作收入，设置薪资结构索引
+        if (item.categoryL1 === 'work_income') {
+          const salaryStructure = item.salaryStructure || 'monthly_salary'
+          const salaryStructureIndex = this.data.salaryStructureOptions.findIndex(option => option.value === salaryStructure)
+          this.setData({ 
+            salaryStructureIndex: salaryStructureIndex >= 0 ? salaryStructureIndex : -1,
+            salaryUnitText: this.getSalaryUnit(salaryStructure)
+          })
+          // 更新薪资输入标签
+          this.updateSalaryInputLabels(salaryStructure)
         }
       }
     } catch (error) {
@@ -341,6 +414,11 @@ Page({
     this.setData({
       'formData.monthlyIncome': e.detail.value
     })
+    
+    // 如果是工作收入，计算工作价值
+    if (this.data.formData.categoryL1 === 'work_income') {
+      this.calculateWorkValue()
+    }
   },
 
   // 消费性资产特有字段输入处理
@@ -420,10 +498,111 @@ Page({
     })
   },
 
-  onPositionInput(e) {
+  // 薪资结构选择
+  onSalaryStructureChange(e) {
+    const index = parseInt(e.detail.value)
+    const selectedStructure = this.data.salaryStructureOptions[index]
     this.setData({
-      'formData.position': e.detail.value
+      salaryStructureIndex: index,
+      'formData.salaryStructure': selectedStructure.value
     })
+    // 更新薪资输入标签和单位文本
+    this.updateSalaryInputLabels(selectedStructure.value)
+  },
+
+  // 根据薪资结构更新输入标签
+  updateSalaryInputLabels(salaryStructure) {
+    let salaryLabel = '当前月薪 *'
+    let salaryPlaceholder = '当前每月收入'
+    let historyLabel = '月薪金额'
+    let historyPlaceholder = '请输入月薪'
+    
+    switch (salaryStructure) {
+      case 'hourly_wage':
+        salaryLabel = '当前时薪 *'
+        salaryPlaceholder = '每小时收入金额'
+        historyLabel = '时薪金额'
+        historyPlaceholder = '请输入时薪'
+        break
+
+      case 'daily_wage':
+        salaryLabel = '当前日薪 *'
+        salaryPlaceholder = '每日收入金额'
+        historyLabel = '日薪金额'
+        historyPlaceholder = '请输入日薪'
+        break
+
+      case 'monthly_salary':
+      default:
+        salaryLabel = '当前月薪 *'
+        salaryPlaceholder = '当前每月收入'
+        historyLabel = '月薪金额'
+        historyPlaceholder = '请输入月薪'
+        break
+    }
+    
+    this.setData({
+      salaryInputLabel: salaryLabel,
+      salaryInputPlaceholder: salaryPlaceholder,
+      salaryHistoryLabel: historyLabel,
+      salaryHistoryPlaceholder: historyPlaceholder,
+      salaryUnitText: this.getSalaryUnit(salaryStructure)
+    })
+  },
+
+  onDailyWorkHoursInput(e) {
+    this.setData({
+      'formData.dailyWorkHours': e.detail.value
+    })
+  },
+
+  onWeeklyWorkDaysInput(e) {
+    this.setData({
+      'formData.weeklyWorkDays': e.detail.value
+    })
+  },
+
+  // 每年工作月数输入
+  onWorkingMonthsPerYearInput(e) {
+    this.setData({
+      'formData.workingMonthsPerYear': e.detail.value
+    })
+    // 触发工作价值重新计算
+    if (this.data.formData.categoryL1 === 'work_income') {
+      this.calculateWorkValue()
+    }
+  },
+
+  // 固定额外收入输入
+  onFixedAllowancesInput(e) {
+    this.setData({
+      'formData.fixedAllowances': e.detail.value
+    })
+    // 触发工作价值重新计算
+    if (this.data.formData.categoryL1 === 'work_income') {
+      this.calculateWorkValue()
+    }
+  },
+
+  onStartDateChange(e) {
+    this.setData({
+      'formData.startDate': e.detail.value
+    })
+    this.calculateWorkValue()
+  },
+
+  onEndDateChange(e) {
+    this.setData({
+      'formData.endDate': e.detail.value
+    })
+    this.calculateWorkValue()
+  },
+
+  onInitialSalaryInput(e) {
+    this.setData({
+      'formData.initialSalary': e.detail.value
+    })
+    this.calculateWorkValue()
   },
 
   // 日期选择器处理
@@ -667,10 +846,21 @@ Page({
           return false
         }
       }
-      // 工作收入：需要月收入
+      // 工作收入：需要入职日期和当前月薪
       else if (l1 === 'work_income') {
+        if (!formData.startDate) {
+          wx.showToast({ title: '请选择入职日期', icon: 'error' })
+          return false
+        }
         if (!formData.monthlyIncome) {
-          wx.showToast({ title: '请输入月收入', icon: 'error' })
+          wx.showToast({ title: '请输入当前月薪', icon: 'error' })
+          return false
+        }
+        // 验证入职日期不能晚于当前日期
+        const startDate = new Date(formData.startDate)
+        const currentDate = new Date()
+        if (startDate > currentDate) {
+          wx.showToast({ title: '入职日期不能晚于当前日期', icon: 'error' })
           return false
         }
       }
@@ -769,17 +959,43 @@ Page({
       actualMonthlyPayment = monthlyOperatingCost // 运营成本作为支出
     }
     
+    // 工作收入特殊处理
+    let finalOriginalValue = 0
+    let finalCurrentValue = 0
+    
+    if (type === 'asset' && formData.categoryL1 === 'work_income') {
+      // 工作收入：计算历史实际收入作为价值
+      const startDate = new Date(formData.startDate)
+      const currentDate = new Date()
+      const yearsDiff = currentDate.getFullYear() - startDate.getFullYear()
+      const monthsDiff = currentDate.getMonth() - startDate.getMonth()
+      const totalMonths = Math.max(0, yearsDiff * 12 + monthsDiff)
+      
+      const currentSalary = parseFloat(formData.monthlyIncome) || 0
+      const initialSalary = parseFloat(formData.initialSalary) || currentSalary
+      const averageSalary = (initialSalary + currentSalary) / 2
+      
+      finalOriginalValue = 0 // 工作收入没有初始投入成本
+      finalCurrentValue = totalMonths * averageSalary // 历史累计收入
+    } else {
+      // 其他资产按原逻辑处理
+      finalOriginalValue = parseFloat(formData.originalValue || formData.initialValue) || 0
+      finalCurrentValue = (formData.categoryL1 === 'current_assets' && formData.categoryL2 === 'cash_assets')
+        ? (parseFloat(formData.currentValue) || 0)
+        : (formData.categoryL1 === 'physical_assets' && formData.categoryL2 === 'consumer_assets')
+        ? (parseFloat(formData.currentValue) || 0) // 消费型资产：可以为0，表示使用折旧计算
+        : (parseFloat(formData.currentValue) || parseFloat(formData.originalValue || formData.initialValue) || 0)
+    }
+
     const saveData = {
       ...formData,
       id: isEdit ? editId : `${type}_${Date.now()}`,
       name: formData.name.trim(),
       // 统一原值（兼容旧字段）：
-      originalValue: parseFloat(formData.originalValue || formData.initialValue) || 0,
+      originalValue: finalOriginalValue,
       // 转换数值字段
-      initialValue: parseFloat(formData.originalValue || formData.initialValue) || 0,
-      currentValue: (formData.categoryL1 === 'current_assets' && formData.categoryL2 === 'cash_assets')
-        ? (parseFloat(formData.currentValue) || 0)
-        : (parseFloat(formData.currentValue) || parseFloat(formData.originalValue || formData.initialValue) || 0),
+      initialValue: finalOriginalValue,
+      currentValue: finalCurrentValue,
       monthlyIncome: actualMonthlyIncome,
       dailyIncome: actualMonthlyIncome / 30,
       annualReturn: parseFloat(formData.annualReturn) || 0,
@@ -792,9 +1008,14 @@ Page({
       monthlyOperatingCost: monthlyOperatingCost,
       depreciationRate: parseFloat(formData.depreciationRate) || 0,
       isConsumerAsset: isConsumerAsset,
+      // 工作收入特有字段
+      startDate: formData.startDate || '',
+      initialSalary: parseFloat(formData.initialSalary) || 0,
+      dailyWorkHours: parseFloat(formData.dailyWorkHours) || 8,
+      weeklyWorkDays: parseFloat(formData.weeklyWorkDays) || 5,
       // 日期字段
       createDate: formData.createDate || new Date().toISOString().split('T')[0],
-      purchaseDate: formData.createDate || new Date().toISOString().split('T')[0],
+      purchaseDate: formData.startDate || formData.createDate || new Date().toISOString().split('T')[0],
       createTime: isEdit ? (formData.createTime || new Date().toISOString()) : new Date().toISOString()
     }
     
@@ -867,5 +1088,451 @@ Page({
       title: `已设置折旧率为${rate}%`,
       icon: 'success'
     })
+  },
+
+  // Logo选择相关方法
+  showLogoSelector() {
+    this.setData({
+      showLogoModal: true
+    })
+  },
+
+  hideLogoSelector(e) {
+    // 点击遮罩层关闭弹窗
+    this.setData({
+      showLogoModal: false
+    })
+  },
+
+  // 取消按钮专用方法
+  cancelLogoSelector() {
+    this.setData({
+      showLogoModal: false
+    })
+  },
+
+  switchLogoType(e) {
+    const type = e.currentTarget.dataset.type
+    this.setData({
+      logoSelectorType: type
+    })
+  },
+
+  selectEmoji(e) {
+    const emoji = e.currentTarget.dataset.emoji
+    this.setData({
+      'formData.logoEmoji': emoji,
+      'formData.logoType': 'emoji'
+    })
+  },
+
+  uploadImage() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempFilePath = res.tempFilePaths[0]
+        
+        // 这里可以上传到服务器，现在先使用本地临时路径
+        this.setData({
+          'formData.logoUrl': tempFilePath,
+          'formData.logoType': 'image'
+        })
+        
+        wx.showToast({
+          title: '图片已选择',
+          icon: 'success'
+        })
+      },
+      fail: (error) => {
+        console.error('选择图片失败:', error)
+        wx.showToast({
+          title: '选择图片失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 显示自定义emoji输入弹窗
+  showCustomEmojiInput() {
+    wx.showModal({
+      title: '输入自定义emoji',
+      editable: true,
+      placeholderText: '请输入emoji...',
+      success: (res) => {
+        if (res.confirm && res.content) {
+          const customEmoji = res.content.trim()
+          
+          // 简单验证是否包含emoji
+          const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+          
+          if (!emojiRegex.test(customEmoji)) {
+            wx.showToast({
+              title: '请输入有效的emoji',
+              icon: 'none'
+            })
+            return
+          }
+
+          this.setData({
+            'formData.logoEmoji': customEmoji,
+            'formData.logoType': 'emoji'
+          })
+
+          wx.showToast({
+            title: '自定义emoji已设置',
+            icon: 'success'
+          })
+        }
+      }
+    })
+  },
+
+  confirmLogo() {
+    this.setData({
+      showLogoModal: false
+    })
+    wx.showToast({
+      title: '图标已设置',
+      icon: 'success'
+    })
+  },
+
+  // 薪资历史管理相关方法
+  showSalaryHistoryManager() {
+    // 如果没有薪资历史记录但有入职日期和当前薪资，智能初始化
+    if (this.data.formData.salaryHistory.length === 0 && 
+        this.data.formData.startDate && 
+        this.data.formData.monthlyIncome) {
+      
+      wx.showModal({
+        title: '智能初始化',
+        content: '检测到您已设置入职日期和当前薪资，是否自动创建初始薪资记录？',
+        success: (res) => {
+          if (res.confirm) {
+            const initialRecord = {
+              id: `salary_${Date.now()}`,
+              effectiveDate: this.data.formData.startDate,
+              amount: parseFloat(this.data.formData.monthlyIncome),
+              reason: '入职'
+            }
+            
+            this.setData({
+              'formData.salaryHistory': [initialRecord]
+            })
+            
+            wx.showToast({
+              title: '已创建初始记录',
+              icon: 'success'
+            })
+          }
+          
+          this.openSalaryHistoryModal()
+        }
+      })
+    } else {
+      this.openSalaryHistoryModal()
+    }
+  },
+
+  openSalaryHistoryModal() {
+    // 如果是第一次添加薪资记录，默认使用入职日期
+    const isFirstRecord = !this.data.formData.salaryHistory || this.data.formData.salaryHistory.length === 0
+    let defaultDate = ''
+    let defaultReason = ''
+    let defaultAmount = ''
+    
+    if (isFirstRecord) {
+      defaultDate = this.data.formData.startDate || ''
+      defaultReason = '入职'
+      // 如果已经填写了当前月薪，作为入职薪资的默认值
+      defaultAmount = this.data.formData.monthlyIncome || ''
+    }
+    
+    this.setData({
+      showSalaryHistoryModal: true,
+      newSalaryRecord: {
+        effectiveDate: defaultDate,
+        amount: defaultAmount,
+        reason: defaultReason
+      },
+      // 确保薪资单位文本和标签是最新的
+      salaryUnitText: this.getSalaryUnit(this.data.formData.salaryStructure || 'monthly_salary')
+    })
+    
+    // 更新薪资历史记录标签
+    this.updateSalaryInputLabels(this.data.formData.salaryStructure || 'monthly_salary')
+  },
+
+  hideSalaryHistoryManager(e) {
+    // 点击遮罩层关闭弹窗
+    this.setData({
+      showSalaryHistoryModal: false
+    })
+  },
+
+  // 取消薪资历史管理
+  cancelSalaryHistoryManager() {
+    this.setData({
+      showSalaryHistoryModal: false,
+      newSalaryRecord: {
+        effectiveDate: '',
+        amount: '',
+        reason: ''
+      }
+    })
+  },
+
+  // 阻止弹窗内容区域点击时关闭弹窗
+  preventClose() {
+    // 空方法，仅用于阻止事件冒泡
+  },
+
+  // 根据薪资结构获取单位文本
+  getSalaryUnit(salaryStructure) {
+    switch (salaryStructure) {
+      case 'hourly_wage':
+        return '/小时'
+      case 'daily_wage':
+        return '/天'
+      case 'monthly_salary':
+      default:
+        return '/月'
+    }
+  },
+
+  onNewSalaryDateChange(e) {
+    this.setData({
+      'newSalaryRecord.effectiveDate': e.detail.value
+    })
+  },
+
+  onNewSalaryAmountInput(e) {
+    this.setData({
+      'newSalaryRecord.amount': e.detail.value
+    })
+  },
+
+  onNewSalaryReasonInput(e) {
+    this.setData({
+      'newSalaryRecord.reason': e.detail.value
+    })
+  },
+
+  addSalaryRecord() {
+    const { newSalaryRecord } = this.data
+    
+    if (!newSalaryRecord.effectiveDate) {
+      wx.showToast({
+        title: '请选择生效日期',
+        icon: 'none'
+      })
+      return
+    }
+    
+    if (!newSalaryRecord.amount) {
+      wx.showToast({
+        title: '请输入月薪金额',
+        icon: 'none'
+      })
+      return
+    }
+
+    const salaryRecord = {
+      id: `salary_${Date.now()}`,
+      effectiveDate: newSalaryRecord.effectiveDate,
+      amount: parseFloat(newSalaryRecord.amount),
+      reason: newSalaryRecord.reason || '薪资调整'
+    }
+
+    // 添加到薪资历史，并按日期排序
+    const salaryHistory = [...this.data.formData.salaryHistory, salaryRecord]
+    salaryHistory.sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate))
+
+    this.setData({
+      'formData.salaryHistory': salaryHistory,
+      newSalaryRecord: {
+        effectiveDate: '',
+        amount: '',
+        reason: ''
+      }
+    })
+
+    // 更新当前月薪为最新记录
+    const latestSalary = salaryHistory[salaryHistory.length - 1]
+    if (latestSalary) {
+      this.setData({
+        'formData.monthlyIncome': latestSalary.amount.toString()
+      })
+    }
+
+    // 重新计算工作价值
+    this.calculateWorkValue()
+
+    wx.showToast({
+      title: '记录已添加',
+      icon: 'success'
+    })
+    
+
+  },
+
+
+
+  deleteSalaryRecord(e) {
+    const recordId = e.currentTarget.dataset.recordId
+    
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条薪资记录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          const salaryHistory = this.data.formData.salaryHistory.filter(record => record.id !== recordId)
+          this.setData({
+            'formData.salaryHistory': salaryHistory
+          })
+
+          // 如果删除后还有记录，更新当前月薪为最新记录
+          if (salaryHistory.length > 0) {
+            const latestSalary = salaryHistory[salaryHistory.length - 1]
+            this.setData({
+              'formData.monthlyIncome': latestSalary.amount.toString()
+            })
+          }
+
+          // 重新计算工作价值
+          this.calculateWorkValue()
+
+          wx.showToast({
+            title: '记录已删除',
+            icon: 'success'
+          })
+        }
+      }
+    })
+  },
+
+  confirmSalaryHistory() {
+    this.setData({
+      showSalaryHistoryModal: false
+    })
+  },
+
+  // 计算工作价值（使用薪资历史记录）
+  calculateWorkValue() {
+    const { formData } = this.data
+    
+    if (!formData.startDate) {
+      this.setData({
+        workDurationText: '',
+        totalWorkValueText: ''
+      })
+      return
+    }
+
+    const startDate = new Date(formData.startDate)
+    // 如果设置了离职日期，使用离职日期；否则使用当前日期
+    const endDate = formData.endDate ? new Date(formData.endDate) : new Date()
+    
+    // 计算工作月数
+    const yearsDiff = endDate.getFullYear() - startDate.getFullYear()
+    const monthsDiff = endDate.getMonth() - startDate.getMonth()
+    const totalMonths = yearsDiff * 12 + monthsDiff
+    
+    if (totalMonths < 0) {
+      this.setData({
+        workDurationText: '入职日期不能晚于结束日期',
+        totalWorkValueText: ''
+      })
+      return
+    }
+
+    let totalValue = 0
+
+    // 如果有薪资历史记录，使用精确计算
+    if (formData.salaryHistory && formData.salaryHistory.length > 0) {
+      totalValue = this.calculateAccurateEarnings(formData.salaryHistory, startDate, endDate)
+    } else {
+      // 如果没有薪资历史，使用简单平均值计算
+      const currentSalary = parseFloat(formData.monthlyIncome) || 0
+      const initialSalary = parseFloat(formData.initialSalary) || currentSalary
+      const averageSalary = (initialSalary + currentSalary) / 2
+      totalValue = totalMonths * averageSalary
+    }
+
+    // 格式化显示
+    const years = Math.floor(totalMonths / 12)
+    const months = totalMonths % 12
+    let durationText = ''
+    if (years > 0) {
+      durationText = `${years}年`
+      if (months > 0) {
+        durationText += `${months}个月`
+      }
+    } else {
+      durationText = `${months}个月`
+    }
+    
+    // 添加工作状态说明
+    if (formData.endDate) {
+      durationText += ` (已离职，共${totalMonths}个月)`
+    } else {
+      durationText += ` (在职中，已工作${totalMonths}个月)`
+    }
+
+    this.setData({
+      workDurationText: durationText,
+      totalWorkValueText: totalValue.toLocaleString()
+    })
+  },
+
+  // 精确计算历史收入
+  calculateAccurateEarnings(salaryHistory, startDate, currentDate) {
+    if (!salaryHistory || salaryHistory.length === 0) {
+      return 0
+    }
+
+    // 按日期排序薪资记录
+    const sortedHistory = [...salaryHistory].sort((a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate))
+    
+    let totalEarnings = 0
+    let periodStart = startDate
+
+    for (let i = 0; i < sortedHistory.length; i++) {
+      const record = sortedHistory[i]
+      const recordDate = new Date(record.effectiveDate)
+      
+      // 如果记录日期早于入职日期，跳过
+      if (recordDate < startDate) {
+        continue
+      }
+
+      // 计算当前薪资段的结束时间
+      const periodEnd = i < sortedHistory.length - 1 
+        ? new Date(sortedHistory[i + 1].effectiveDate)
+        : currentDate
+
+      // 限制结束时间不能超过当前时间
+      const actualEnd = periodEnd > currentDate ? currentDate : periodEnd
+
+      // 计算这个薪资段的月数
+      const periodStartYear = periodStart.getFullYear()
+      const periodStartMonth = periodStart.getMonth()
+      const actualEndYear = actualEnd.getFullYear()
+      const actualEndMonth = actualEnd.getMonth()
+      
+      const monthsInPeriod = (actualEndYear - periodStartYear) * 12 + (actualEndMonth - periodStartMonth)
+      
+      if (monthsInPeriod > 0) {
+        totalEarnings += monthsInPeriod * record.amount
+      }
+
+      // 更新下一段的开始时间
+      periodStart = recordDate
+    }
+
+    return totalEarnings
   }
 })

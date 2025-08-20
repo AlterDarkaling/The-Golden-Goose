@@ -72,10 +72,12 @@
 
 .form-input, .form-textarea {
   width: 100%;
-  padding: 20rpx;
+  height: 80rpx;
+  padding: 0 20rpx;
   border: 2rpx solid #e9ecef;
   border-radius: 12rpx;
   font-size: 28rpx;
+  line-height: 80rpx;
   color: #212529;
   background: #ffffff;
   box-sizing: border-box;
@@ -87,7 +89,10 @@
 }
 
 .form-textarea {
+  height: auto;
   min-height: 120rpx;
+  padding: 20rpx;
+  line-height: 1.5;
   resize: none;
 }
 
@@ -99,11 +104,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20rpx;
+  height: 80rpx;
+  padding: 0 20rpx;
   border: 2rpx solid #e9ecef;
   border-radius: 12rpx;
   background: #ffffff;
   font-size: 28rpx;
+  line-height: 80rpx;
   color: #212529;
 }
 
@@ -180,9 +187,16 @@
   }
   
   .form-input,
-  .form-textarea,
   .picker-display {
     font-size: 26rpx;
+    height: 70rpx;
+    line-height: 70rpx;
+    padding: 0 16rpx;
+  }
+  
+  .form-textarea {
+    font-size: 26rpx;
     padding: 16rpx;
+    line-height: 1.4;
   }
 }

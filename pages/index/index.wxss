@@ -123,6 +123,7 @@
   padding: 0 30rpx;
   font-size: 28rpx;
   border: none;
+  box-sizing: border-box;
 }
 
 .filter-container {
@@ -232,13 +233,27 @@
 }
 
 .item-icon {
-  width: 60rpx;
-  height: 60rpx;
-  border-radius: 30rpx;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  font-size: 40rpx;
+}
+
+.icon-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+}
+
+.icon-emoji {
+  font-size: 40rpx;
+}
+
+.icon-default {
+  font-size: 40rpx;
 }
 
 .asset-icon {
@@ -283,6 +298,11 @@
   color: #1976D2;
 }
 
+.income-tag {
+  background: #E8F5E8;
+  color: #2E7D32;
+}
+
 .liability-tag {
   background: #FCE4EC;
   color: #C2185B;
@@ -299,6 +319,11 @@
   color: #adb5bd;
 }
 
+.item-borrow-date {
+  font-size: 22rpx;
+  color: #adb5bd;
+}
+
 .item-right {
   display: flex;
   flex-direction: column;
@@ -310,6 +335,12 @@
   font-size: 32rpx;
   font-weight: bold;
   color: #212529;
+}
+
+.item-original-price {
+  font-size: 22rpx;
+  color: #6c757d;
+  margin-top: -4rpx;
 }
 
 .item-status {

@@ -1,5 +1,6 @@
 // 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
+const AccountingCategories = require('../../utils/accountingCategories.js')
 
 Page({
   data: {
@@ -31,42 +32,9 @@ Page({
       { label: '升序', value: 'asc' }
     ],
     // 资产分类（传统会计准则）
-    assetCategories: [
-      { label: '全部类别', value: 'all' },
-      { label: '流动资产', value: 'current_assets' },
-      { label: '金融资产', value: 'financial_assets' },
-      { label: '实物资产', value: 'physical_assets' },
-      { label: '其他资产', value: 'other_assets' }
-    ],
+    assetCategories: [],
     // 资产二级分类
-    assetSubCategories: [
-      // 全部类别
-      [{ label: '全部', value: 'all' }],
-      // 流动资产
-      [
-        { label: '全部', value: 'all' },
-        { label: '现金类资产', value: 'cash_assets' },
-        { label: '短期理财资产', value: 'short_term_investment' }
-      ],
-      // 金融资产
-      [
-        { label: '全部', value: 'all' },
-        { label: '股票/基金类', value: 'equity_fund' },
-        { label: '固定收益类', value: 'fixed_income' }
-      ],
-      // 实物资产
-      [
-        { label: '全部', value: 'all' },
-        { label: '消费型资产', value: 'consumer_assets' },
-        { label: '增值型资产', value: 'appreciating_assets' }
-      ],
-      // 其他资产
-      [
-        { label: '全部', value: 'all' },
-        { label: '无形资产', value: 'intangible_assets' },
-        { label: '预付类资产', value: 'prepaid_assets' }
-      ]
-    ],
+    assetSubCategories: [],
     
     // 负债分类（传统会计准则）
     liabilityCategories: [
@@ -139,6 +107,7 @@ Page({
   },
 
   onLoad() {
+    this.initCategories()
     this.checkLogin()
     this.loadData()
   },
@@ -146,6 +115,34 @@ Page({
   onShow() {
     this.checkLogin()  // 重新检查登录状态和加载用户信息
     this.loadData()
+  },
+
+  // 初始化分类数据
+  initCategories() {
+    const assetL1Categories = AccountingCategories.getAssetL1Categories()
+    
+    const assetCategories = [
+      { label: '全部类别', value: 'all' },
+      ...assetL1Categories
+    ]
+    
+    const assetSubCategories = [
+      [{ label: '全部', value: 'all' }] // 全部类别的子分类
+    ]
+    
+    // 为每个一级分类添加对应的二级分类
+    assetL1Categories.forEach(l1Category => {
+      const l2Categories = AccountingCategories.getAssetL2Categories(l1Category.value)
+      assetSubCategories.push([
+        { label: '全部', value: 'all' },
+        ...l2Categories
+      ])
+    })
+    
+    this.setData({
+      assetCategories,
+      assetSubCategories
+    })
   },
 
   checkLogin() {
@@ -188,9 +185,13 @@ Page({
     const processedAssets = assets.map(asset => ({
       ...asset,
       type: 'asset',
-      typeText: '资产',
+      typeText: asset.categoryL1 === 'work_income' ? '工作' : '资产',
       categoryName: this.getCategoryName(asset.categoryL1, asset.categoryL2, true),
       displayAmount: this.formatNumber(asset.currentValue || asset.initialValue),
+      originalPrice: this.formatNumber(asset.originalValue || asset.initialValue || 0),
+      // 计算实际月收入（针对工作收入）
+      monthlyIncome: asset.categoryL1 === 'work_income' ? 
+        this.calculateActualMonthlyIncome(asset) : asset.monthlyIncome,
       statusText: this.getStatusText(asset.status),
       createTimeText: StorageManager.formatPurchaseDate(asset.createDate, asset.createTime),
       // 排序用的数值字段
@@ -206,6 +207,7 @@ Page({
       typeText: '负债',
       categoryName: this.getCategoryName(liability.categoryL1, liability.categoryL2, false),
       displayAmount: this.formatNumber(liability.currentAmount || liability.initialAmount),
+      originalAmount: this.formatNumber(liability.originalAmount || liability.initialAmount || 0),
       statusText: this.getStatusText(liability.status),
       createTimeText: StorageManager.formatPurchaseDate(liability.createDate, liability.createTime),
       // 排序用的数值字段
@@ -241,8 +243,12 @@ Page({
     // 净月现金流
     const netMonthlyCashflow = monthlyCashflowIn - monthlyCashflowOut
     
-    // 计算净资产
+    // 计算净资产（排除工作收入类别）
     const totalAssetValue = assets.reduce((total, asset) => {
+      // 工作收入不计入净资产，因为它不是可变现的资产
+      if (asset.categoryL1 === 'work_income') {
+        return total
+      }
       return total + (parseFloat(asset.currentValue) || parseFloat(asset.initialValue) || 0)
     }, 0)
     
@@ -262,13 +268,16 @@ Page({
       cashflowStatus = '优秀'
     }
     
+    // 计算资产数量（排除工作收入）
+    const actualAssetsCount = assets.filter(asset => asset.categoryL1 !== 'work_income').length
+    
     this.setData({
       netWorth: this.formatNumber(netWorth),
       monthlyCashflowIn: this.formatNumber(monthlyCashflowIn),
       monthlyCashflowOut: this.formatNumber(monthlyCashflowOut),
       netMonthlyCashflow: this.formatNumber(netMonthlyCashflow),
       cashflowStatus: cashflowStatus,
-      assetsCount: assets.length,
+      assetsCount: actualAssetsCount,
       liabilitiesCount: liabilities.length
     })
   },
@@ -378,7 +387,15 @@ Page({
           break
         case 'createTime':
         default:
-          // 默认排序：始终按添加时间降序（最新在前），不受升序降序选择影响
+          // 默认排序：工作收入置顶，其他按添加时间降序
+          const isWorkA = a.categoryL1 === 'work_income'
+          const isWorkB = b.categoryL1 === 'work_income'
+          
+          // 如果一个是工作收入，一个不是，工作收入排在前面
+          if (isWorkA && !isWorkB) return -1
+          if (!isWorkA && isWorkB) return 1
+          
+          // 都是工作收入或都不是工作收入，按创建时间降序
           valueA = new Date(a.createTime).getTime()
           valueB = new Date(b.createTime).getTime()
           return valueB - valueA  // 固定降序
@@ -519,6 +536,16 @@ Page({
   },
 
   getCategoryName(categoryL1, categoryL2, isAsset = true) {
+    // 工作收入特殊处理：直接返回二级分类的标签（本职工作/兼职工作）
+    if (categoryL1 === 'work_income') {
+      const l2Categories = AccountingCategories.getAssetL2Categories('work_income')
+      const level2 = l2Categories.find(cat => cat.value === categoryL2)
+      if (level2 && categoryL2 !== 'all') {
+        return level2.label  // 直接返回"本职工作"或"兼职工作"
+      }
+      return '工作收入'  // 默认返回"工作收入"
+    }
+    
     // 根据资产或负债选择对应的分类体系
     const { assetCategories, assetSubCategories, liabilityCategories, liabilitySubCategories } = this.data
     const categories = isAsset ? assetCategories : liabilityCategories
@@ -575,5 +602,46 @@ Page({
     wx.navigateTo({
       url: '/pages/edit/edit'
     })
+  },
+
+  // 计算工作收入的实际月收入
+  calculateActualMonthlyIncome(asset) {
+    const baseIncome = parseFloat(asset.monthlyIncome) || 0
+    const salaryStructure = asset.salaryStructure || 'monthly_salary'
+    const dailyWorkHours = parseFloat(asset.dailyWorkHours) || 8
+    const weeklyWorkDays = parseFloat(asset.weeklyWorkDays) || 5
+    const workingMonthsPerYear = parseFloat(asset.workingMonthsPerYear) || 12
+    
+    // 计算每月工作天数和小时数
+    // 每年工作天数 = 每周工作天数 × 52周 × (工作月数/12)
+    const annualWorkDays = weeklyWorkDays * 52 * (workingMonthsPerYear / 12)
+    const monthlyWorkDays = annualWorkDays / 12
+    const monthlyWorkHours = monthlyWorkDays * dailyWorkHours
+    
+    let actualMonthlyIncome = 0
+    
+    switch (salaryStructure) {
+      case 'hourly_wage':
+        // 时薪 × 每月工作小时数
+        actualMonthlyIncome = baseIncome * monthlyWorkHours
+        break
+        
+      case 'daily_wage':
+        // 日薪 × 每月工作天数
+        actualMonthlyIncome = baseIncome * monthlyWorkDays
+        break
+        
+      case 'monthly_salary':
+      default:
+        // 月薪直接使用
+        actualMonthlyIncome = baseIncome
+        break
+    }
+    
+    // 添加固定额外收入
+    const fixedAllowances = parseFloat(asset.fixedAllowances) || 0
+    actualMonthlyIncome += fixedAllowances
+    
+    return actualMonthlyIncome.toFixed(2)
   }
 })

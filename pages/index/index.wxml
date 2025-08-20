@@ -112,11 +112,18 @@
       <!-- 资产列表 -->
       <view wx:for="{{filteredAssets}}" wx:key="id" class="data-item asset-item" bindtap="viewDetail" data-item="{{item}}" data-type="asset">
         <view class="item-left">
-          <view class="item-icon asset-icon">💰</view>
+          <view class="item-icon asset-icon">
+            <image wx:if="{{item.logoType === 'image' && item.logoUrl}}"
+                   src="{{item.logoUrl}}"
+                   class="icon-image" />
+            <text wx:elif="{{item.logoType === 'emoji' && item.logoEmoji}}"
+                  class="icon-emoji">{{item.logoEmoji}}</text>
+            <text wx:else class="icon-default">💰</text>
+          </view>
           <view class="item-info">
             <view class="item-name-row">
               <text class="item-name">{{item.name}}</text>
-              <text class="item-type-tag asset-tag">{{item.typeText}}</text>
+              <text class="item-type-tag {{item.categoryL1 === 'work_income' ? 'income-tag' : 'asset-tag'}}">{{item.typeText}}</text>
             </view>
             <text class="item-category">{{item.categoryName}}</text>
             <text class="item-purchase-date">{{item.createTimeText}}</text>
@@ -129,6 +136,7 @@
         </view>
         <view class="item-right">
           <text class="item-amount">¥{{item.displayAmount}}</text>
+          <text wx:if="{{item.categoryL1 !== 'work_income'}}" class="item-original-price">(¥{{item.originalPrice}})</text>
           <text class="item-status {{item.status}}">{{item.statusText}}</text>
         </view>
       </view>
@@ -136,14 +144,21 @@
       <!-- 负债列表 -->
       <view wx:for="{{filteredLiabilities}}" wx:key="id" class="data-item liability-item" bindtap="viewDetail" data-item="{{item}}" data-type="liability">
         <view class="item-left">
-          <view class="item-icon liability-icon">💳</view>
+          <view class="item-icon liability-icon">
+            <image wx:if="{{item.logoType === 'image' && item.logoUrl}}"
+                   src="{{item.logoUrl}}"
+                   class="icon-image" />
+            <text wx:elif="{{item.logoType === 'emoji' && item.logoEmoji}}"
+                  class="icon-emoji">{{item.logoEmoji}}</text>
+            <text wx:else class="icon-default">💳</text>
+          </view>
           <view class="item-info">
             <view class="item-name-row">
               <text class="item-name">{{item.name}}</text>
               <text class="item-type-tag liability-tag">{{item.typeText}}</text>
             </view>
             <text class="item-category">{{item.categoryName}}</text>
-            <text class="item-purchase-date">{{item.createTimeText}}</text>
+            <text class="item-borrow-date">{{item.createTimeText}}</text>
             <!-- 现金流信息 -->
             <view class="item-cashflow">
               <text class="cashflow-label">月支出: </text>
@@ -153,6 +168,7 @@
         </view>
         <view class="item-right">
           <text class="item-amount">¥{{item.displayAmount}}</text>
+          <text class="item-original-price">(¥{{item.originalAmount}})</text>
           <text class="item-status {{item.status}}">{{item.statusText}}</text>
         </view>
       </view>

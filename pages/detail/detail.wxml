@@ -1,87 +1,207 @@
 <view class="detail-container">
   <!-- 头部信息 -->
   <view class="header-section">
-    <view class="type-badge {{type}}">
-      {{type === 'asset' ? '💰 资产' : '💳 负债'}}
+    <view class="item-header">
+      <view class="item-logo">
+        <image wx:if="{{itemData.logoType === 'image' && itemData.logoUrl}}" 
+               src="{{itemData.logoUrl}}" 
+               class="logo-image-display" />
+        <text wx:elif="{{itemData.logoType === 'emoji' && itemData.logoEmoji}}" 
+              class="logo-emoji-display">{{itemData.logoEmoji}}</text>
+        <text wx:else class="logo-default-display">{{type === 'asset' ? '💰' : '💳'}}</text>
+      </view>
+      <view class="item-info">
+        <view class="type-badge {{type}}">
+          {{type === 'asset' ? '资产' : '负债'}}
+        </view>
+        <view class="title">{{itemData.name}}</view>
+      </view>
     </view>
-    <view class="title">{{itemData.name}}</view>
     <view class="amount">
       ¥{{displayAmount}}
     </view>
   </view>
 
-  <!-- 价值分析 -->
-  <view class="info-section">
+  <!-- 工作收入：基础信息 -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 === 'work_income'}}" class="info-section">
+    <view class="section-title">💼 基础信息</view>
+    <view class="basic-info-grid">
+      <view class="info-item">
+        <text class="info-label">工作单位</text>
+        <text class="info-value">{{itemData.workUnit || '未设置'}}</text>
+      </view>
+                      <view class="info-item">
+                  <text class="info-label">薪资结构</text>
+                  <text class="info-value">{{itemData.salaryStructureText}}</text>
+                </view>
+      <view class="info-item">
+        <text class="info-label">入职日期</text>
+        <text class="info-value">{{valueAnalysis.startDateText || '未知'}}</text>
+      </view>
+      <view class="info-item" wx:if="{{itemData.endDate}}">
+        <text class="info-label">离职日期</text>
+        <text class="info-value">{{itemData.endDate}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">工作状态</text>
+        <text class="info-value">{{itemData.endDate ? '已离职' : '在职中'}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">工作时长</text>
+        <text class="info-value">{{valueAnalysis.workDurationText || '0年0月'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 工作收入：薪资概览 -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 === 'work_income'}}" class="info-section">
+    <view class="section-title">💰 薪资概览</view>
+    <view class="salary-overview-grid">
+      <view class="salary-item">
+        <text class="salary-amount">¥{{valueAnalysis.initialSalaryText || '0.00'}}</text>
+        <text class="salary-label">入职薪资</text>
+      </view>
+      <view class="salary-item">
+        <text class="salary-amount">¥{{valueAnalysis.currentSalaryText || '0.00'}}</text>
+        <text class="salary-label">当前薪资</text>
+      </view>
+      <view class="salary-item">
+        <text class="salary-amount">¥{{valueAnalysis.totalEarningsText || '0.00'}}</text>
+        <text class="salary-label">历史总收入</text>
+      </view>
+      <view class="salary-item">
+        <text class="salary-amount">{{valueAnalysis.growthRateText || '0.0'}}%</text>
+        <text class="salary-label">薪资涨幅</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 工作收入：收入结构 -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 === 'work_income'}}" class="info-section">
+    <view class="section-title">💰 收入结构</view>
+    
+    <!-- 基础薪资 -->
+    <view class="income-category">
+      <view class="category-header">
+        <text class="category-title">基础薪资</text>
+        <text class="category-amount">¥{{incomeAnalysis.baseSalaryText || '0.00'}}/月</text>
+      </view>
+    </view>
+    
+    <!-- 固定额外收入 -->
+    <view wx:if="{{incomeAnalysis.fixedAllowancesText && incomeAnalysis.fixedAllowancesText !== '0.00'}}" class="income-category">
+      <view class="category-header">
+        <text class="category-title">固定额外收入</text>
+        <text class="category-amount">¥{{incomeAnalysis.fixedAllowancesText}}/月</text>
+      </view>
+      <text class="category-desc">津贴、补助等固定收入</text>
+    </view>
+    
+    <!-- 可变额外收入 -->
+    <view wx:if="{{incomeAnalysis.averageVariableIncomeText && incomeAnalysis.averageVariableIncomeText !== '0.00'}}" class="income-category">
+      <view class="category-header">
+        <text class="category-title">可变额外收入</text>
+        <text class="category-amount">¥{{incomeAnalysis.averageVariableIncomeText}}/月</text>
+      </view>
+      <text class="category-desc">近6个月平均提成、奖金等</text>
+    </view>
+    
+    <!-- 总收入汇总 -->
+    <view class="total-income-summary">
+      <view class="summary-row main-summary">
+        <text class="summary-label">总月收入</text>
+        <text class="summary-amount">¥{{incomeAnalysis.totalMonthlyIncomeText || '0.00'}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">年化收入</text>
+        <text class="summary-amount">¥{{incomeAnalysis.totalGrossAnnualText || '0.00'}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">时薪价值</text>
+        <text class="summary-amount">¥{{incomeAnalysis.totalHourlyRateText || '0.00'}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">日均收入</text>
+        <text class="summary-amount">¥{{incomeAnalysis.totalDailyIncomeText || '0.00'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 其他资产的价值分析 -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 !== 'work_income'}}" class="info-section">
     <view class="section-title">💰 价值分析</view>
     <view class="value-analysis-grid">
-      <block wx:if="{{type === 'asset'}}">
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.purchasePriceText || '0.00'}}</text>
-          <text class="value-label">购买价格</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.currentMarketValueText || '0.00'}}</text>
-          <text class="value-label">当前市值</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.accumulatedDepreciationText || '0.00'}}</text>
-          <text class="value-label">累计折旧</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.operatingCostText || '0.00'}}</text>
-          <text class="value-label">运营成本</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">{{valueAnalysis.usageDaysText || '0'}}天</text>
-          <text class="value-label">使用天数</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.dailyCostText || '0.00'}}</text>
-          <text class="value-label">每日成本</text>
-        </view>
-      </block>
-      <block wx:if="{{type === 'liability'}}">
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.originalAmountText || '0.00'}}</text>
-          <text class="value-label">借款金额</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.totalInterestText || '0.00'}}</text>
-          <text class="value-label">总利息</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.paidAmountText || '0.00'}}</text>
-          <text class="value-label">已还本金</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">¥{{valueAnalysis.remainingAmountText || '0.00'}}</text>
-          <text class="value-label">剩余本金</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">{{valueAnalysis.completionRateText || '0'}}%</text>
-          <text class="value-label">完成度</text>
-        </view>
-        <view class="value-item">
-          <text class="value-amount">{{valueAnalysis.remainingMonthsText || '0'}}期</text>
-          <text class="value-label">剩余期数</text>
-        </view>
-      </block>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.purchasePriceText || '0.00'}}</text>
+        <text class="value-label">购买价格</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.currentMarketValueText || '0.00'}}</text>
+        <text class="value-label">当前市值</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.accumulatedDepreciationText || '0.00'}}</text>
+        <text class="value-label">累计折旧</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.operatingCostText || '0.00'}}</text>
+        <text class="value-label">运营成本</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">{{valueAnalysis.usageDaysText || '0'}}天</text>
+        <text class="value-label">使用天数</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.dailyCostText || '0.00'}}</text>
+        <text class="value-label">每日成本</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 负债的价值分析 -->
+  <view wx:if="{{type === 'liability'}}" class="info-section">
+    <view class="section-title">💰 负债分析</view>
+    <view class="value-analysis-grid">
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.originalAmountText || '0.00'}}</text>
+        <text class="value-label">借款金额</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.totalInterestText || '0.00'}}</text>
+        <text class="value-label">总利息</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.paidAmountText || '0.00'}}</text>
+        <text class="value-label">已还本金</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">¥{{valueAnalysis.remainingAmountText || '0.00'}}</text>
+        <text class="value-label">剩余本金</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">{{valueAnalysis.completionRateText || '0'}}%</text>
+        <text class="value-label">完成度</text>
+      </view>
+      <view class="value-item">
+        <text class="value-amount">{{valueAnalysis.remainingMonthsText || '0'}}期</text>
+        <text class="value-label">剩余期数</text>
+      </view>
     </view>
   </view>
 
 
 
-  <!-- 其他费用 -->
-  <view class="info-section">
+  <!-- 其他费用（工作收入不显示） -->
+  <view wx:if="{{itemData.categoryL1 !== 'work_income'}}" class="info-section">
     <view class="section-title-with-action">
       <text class="section-title">💸 其他费用</text>
-      <button class="add-cost-btn" bindtap="addOtherCost">+ 添加费用</button>
+      <view class="add-cost-btn" bindtap="addOtherCost">添加</view>
     </view>
     <view class="other-costs">
       <view wx:if="{{otherCosts.length === 0}}" class="empty-costs">
         <text>暂无其他费用记录</text>
       </view>
-      <view wx:for="{{otherCosts}}" wx:key="id" class="cost-item">
+      <view wx:for="{{otherCosts}}" wx:key="id" class="cost-item" bindlongpress="deleteCost" data-cost-id="{{item.id}}">
         <view class="cost-info">
           <text class="cost-name">{{item.name}}</text>
           <text class="cost-amount">¥{{item.amountText}}</text>
@@ -95,58 +215,152 @@
     </view>
   </view>
 
-  <!-- 资产价值趋势 -->
-  <view wx:if="{{type === 'asset'}}" class="info-section">
-    <view class="section-title">📈 {{type === 'asset' ? '资产价值趋势' : '负债余额趋势'}}</view>
-    <view class="trend-subtitle">基于购买价格和折旧计算（每月折旧率{{itemData.depreciationRate || 2}}%）</view>
-    <view class="chart-container">
-      <view class="chart-area">
-        <view class="y-axis">
-          <text class="y-label">¥{{trendData.maxValueText}}</text>
-          <text class="y-label">¥{{trendData.maxValue80Text}}</text>
-          <text class="y-label">¥{{trendData.maxValue60Text}}</text>
-          <text class="y-label">¥{{trendData.maxValue40Text}}</text>
-          <text class="y-label">¥{{trendData.maxValue20Text}}</text>
-          <text class="y-label">¥0.00</text>
-        </view>
-        <view class="chart-main">
-          <view class="chart-line">
-            <view wx:for="{{trendData.points}}" wx:key="index" 
-                  class="chart-point" 
-                  style="left: {{item.x}}%; bottom: {{item.y}}%;">
-              <view class="point-dot"></view>
-            </view>
-            <view class="trend-line" style="{{trendData.lineStyle}}"></view>
+  <!-- 资产价值趋势（工作收入不显示） -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 !== 'work_income'}}" class="info-section">
+    <view class="section-title">📈 资产生命周期</view>
+    
+    <!-- 时间轴容器 -->
+    <view class="timeline-container">
+      <!-- 时间轴线条 -->
+      <view class="timeline-line"></view>
+      
+      <!-- 时间节点 -->
+      <view class="timeline-nodes">
+        <!-- 购买时点 -->
+        <view class="timeline-node past">
+          <view class="node-dot"></view>
+          <view class="node-card">
+            <view class="node-title">购买时</view>
+            <view class="node-value">¥{{valueAnalysis.purchasePriceText}}</view>
+            <view class="node-date">{{timelineData.purchaseDate}}</view>
           </view>
-          <view class="chart-bars">
-            <view wx:for="{{trendData.points}}" wx:key="index" 
-                  class="chart-bar" 
-                  style="left: {{item.x}}%; height: {{item.y}}%; width: {{100 / trendData.points.length * 0.8}}%;">
-            </view>
+        </view>
+        
+        <!-- 6个月后 -->
+        <view class="timeline-node past-mid">
+          <view class="node-dot"></view>
+          <view class="node-card">
+            <view class="node-title">{{timelineData.sixMonthsLabel}}</view>
+            <view class="node-value">¥{{timelineData.sixMonthsValueText}}</view>
+            <view class="node-date">{{timelineData.sixMonthsDate}}</view>
+          </view>
+        </view>
+        
+        <!-- 当前时点 -->
+        <view class="timeline-node current">
+          <view class="node-dot"></view>
+          <view class="node-card highlight">
+            <view class="node-title">现在</view>
+            <view class="node-value">¥{{valueAnalysis.currentMarketValueText}}</view>
+            <view class="node-date">{{timelineData.currentDate}}</view>
+            <view class="node-extra">已使用{{valueAnalysis.usageDaysText}}天</view>
+          </view>
+        </view>
+        
+        <!-- 1年后预测 -->
+        <view class="timeline-node future-near">
+          <view class="node-dot"></view>
+          <view class="node-card">
+            <view class="node-title">1年后</view>
+            <view class="node-value">¥{{timelineData.oneYearValueText}}</view>
+            <view class="node-date">{{timelineData.oneYearDate}}</view>
+          </view>
+        </view>
+        
+        <!-- 3年后预测 -->
+        <view class="timeline-node future-far">
+          <view class="node-dot"></view>
+          <view class="node-card">
+            <view class="node-title">3年后</view>
+            <view class="node-value">¥{{timelineData.threeYearsValueText}}</view>
+            <view class="node-date">{{timelineData.threeYearsDate}}</view>
           </view>
         </view>
       </view>
-      <view class="x-axis">
-        <text wx:for="{{trendData.labels}}" wx:key="index" class="x-label">{{item}}</text>
+    </view>
+    
+    <!-- 关键指标 -->
+    <view class="lifecycle-stats">
+      <view class="stat-item">
+        <text class="stat-label">已折旧</text>
+        <text class="stat-value negative">-¥{{valueAnalysis.accumulatedDepreciationText}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">每日成本</text>
+        <text class="stat-value">¥{{valueAnalysis.dailyCostText}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">未来3年损失</text>
+        <text class="stat-value warning">¥{{timelineData.futureLossText}}</text>
+      </view>
+    </view>
+    
+    <!-- 里程碑事件 -->
+    <view wx:if="{{timelineData.milestones.length > 0}}" class="milestones">
+      <text class="milestones-title">📅 重要节点</text>
+      <view class="milestones-list">
+        <view wx:for="{{timelineData.milestones}}" wx:key="index" class="milestone-item">
+          <text class="milestone-icon">{{item.icon}}</text>
+          <view class="milestone-info">
+            <text class="milestone-title">{{item.title}}</text>
+            <text class="milestone-date">{{item.date}}</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>
 
-  <!-- 专项信息 -->
-  <view wx:if="{{showSpecialInfo}}" class="info-section">
+  <!-- 工作收入：职业发展 -->
+  <view wx:if="{{type === 'asset' && itemData.categoryL1 === 'work_income'}}" class="info-section">
+    <view class="section-title">📈 职业发展</view>
+    
+    <!-- 薪资历史记录 -->
+    <view wx:if="{{itemData.salaryHistory && itemData.salaryHistory.length > 0}}" class="salary-timeline">
+      <view wx:for="{{salaryTimelineData}}" wx:key="id" class="timeline-step">
+        <view class="step-dot {{item.isCurrent ? 'current' : 'past'}}"></view>
+        <view class="step-content">
+          <text class="step-title">{{item.reason}}</text>
+          <text class="step-value">¥{{item.amount}}/月</text>
+          <text class="step-date">{{item.dateText}}</text>
+          <text wx:if="{{item.duration}}" class="step-duration">{{item.duration}}</text>
+        </view>
+        <view wx:if="{{!item.isLast}}" class="step-line"></view>
+      </view>
+    </view>
+    
+    <!-- 简化时间轴（无薪资历史时） -->
+    <view wx:else class="income-timeline">
+      <!-- 入职时点 -->
+      <view class="income-milestone">
+        <view class="milestone-dot start"></view>
+        <view class="milestone-content">
+          <text class="milestone-title">入职</text>
+          <text class="milestone-value">¥{{valueAnalysis.initialSalaryText}}/月</text>
+          <text class="milestone-date">{{valueAnalysis.startDateText}}</text>
+        </view>
+      </view>
+      
+      <!-- 连接线 -->
+      <view class="income-line"></view>
+      
+      <!-- 当前时点 -->
+      <view class="income-milestone">
+        <view class="milestone-dot current"></view>
+        <view class="milestone-content">
+          <text class="milestone-title">现在</text>
+          <text class="milestone-value">¥{{valueAnalysis.currentSalaryText}}/月</text>
+          <text class="milestone-date">{{valueAnalysis.workDurationText}}</text>
+        </view>
+      </view>
+    </view>
+    
+
+  </view>
+
+  <!-- 专项信息（非工作收入） -->
+  <view wx:if="{{showSpecialInfo && itemData.categoryL1 !== 'work_income'}}" class="info-section">
     <view class="section-title">{{specialInfoTitle}}</view>
     <view class="special-info">
-      <!-- 工作收入信息 -->
-      <block wx:if="{{itemData.categoryL1 === 'work_income'}}">
-        <view wx:if="{{itemData.workUnit}}" class="special-item">
-          <text class="special-label">工作单位</text>
-          <text class="special-value">{{itemData.workUnit}}</text>
-        </view>
-        <view wx:if="{{itemData.position}}" class="special-item">
-          <text class="special-label">职位</text>
-          <text class="special-value">{{itemData.position}}</text>
-        </view>
-      </block>
 
       <!-- 金融资产信息 -->
       <block wx:if="{{itemData.categoryL1 === 'financial_assets'}}">

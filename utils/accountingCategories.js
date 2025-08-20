@@ -104,9 +104,9 @@ class AccountingCategories {
           icon: '📱',
           description: '使用价值为主、价值随时间递减的物品',
           depreciable: true,
-          marketValue: false,
+          marketValue: true,
           examples: ['手机电脑', '家电家具', '汽车衣物'],
-          accountingRule: '按月计提折旧，资产净值=原值-累计折旧',
+          accountingRule: '可手动设置当前市值，或按月计提折旧计算，资产净值=当前市值或原值-累计折旧',
           depreciationRates: {
             'mobile_computer': { rate: 0.40, label: '手机/电脑', years: 3 },
             'home_appliance': { rate: 0.20, label: '家电', years: 5 },

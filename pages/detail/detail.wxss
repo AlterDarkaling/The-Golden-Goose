@@ -7,16 +7,61 @@
 .header-section {
   background: white;
   padding: 60rpx 40rpx;
-  text-align: center;
   border-bottom: 1rpx solid #e9ecef;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-bottom: 30rpx;
+}
+
+.item-logo {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background: #f8f9fa;
+  border: 1rpx solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.logo-image-display {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+}
+
+.logo-emoji-display {
+  font-size: 48rpx;
+}
+
+.logo-default-display {
+  font-size: 48rpx;
+  opacity: 0.7;
+}
+
+.item-info {
+  flex: 1;
+  text-align: left;
+}
+
+.amount {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #4A90E2;
+  text-align: center;
 }
 
 .type-badge {
   display: inline-block;
-  padding: 12rpx 24rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-  margin-bottom: 20rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  margin-bottom: 12rpx;
 }
 
 .type-badge.asset {
@@ -30,16 +75,9 @@
 }
 
 .title {
-  font-size: 36rpx;
+  font-size: 32rpx;
   font-weight: bold;
   color: #212529;
-  margin-bottom: 20rpx;
-}
-
-.amount {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #4A90E2;
 }
 
 .info-section {
@@ -159,6 +197,8 @@
   border-top: 1rpx solid #e9ecef;
   display: flex;
   gap: 20rpx;
+  z-index: 10;
+  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .action-btn {
@@ -326,23 +366,30 @@
 .add-cost-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-  border: none;
-  border-radius: 20rpx;
-  padding: 10rpx 20rpx;
+  border-radius: 16rpx;
+  padding: 8rpx 16rpx;
   font-size: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.3);
+  cursor: pointer;
+}
+
+.add-cost-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.4);
 }
 
 .other-costs {
-  background: rgba(255, 255, 255, 0.05);
+  background: #f8f9fa;
   border-radius: 12rpx;
   padding: 24rpx;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1rpx solid #e9ecef;
 }
 
 .empty-costs {
   text-align: center;
-  color: #8892b0;
+  color: #999;
   font-size: 28rpx;
   padding: 40rpx 0;
 }
@@ -352,7 +399,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1rpx solid #f0f0f0;
 }
 
 .cost-item:last-child {
@@ -366,19 +413,24 @@
 
 .cost-name {
   font-size: 28rpx;
-  color: #ccd6f6;
+  color: #333;
   margin-bottom: 8rpx;
 }
 
 .cost-amount {
   font-size: 32rpx;
   font-weight: bold;
-  color: #ff6b6b;
+  color: #e74c3c;
 }
 
 .cost-date {
   font-size: 24rpx;
-  color: #8892b0;
+  color: #999;
+}
+
+.cost-item:active {
+  background: #f8f9fa;
+  transform: scale(0.98);
 }
 
 .costs-summary {
@@ -387,123 +439,567 @@
   align-items: center;
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-top: 2rpx solid #e9ecef;
 }
 
 .summary-label {
   font-size: 28rpx;
-  color: #8892b0;
+  color: #666;
 }
 
 .summary-amount {
   font-size: 32rpx;
   font-weight: bold;
-  color: #ff6b6b;
+  color: #e74c3c;
 }
 
-/* 趋势图表样式 */
-.trend-subtitle {
-  font-size: 24rpx;
-  color: #8892b0;
-  margin-bottom: 20rpx;
-  text-align: center;
+/* 时间轴样式 */
+.timeline-container {
+  position: relative;
+  margin: 30rpx 0;
+  padding: 20rpx 10rpx;
 }
 
-.chart-container {
-  background: rgba(255, 255, 255, 0.05);
+.timeline-line {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 4rpx;
+  background: linear-gradient(90deg, #52c41a 0%, #87d068 25%, #1890ff 50%, #faad14 75%, #ff7875 100%);
+  border-radius: 2rpx;
+  transform: translateY(-50%);
+}
+
+.timeline-nodes {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 120rpx;
+}
+
+.node-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  margin-bottom: 16rpx;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.timeline-node.past .node-dot {
+  background: #52c41a;
+}
+
+.timeline-node.past-mid .node-dot {
+  background: #87d068;
+}
+
+.timeline-node.current .node-dot {
+  background: #1890ff;
+  transform: scale(1.2);
+  box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.4);
+}
+
+.timeline-node.future-near .node-dot {
+  background: #faad14;
+}
+
+.timeline-node.future-far .node-dot {
+  background: #ff7875;
+}
+
+.node-card {
+  background: #fff;
+  border: 1rpx solid #e9ecef;
   border-radius: 12rpx;
-  padding: 30rpx;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8rpx 6rpx;
+  text-align: center;
+  min-width: 100rpx;
+  max-width: 110rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.node-card.highlight {
+  border-color: #1890ff;
+  box-shadow: 0 4rpx 16rpx rgba(24, 144, 255, 0.15);
+}
+
+.node-title {
+  font-size: 18rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+}
+
+.node-value {
+  font-size: 22rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 3rpx;
+}
+
+.node-date {
+  font-size: 16rpx;
+  color: #666;
+}
+
+.node-extra {
+  font-size: 18rpx;
+  color: #1890ff;
+  margin-top: 3rpx;
+}
+
+/* 关键指标样式 */
+.lifecycle-stats {
+  display: flex;
+  gap: 16rpx;
+  margin: 30rpx 0;
+}
+
+.stat-item {
+  flex: 1;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  text-align: center;
+  border: 1rpx solid #e9ecef;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #666;
+  margin-bottom: 6rpx;
+  display: block;
+}
+
+.stat-value {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-value.negative {
+  color: #ff4d4f;
+}
+
+.stat-value.warning {
+  color: #faad14;
+}
+
+/* 里程碑事件样式 */
+.milestones {
+  margin-top: 30rpx;
+}
+
+.milestones-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.milestones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+.milestone-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+}
+
+.milestone-info {
+  flex: 1;
+}
+
+.milestone-title {
+  font-size: 24rpx;
+  color: #333;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.milestone-date {
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 收入统计样式 */
+.income-stats {
+  margin-top: 40rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20rpx;
+}
+
+/* 薪资历史时间轴样式 */
+.salary-timeline {
+  position: relative;
+  padding: 30rpx 0;
+}
+
+.timeline-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+}
+
+.timeline-step:last-child {
+  margin-bottom: 0;
+}
+
+.step-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 30rpx;
+  margin-top: 10rpx;
+  z-index: 2;
+  position: relative;
+}
+
+.step-dot.past {
+  background: #6c757d;
+  border: 3rpx solid #fff;
+  box-shadow: 0 0 0 2rpx #6c757d;
+}
+
+.step-dot.current {
+  background: #007bff;
+  border: 3rpx solid #fff;
+  box-shadow: 0 0 0 2rpx #007bff;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 2rpx #007bff;
+  }
+  50% {
+    box-shadow: 0 0 0 8rpx rgba(0, 123, 255, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 2rpx #007bff;
+  }
+}
+
+.step-line {
+  position: absolute;
+  left: 10rpx;
+  top: 30rpx;
+  width: 2rpx;
+  height: 70rpx;
+  background: #e9ecef;
+  z-index: 1;
+}
+
+.step-content {
+  flex: 1;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  border-left: 4rpx solid #007bff;
+}
+
+.step-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.step-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.step-date {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-bottom: 6rpx;
+  display: block;
+}
+
+.step-duration {
+  font-size: 22rpx;
+  color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 4rpx 8rpx;
+  border-radius: 6rpx;
+  display: inline-block;
+}
+
+/* 工作收入：基础信息样式 */
+.basic-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24rpx;
   margin-top: 20rpx;
 }
 
-.chart-area {
-  display: flex;
-  height: 400rpx;
-  margin-bottom: 20rpx;
+/* 移除不支持的:has()选择器，保持默认2列布局 */
+
+.info-item {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  border: 1rpx solid #e9ecef;
 }
 
-.y-axis {
+.info-label {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #212529;
+  font-weight: 500;
+}
+
+/* 工作收入：薪资概览样式 */
+.salary-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.salary-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12rpx;
+  padding: 24rpx;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.2);
+}
+
+.salary-amount {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.salary-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+/* 工作收入：收入分析样式 */
+.income-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.analysis-item {
+  background: #fff;
+  border: 2rpx solid #e9ecef;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.analysis-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 4rpx 12rpx rgba(0, 123, 255, 0.1);
+}
+
+.analysis-amount {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 8rpx;
+}
+
+.analysis-label {
+  font-size: 24rpx;
+  color: #6c757d;
+}
+
+/* 工作收入：收入结构样式 */
+.income-category {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.category-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #495057;
+}
+
+.category-amount {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.category-desc {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-top: 8rpx;
+}
+
+/* 总收入汇总 */
+.total-income-summary {
+  background: #fff3cd;
+  border: 1rpx solid #ffeaa7;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-top: 20rpx;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.summary-row.main-summary {
+  border-bottom: 1rpx solid #ffeaa7;
+  margin-bottom: 12rpx;
+  padding-bottom: 12rpx;
+}
+
+.main-summary .summary-label {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #856404;
+}
+
+.main-summary .summary-amount {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #856404;
+}
+
+.summary-label {
+  font-size: 28rpx;
+  color: #856404;
+}
+
+.summary-amount {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #856404;
+}
+
+/* 收入发展轨迹样式 */
+.income-timeline {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 20rpx;
+  margin: 20rpx 0;
+}
+
+.income-milestone {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 120rpx;
-  padding-right: 20rpx;
-}
-
-.y-label {
-  font-size: 20rpx;
-  color: #8892b0;
-  text-align: right;
-}
-
-.chart-main {
+  align-items: center;
   flex: 1;
-  position: relative;
-  background: linear-gradient(to top, rgba(79, 172, 254, 0.1) 0%, rgba(79, 172, 254, 0.05) 100%);
-  border-radius: 8rpx;
-  border: 1px solid rgba(79, 172, 254, 0.2);
 }
 
-.chart-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.chart-point {
-  position: absolute;
-  width: 16rpx;
-  height: 16rpx;
-}
-
-.point-dot {
-  width: 100%;
-  height: 100%;
-  background: #4facfe;
+.milestone-dot {
+  width: 32rpx;
+  height: 32rpx;
   border-radius: 50%;
-  border: 2px solid #0f3460;
-  box-shadow: 0 0 10rpx rgba(79, 172, 254, 0.6);
+  margin-bottom: 16rpx;
+  border: 4rpx solid #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
 }
 
-.trend-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  opacity: 0.8;
-  border-radius: 8rpx;
+.milestone-dot.start {
+  background: #52c41a;
 }
 
-.chart-bars {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.milestone-dot.current {
+  background: #1890ff;
 }
 
-.chart-bar {
-  position: absolute;
-  bottom: 0;
-  background: rgba(79, 172, 254, 0.3);
-  border-radius: 4rpx 4rpx 0 0;
-  border: 1px solid rgba(79, 172, 254, 0.5);
+.income-line {
+  flex: 1;
+  height: 4rpx;
+  background: linear-gradient(90deg, #52c41a 0%, #1890ff 100%);
+  border-radius: 2rpx;
+  margin: 0 20rpx;
+  margin-top: -40rpx;
 }
 
-.x-axis {
+.milestone-content {
   display: flex;
-  justify-content: space-between;
-  padding: 0 120rpx 0 140rpx;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.x-label {
-  font-size: 20rpx;
-  color: #8892b0;
-  text-align: center;
-  transform: rotate(-45deg);
-  transform-origin: center;
+.milestone-content .milestone-title {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+
+.milestone-value {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.milestone-content .milestone-date {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.income-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20rpx;
+  margin-top: 30rpx;
+  padding: 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
 }
