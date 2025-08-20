@@ -1,6 +1,7 @@
 // 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
 const AccountingCategories = require('../../utils/accountingCategories.js')
+const DepreciationEngine = require('../../utils/depreciation.js')
 
 Page({
   data: {
@@ -193,6 +194,9 @@ Page({
       // 计算实际月收入（针对工作收入）
       monthlyIncome: asset.categoryL1 === 'work_income' ? 
         self.calculateActualMonthlyIncome(asset) : asset.monthlyIncome,
+      // 计算每日成本（针对消费型资产）
+      dailyCost: asset.categoryL2 === 'consumer_assets' ? 
+        self.calculateDailyCost(asset) : null,
       statusText: self.getStatusText(asset.status),
       // 工作收入优先显示入职日期，其他资产显示购买日期
       createTimeText: asset.categoryL1 === 'work_income' ? 
@@ -663,5 +667,40 @@ Page({
     actualMonthlyIncome += fixedAllowances
     
     return actualMonthlyIncome.toFixed(2)
+  },
+
+  // 计算消费型资产的每日成本
+  calculateDailyCost(asset) {
+    // 月度运营成本除以30天
+    const monthlyOperatingCost = parseFloat(asset.monthlyOperatingCost) || 0
+    const dailyOperatingCost = monthlyOperatingCost / 30
+    
+    // 折旧成本计算
+    let dailyDepreciation = 0
+    const originalValue = parseFloat(asset.originalValue) || parseFloat(asset.initialValue) || 0
+    
+    if (originalValue > 0) {
+      let depreciationRate = 0
+      
+      // 优先使用用户设置的折旧率
+      if (asset.depreciationRate) {
+        depreciationRate = parseFloat(asset.depreciationRate) / 100
+      } else {
+        // 使用系统默认折旧率
+        depreciationRate = DepreciationEngine.getDepreciationRate(asset.categoryL3 || asset.categoryL2 || '')
+      }
+      
+      // 年折旧额 / 365天
+      dailyDepreciation = (originalValue * depreciationRate) / 365
+    }
+    
+    const totalDailyCost = dailyOperatingCost + dailyDepreciation
+    
+    // 如果成本太小，返回最小显示值
+    if (totalDailyCost < 0.01 && originalValue > 0) {
+      return "0.01"  // 最小显示1分钱，表示该资产确实有成本
+    }
+    
+    return totalDailyCost.toFixed(2)
   }
 })

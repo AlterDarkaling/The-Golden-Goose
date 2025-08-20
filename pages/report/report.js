@@ -70,13 +70,26 @@ Page({
     let totalAssets = 0
     assets.forEach(a => {
       const v = this.firstNumber(a.currentValue, a.originalValue, a.initialValue, 0)
-      totalAssets += v
       switch (a.categoryL1) {
-        case 'current_assets': currentAssetsSum += v; break
-        case 'financial_assets': financialAssetsSum += v; break
-        case 'physical_assets': physicalAssetsSum += v; break
-        case 'work_income': workIncomeValue += v; break
-        default: otherAssetsSum += v
+        case 'current_assets': 
+          currentAssetsSum += v
+          totalAssets += v
+          break
+        case 'financial_assets': 
+          financialAssetsSum += v
+          totalAssets += v
+          break
+        case 'physical_assets': 
+          physicalAssetsSum += v
+          totalAssets += v
+          break
+        case 'work_income': 
+          workIncomeValue += v
+          // 不计入总资产
+          break
+        default: 
+          otherAssetsSum += v
+          totalAssets += v
       }
     })
 
@@ -144,8 +157,8 @@ Page({
     const financingCashFlowNum = -totalMonthlyPayment
     const netCashFlowNum = operatingCashFlowNum + investingCashFlowNum + financingCashFlowNum
 
-    // 计算占比
-    const assetsBreakdownTotal = currentAssetsSum + financialAssetsSum + physicalAssetsSum + workIncomeValue + otherAssetsSum
+    // 计算占比（排除工作收入）
+    const assetsBreakdownTotal = currentAssetsSum + financialAssetsSum + physicalAssetsSum + otherAssetsSum
     const liabilitiesBreakdownTotal = currentLiabilitiesSum + longTermLiabilitiesSum + otherLiabilitiesSum
 
     // 财务比率（基础版）
@@ -212,9 +225,8 @@ Page({
           { name: '流动资产', valueText: '¥' + this.absCurrency(currentAssetsSum), percentageText: this.percentText(currentAssetsSum, assetsBreakdownTotal) },
           { name: '金融资产', valueText: '¥' + this.absCurrency(financialAssetsSum), percentageText: this.percentText(financialAssetsSum, assetsBreakdownTotal) },
           { name: '实物资产', valueText: '¥' + this.absCurrency(physicalAssetsSum), percentageText: this.percentText(physicalAssetsSum, assetsBreakdownTotal) },
-          { name: '工作收入价值', valueText: '¥' + this.absCurrency(workIncomeValue), percentageText: this.percentText(workIncomeValue, assetsBreakdownTotal) },
           { name: '其他资产', valueText: '¥' + this.absCurrency(otherAssetsSum), percentageText: this.percentText(otherAssetsSum, assetsBreakdownTotal) }
-        ],
+        ].filter(item => parseFloat(item.valueText.replace('¥', '').replace(',', '')) > 0),
         liabilities: [
           { name: '流动负债', valueText: '¥' + this.absCurrency(currentLiabilitiesSum), percentageText: this.percentText(currentLiabilitiesSum, liabilitiesBreakdownTotal) },
           { name: '长期负债', valueText: '¥' + this.absCurrency(longTermLiabilitiesSum), percentageText: this.percentText(longTermLiabilitiesSum, liabilitiesBreakdownTotal) },

@@ -129,8 +129,13 @@
             <text class="{{item.categoryL1 === 'work_income' ? 'item-start-date' : 'item-purchase-date'}}">{{item.createTimeText}}</text>
             <!-- 现金流信息 -->
             <view class="item-cashflow">
-              <text class="cashflow-label">月收入: </text>
-              <text class="cashflow-amount positive">¥{{item.monthlyIncome || '0'}}</text>
+              <text wx:if="{{item.categoryL1 === 'work_income'}}" class="cashflow-label">月收入: </text>
+              <text wx:elif="{{item.categoryL2 === 'consumer_assets'}}" class="cashflow-label">每日成本: </text>
+              <text wx:else class="cashflow-label">月收入: </text>
+              
+              <text wx:if="{{item.categoryL1 === 'work_income'}}" class="cashflow-amount positive">¥{{item.monthlyIncome || '0'}}</text>
+              <text wx:elif="{{item.categoryL2 === 'consumer_assets'}}" class="cashflow-amount negative">¥{{item.dailyCost || '0'}}</text>
+              <text wx:else class="cashflow-amount positive">¥{{item.monthlyIncome || '0'}}</text>
             </view>
           </view>
         </view>

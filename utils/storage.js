@@ -142,7 +142,12 @@ const StorageManager = {
     const assets = this.getAssets()
     const liabilities = this.getLiabilities()
     
+    // 计算资产总值，排除工作收入
     const totalAssets = assets.reduce((sum, asset) => {
+      // 排除工作收入，因为它不是传统意义上的资产
+      if (asset.categoryL1 === 'work_income') {
+        return sum
+      }
       const currentValue = asset.currentValue || asset.initialValue || 0
       return sum + currentValue
     }, 0)

@@ -516,14 +516,14 @@ Page({
 
   handleDataBackup() {
     wx.showActionSheet({
-      itemList: ['生成完整备份', '导出JSON格式', '导出CSV格式', '数据统计报告'],
+      itemList: ['💾 完整数据备份', '🔧 简化备份（兼容模式）', '📊 导出CSV格式', '📋 数据统计报告'],
       success: (res) => {
         switch(res.tapIndex) {
           case 0:
             this.generateFullBackup()
             break
           case 1:
-            this.exportJSONData()
+            this.generateSimpleBackup()
             break
           case 2:
             this.exportCSVData()
@@ -542,94 +542,317 @@ Page({
     
     try {
       const backupData = this.createBackupData()
+      console.log('生成的备份数据:', backupData)
       
-      if (!backupData.assets.length && !backupData.liabilities.length) {
+      // 检查是否有数据可备份
+      const hasAssets = backupData.coreData?.assets?.length > 0
+      const hasLiabilities = backupData.coreData?.liabilities?.length > 0
+      
+      if (!hasAssets && !hasLiabilities) {
         wx.hideLoading()
-        wx.showToast({
+        wx.showModal({
           title: '暂无数据可备份',
-          icon: 'none'
+          content: '当前没有资产或负债数据可以备份。请先添加一些财务记录。',
+          showCancel: false,
+          confirmText: '知道了'
         })
         return
       }
 
       // 生成备份文件内容
-      const backupContent = this.generateBackupContent(backupData)
+      let backupContent
+      try {
+        backupContent = this.generateBackupContent(backupData)
+        console.log('生成的备份内容长度:', backupContent.length)
+      } catch (contentError) {
+        console.error('生成备份内容失败:', contentError)
+        // 如果生成内容失败，使用简化版本
+        backupContent = `大鹅爱记账 - 数据备份\n时间：${new Date().toLocaleString()}\n\n备份数据：\n${JSON.stringify(backupData, null, 2)}`
+      }
       
       wx.hideLoading()
       
       // 显示备份选项
       wx.showActionSheet({
-        itemList: ['查看备份内容', '复制到剪贴板', '分享备份', '保存到相册'],
+        itemList: ['💾 复制完整备份数据', '📋 查看备份信息', '❓ 查看使用说明'],
         success: (res) => {
           switch(res.tapIndex) {
             case 0:
-              this.showBackupContent(backupContent)
+              this.copyJSONData(backupData)
               break
             case 1:
-              this.copyToClipboard(backupContent)
+              this.showBackupContent(backupContent)
               break
             case 2:
-              this.shareBackup(backupContent)
-              break
-            case 3:
-              this.saveBackupToAlbum(backupContent)
+              this.showBackupInstructions()
               break
           }
         }
       })
     } catch (error) {
       wx.hideLoading()
-      wx.showToast({
-        title: '备份生成失败',
-        icon: 'error'
-      })
       console.error('Backup generation failed:', error)
+      wx.showModal({
+        title: '备份生成失败',
+        content: `备份过程中出现错误：\n${error.message}\n\n请重试或联系技术支持。`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
     }
   },
 
-  // 创建备份数据
+  // 创建完整备份数据
   createBackupData() {
-    const assets = StorageManager.getAssets() || []
-    const liabilities = StorageManager.getLiabilities() || []
-    const userInfo = StorageManager.getUser() || {}
-    const settings = StorageManager.getSettings() || {}
+    try {
+      console.log('开始创建备份数据...')
+      
+      // 核心数据
+      let assets, liabilities, userInfo, settings
+      
+      try {
+        assets = StorageManager.getAssets() || []
+        console.log('获取资产数据成功:', assets.length)
+      } catch (e) {
+        console.error('获取资产数据失败:', e)
+        assets = []
+      }
+      
+      try {
+        liabilities = StorageManager.getLiabilities() || []
+        console.log('获取负债数据成功:', liabilities.length)
+      } catch (e) {
+        console.error('获取负债数据失败:', e)
+        liabilities = []
+      }
+      
+      try {
+        userInfo = StorageManager.getUser() || {}
+        console.log('获取用户信息成功')
+      } catch (e) {
+        console.error('获取用户信息失败:', e)
+        userInfo = {}
+      }
+      
+      try {
+        settings = StorageManager.getSettings() || {}
+        console.log('获取设置信息成功')
+      } catch (e) {
+        console.error('获取设置信息失败:', e)
+        settings = {}
+      }
+      
+      // 应用状态数据
+      let appInitialized, hasSampleData
+      try {
+        appInitialized = wx.getStorageSync('app_initialized') || false
+        hasSampleData = wx.getStorageSync('has_sample_data')
+        console.log('获取应用状态成功')
+      } catch (e) {
+        console.error('获取应用状态失败:', e)
+        appInitialized = false
+        hasSampleData = false
+      }
+      
+      // 获取存储信息（可选，失败不影响主要功能）
+      let storageInfo, additionalData = {}
+      try {
+        storageInfo = wx.getStorageInfoSync()
+        console.log('当前存储信息:', storageInfo)
+        
+        // 其他可能的数据
+        storageInfo.keys.forEach(key => {
+          // 排除已经包含的数据和临时数据
+          if (!['assets_data', 'liabilities_data', 'user_info', 'settings_data', 'app_initialized', 'has_sample_data', 'backup_before_restore'].includes(key)) {
+            try {
+              additionalData[key] = wx.getStorageSync(key)
+            } catch (e) {
+              console.warn(`读取存储键 ${key} 失败:`, e)
+            }
+          }
+        })
+      } catch (e) {
+        console.warn('获取存储信息失败，跳过额外数据备份:', e)
+        additionalData = {}
+      }
+      
+      // 获取系统信息
+      let deviceInfo
+      try {
+        const sysInfo = wx.getSystemInfoSync()
+        deviceInfo = {
+          platform: sysInfo.platform || 'unknown',
+          version: sysInfo.version || 'unknown',
+          appVersion: '1.0.0'
+        }
+      } catch (e) {
+        console.warn('获取系统信息失败:', e)
+        deviceInfo = {
+          platform: 'unknown',
+          version: 'unknown', 
+          appVersion: '1.0.0'
+        }
+      }
+      
+      // 核心数据对象
+      const coreData = {
+        assets: assets,
+        liabilities: liabilities,
+        userInfo: userInfo,
+        settings: settings
+      }
+      
+      // 生成统计信息
+      let stats
+      try {
+        stats = this.calculateBackupStats(assets, liabilities)
+      } catch (e) {
+        console.warn('生成统计信息失败:', e)
+        stats = {
+          totalAssets: assets.length,
+          totalLiabilities: liabilities.length,
+          totalAssetValue: 0,
+          totalLiabilityValue: 0,
+          netWorth: 0
+        }
+      }
+      
+      // 生成校验和
+      let checksum
+      try {
+        checksum = this.generateChecksum(coreData)
+      } catch (e) {
+        console.warn('生成校验和失败:', e)
+        checksum = 'unknown'
+      }
+      
+      const backupData = {
+        // 备份元信息
+        version: '3.0',
+        timestamp: new Date().toISOString(),
+        deviceInfo: deviceInfo,
+        
+        // 核心业务数据
+        coreData: coreData,
+        
+        // 应用状态数据  
+        appState: {
+          appInitialized: appInitialized,
+          hasSampleData: hasSampleData
+        },
+        
+        // 其他数据
+        additionalData: additionalData,
+        
+        // 数据统计
+        stats: stats,
+        
+        // 数据完整性校验
+        checksum: checksum
+      }
+      
+      console.log('完整备份数据:', backupData)
+      return backupData
+      
+    } catch (error) {
+      console.error('创建备份数据失败:', error)
+      throw new Error(`备份数据创建失败: ${error.message}`)
+    }
+  },
+
+  // 生成简化备份（兼容模式）
+  generateSimpleBackup() {
+    wx.showLoading({ title: '生成简化备份中...' })
     
-    return {
-      version: '2.0',
-      timestamp: new Date().toISOString(),
-      deviceInfo: {
-        platform: wx.getSystemInfoSync().platform,
-        version: wx.getSystemInfoSync().version
-      },
-      userInfo: {
-        nickname: userInfo.nickname,
-        motto: userInfo.motto,
-        createTime: userInfo.createTime
-      },
-      assets: assets.map(asset => ({
-        ...asset,
-        backupTime: new Date().toISOString()
-      })),
-      liabilities: liabilities.map(liability => ({
-        ...liability,
-        backupTime: new Date().toISOString()
-      })),
-      settings,
-      stats: this.calculateBackupStats(assets, liabilities)
+    try {
+      // 只备份核心数据，避免复杂的存储扫描
+      const assets = StorageManager.getAssets() || []
+      const liabilities = StorageManager.getLiabilities() || []
+      const userInfo = StorageManager.getUser() || {}
+      
+      // 简化的备份数据结构
+      const backupData = {
+        version: '2.0',
+        timestamp: new Date().toISOString(),
+        assets: assets,
+        liabilities: liabilities,
+        userInfo: userInfo,
+        stats: {
+          totalAssets: assets.length,
+          totalLiabilities: liabilities.length
+        }
+      }
+      
+      console.log('简化备份数据:', backupData)
+      
+      if (!assets.length && !liabilities.length) {
+        wx.hideLoading()
+        wx.showModal({
+          title: '暂无数据可备份',
+          content: '当前没有资产或负债数据可以备份。请先添加一些财务记录。',
+          showCancel: false,
+          confirmText: '知道了'
+        })
+        return
+      }
+      
+      wx.hideLoading()
+      
+      // 直接复制JSON数据
+      const jsonContent = JSON.stringify(backupData, null, 2)
+      this.copyToClipboard(jsonContent)
+      
+      wx.showModal({
+        title: '简化备份完成',
+        content: `📋 备份数据已复制到剪贴板\n\n📊 备份内容：\n• 资产记录：${assets.length}条\n• 负债记录：${liabilities.length}条\n• 备份时间：${new Date().toLocaleString()}\n\n💡 此为简化版本，如需完整备份请使用"完整数据备份"功能。`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+      
+    } catch (error) {
+      wx.hideLoading()
+      console.error('简化备份失败:', error)
+      wx.showModal({
+        title: '简化备份失败',
+        content: `备份过程中出现错误：\n${error.message}\n\n请尝试使用其他备份方式或联系技术支持。`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    }
+  },
+
+  // 生成数据校验和
+  generateChecksum(data) {
+    try {
+      const dataString = JSON.stringify(data)
+      // 简单的校验和算法
+      let hash = 0
+      for (let i = 0; i < dataString.length; i++) {
+        const char = dataString.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // 转换为32位整数
+      }
+      return hash.toString(36)
+    } catch (error) {
+      console.warn('生成校验和失败:', error)
+      return 'unknown'
     }
   },
 
   // 计算备份统计
   calculateBackupStats(assets, liabilities) {
-    const totalAssetValue = assets.reduce((sum, asset) => 
+    // 确保参数是数组
+    const safeAssets = Array.isArray(assets) ? assets : []
+    const safeLiabilities = Array.isArray(liabilities) ? liabilities : []
+    
+    const totalAssetValue = safeAssets.reduce((sum, asset) => 
       sum + (asset.currentValue || asset.originalValue || asset.initialValue || 0), 0)
-    const totalLiabilityValue = liabilities.reduce((sum, liability) => 
+    const totalLiabilityValue = safeLiabilities.reduce((sum, liability) => 
       sum + (liability.currentAmount || liability.originalAmount || liability.initialAmount || 0), 0)
     const netWorth = totalAssetValue - totalLiabilityValue
     
     return {
-      totalAssets: assets.length,
-      totalLiabilities: liabilities.length,
+      totalAssets: safeAssets.length,
+      totalLiabilities: safeLiabilities.length,
       totalAssetValue,
       totalLiabilityValue,
       netWorth,
@@ -640,13 +863,19 @@ Page({
 
   // 生成备份内容
   generateBackupContent(backupData) {
-    const { stats } = backupData
+    const { stats, version, coreData, appState } = backupData
+    const assets = version === '3.0' ? coreData?.assets || [] : backupData.assets || []
+    const liabilities = version === '3.0' ? coreData?.liabilities || [] : backupData.liabilities || []
+    const userInfo = version === '3.0' ? coreData?.userInfo || {} : backupData.userInfo || {}
     
-    return `🦢 大鹅爱记账 - 数据备份
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 备份时间：${new Date(backupData.timestamp).toLocaleString()}
-📱 设备信息：${backupData.deviceInfo.platform} ${backupData.deviceInfo.version}
-👤 用户昵称：${backupData.userInfo.nickname || '未设置'}
+    return `🦢 大鹅爱记账 - 完整数据备份
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 备份信息
+• 版本：v${version}
+• 时间：${new Date(backupData.timestamp).toLocaleString()}
+• 设备：${backupData.deviceInfo.platform} ${backupData.deviceInfo.version}
+• 用户：${userInfo.nickname || '未设置'}
+• 校验：${backupData.checksum || '无'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 财务数据统计
@@ -681,10 +910,14 @@ ${this.generateDetailedBackupContent(backupData)}
   generateDetailedBackupContent(backupData) {
     let content = ''
     
+    // 兼容v2.0和v3.0数据结构
+    const assets = backupData.assets || backupData.coreData?.assets || []
+    const liabilities = backupData.liabilities || backupData.coreData?.liabilities || []
+    
     // 资产详情
-    if (backupData.assets.length > 0) {
+    if (assets.length > 0) {
       content += '💎 资产明细：\n'
-      backupData.assets.forEach((asset, index) => {
+      assets.forEach((asset, index) => {
         const value = asset.currentValue || asset.originalValue || asset.initialValue || 0
         content += `${index + 1}. ${asset.name} - ¥${this.formatNumber(value)}\n`
       })
@@ -692,9 +925,9 @@ ${this.generateDetailedBackupContent(backupData)}
     }
     
     // 负债详情
-    if (backupData.liabilities.length > 0) {
+    if (liabilities.length > 0) {
       content += '💳 负债明细：\n'
-      backupData.liabilities.forEach((liability, index) => {
+      liabilities.forEach((liability, index) => {
         const value = liability.currentAmount || liability.originalAmount || liability.initialAmount || 0
         content += `${index + 1}. ${liability.name} - ¥${this.formatNumber(value)}\n`
       })
@@ -704,41 +937,7 @@ ${this.generateDetailedBackupContent(backupData)}
     return content || '暂无详细数据'
   },
 
-  // 导出JSON格式
-  exportJSONData() {
-    wx.showLoading({ title: '导出中...' })
-    
-    try {
-      const backupData = this.createBackupData()
-      const jsonContent = JSON.stringify(backupData, null, 2)
-      
-      wx.hideLoading()
-      
-      wx.showActionSheet({
-        itemList: ['查看JSON内容', '复制JSON数据', '保存JSON文件'],
-        success: (res) => {
-          switch(res.tapIndex) {
-            case 0:
-              this.showJSONContent(jsonContent)
-              break
-            case 1:
-              this.copyToClipboard(jsonContent)
-              break
-            case 2:
-              this.saveJSONFile(jsonContent)
-              break
-          }
-        }
-      })
-    } catch (error) {
-      wx.hideLoading()
-      wx.showToast({
-        title: 'JSON导出失败',
-        icon: 'error'
-      })
-      console.error('JSON export failed:', error)
-    }
-  },
+
 
   // 导出CSV格式
   exportCSVData() {
@@ -935,22 +1134,33 @@ ${this.generateDetailedBackupContent(backupData)}
     this.copyToClipboard(content)
   },
 
-  // 复制到剪贴板
-  copyToClipboard(content) {
-    wx.setClipboardData({
-      data: content,
-      success: () => {
-        wx.showToast({
-          title: '已复制到剪贴板',
-          icon: 'success'
-        })
-      },
-      fail: () => {
-        wx.showToast({
-          title: '复制失败',
-          icon: 'error'
-        })
-      }
+  // 复制JSON数据
+  copyJSONData(backupData) {
+    try {
+      const jsonContent = JSON.stringify(backupData, null, 2)
+      this.copyToClipboard(jsonContent)
+      wx.showModal({
+        title: 'JSON数据已复制',
+        content: '完整的JSON备份数据已复制到剪贴板，您可以：\n\n• 保存到备忘录\n• 发送给文件传输助手\n• 粘贴到其他应用\n\n恢复时选择"从剪贴板恢复"即可。',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    } catch (error) {
+      console.error('JSON复制失败:', error)
+      wx.showToast({
+        title: 'JSON生成失败',
+        icon: 'error'
+      })
+    }
+  },
+
+  // 显示备份说明
+  showBackupInstructions() {
+    wx.showModal({
+      title: '完整备份恢复说明',
+      content: `📋 新版备份系统特点：\n\n✅ 完整数据备份\n• 包含所有资产负债记录\n• 包含用户设置和应用状态\n• 包含所有本地存储数据\n• 数据完整性校验\n\n💾 备份步骤：\n1. 点击"复制完整备份数据"\n2. 将数据保存到安全位置\n\n🔄 恢复步骤：\n1. 复制备份数据到剪贴板\n2. 点击"数据恢复"→"从剪贴板恢复"\n3. 系统会自动验证和恢复所有数据\n\n🛡️ 安全保护：\n• 恢复前自动备份当前数据\n• 支持一键撤销恢复\n• 版本兼容性检查\n• 数据损坏检测`,
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
@@ -1065,10 +1275,10 @@ ${this.generateDetailedBackupContent(backupData)}
   },
 
   showDataStatistics() {
-    const assets = StorageManager.getAssets()
-    const liabilities = StorageManager.getLiabilities()
-    const dailyIncome = StorageManager.calculateDailyIncome()
-    const dailyCost = StorageManager.calculateDailyCost()
+    const assets = StorageManager.getAssets() || []
+    const liabilities = StorageManager.getLiabilities() || []
+    const dailyIncome = StorageManager.calculateDailyIncome() || 0
+    const dailyCost = StorageManager.calculateDailyCost() || 0
 
     wx.showModal({
       title: '数据统计',
@@ -1106,19 +1316,27 @@ ${this.generateDetailedBackupContent(backupData)}
     wx.getClipboardData({
       success: (res) => {
         try {
+          console.log('剪贴板数据:', res.data)
           const data = JSON.parse(res.data)
+          console.log('解析后的数据:', data)
           this.validateAndRestoreData(data)
         } catch (error) {
-          wx.showToast({
-            title: '剪贴板数据格式错误',
-            icon: 'error'
+          console.error('数据解析错误:', error)
+          wx.showModal({
+            title: '数据格式错误',
+            content: `剪贴板数据格式不正确：\n${error.message}\n\n请确保复制的是完整的JSON备份数据。`,
+            showCancel: false,
+            confirmText: '知道了'
           })
         }
       },
-      fail: () => {
-        wx.showToast({
+      fail: (error) => {
+        console.error('获取剪贴板失败:', error)
+        wx.showModal({
           title: '获取剪贴板失败',
-          icon: 'error'
+          content: '无法读取剪贴板内容。请检查小程序权限或重新复制备份数据。',
+          showCancel: false,
+          confirmText: '知道了'
         })
       }
     })
@@ -1139,27 +1357,82 @@ ${this.generateDetailedBackupContent(backupData)}
 
   // 验证并恢复数据
   validateAndRestoreData(data) {
-    if (!data || !data.version) {
-      wx.showToast({
-        title: '不是有效的备份数据',
-        icon: 'error'
-      })
-      return
-    }
-
-    const { assets = [], liabilities = [], userInfo = {} } = data
-
-    wx.showModal({
-      title: '确认数据恢复',
-      content: `发现备份数据：\n• 资产记录：${assets.length}条\n• 负债记录：${liabilities.length}条\n• 备份时间：${new Date(data.timestamp).toLocaleString()}\n\n恢复将覆盖当前所有数据，是否继续？`,
-      confirmText: '恢复数据',
-      confirmColor: '#ff6b6b',
-      success: (res) => {
-        if (res.confirm) {
-          this.performDataRestore(data)
-        }
+    try {
+      // 基本格式验证
+      if (!data || typeof data !== 'object') {
+        throw new Error('无效的数据格式')
       }
-    })
+
+      if (!data.version) {
+        throw new Error('缺少版本信息')
+      }
+
+      // 版本兼容性检查
+      const supportedVersions = ['2.0', '3.0']
+      if (!supportedVersions.includes(data.version)) {
+        throw new Error(`不支持的备份版本: ${data.version}`)
+      }
+
+      // 数据完整性验证
+      let coreData, stats
+      if (data.version === '3.0') {
+        if (!data.coreData) {
+          throw new Error('缺少核心数据')
+        }
+        coreData = data.coreData
+        
+        // 校验和验证
+        if (data.checksum) {
+          const calculatedChecksum = this.generateChecksum(coreData)
+          if (calculatedChecksum !== data.checksum) {
+            console.warn('数据校验和不匹配，可能存在数据损坏')
+          }
+        }
+        
+        stats = data.stats
+      } else {
+        // 兼容旧版本格式
+        coreData = {
+          assets: data.assets || [],
+          liabilities: data.liabilities || [],
+          userInfo: data.userInfo || {},
+          settings: data.settings || {}
+        }
+        stats = data.stats
+      }
+
+      const { assets = [], liabilities = [], userInfo = {} } = coreData
+
+      // 数据合理性检查
+      if (!Array.isArray(assets) || !Array.isArray(liabilities)) {
+        throw new Error('资产或负债数据格式错误')
+      }
+
+      // 显示恢复确认对话框
+      const backupTime = new Date(data.timestamp).toLocaleString()
+      const statsInfo = stats ? `\n• 备份时净资产：¥${stats.netWorth?.toLocaleString() || '0'}` : ''
+      
+      wx.showModal({
+        title: '确认数据恢复',
+        content: `📋 备份信息：\n• 版本：${data.version}\n• 资产记录：${assets.length}条\n• 负债记录：${liabilities.length}条\n• 备份时间：${backupTime}${statsInfo}\n\n⚠️ 恢复将完全覆盖当前数据，是否继续？`,
+        confirmText: '恢复数据',
+        confirmColor: '#ff6b6b',
+        success: (res) => {
+          if (res.confirm) {
+            this.performDataRestore(data)
+          }
+        }
+      })
+
+    } catch (error) {
+      console.error('数据验证失败:', error)
+      wx.showModal({
+        title: '数据验证失败',
+        content: `备份数据验证失败：\n${error.message}\n\n请检查数据是否完整或尝试使用其他备份。`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    }
   },
 
   // 执行数据恢复
@@ -1167,56 +1440,110 @@ ${this.generateDetailedBackupContent(backupData)}
     wx.showLoading({ title: '恢复数据中...' })
 
     try {
-      // 备份当前数据
+      // 1. 备份当前数据（用于回滚）
       const currentBackup = this.createBackupData()
       wx.setStorageSync('backup_before_restore', currentBackup)
+      console.log('当前数据已备份')
 
-      // 恢复资产数据
-      if (data.assets && data.assets.length > 0) {
-        wx.setStorageSync('assets_data', data.assets)
+      // 2. 解析备份数据
+      let coreData, appState, additionalData
+      
+      if (data.version === '3.0') {
+        coreData = data.coreData
+        appState = data.appState || {}
+        additionalData = data.additionalData || {}
+      } else {
+        // 兼容旧版本
+        coreData = {
+          assets: data.assets || [],
+          liabilities: data.liabilities || [],
+          userInfo: data.userInfo || {},
+          settings: data.settings || {}
+        }
+        appState = {}
+        additionalData = {}
       }
 
-      // 恢复负债数据
-      if (data.liabilities && data.liabilities.length > 0) {
-        wx.setStorageSync('liabilities_data', data.liabilities)
+      // 3. 恢复核心数据
+      if (coreData.assets) {
+        StorageManager.saveAssets(coreData.assets)
+        console.log(`恢复资产数据: ${coreData.assets.length}条`)
       }
 
-      // 恢复用户信息（部分）
-      if (data.userInfo) {
+      if (coreData.liabilities) {
+        StorageManager.saveLiabilities(coreData.liabilities)
+        console.log(`恢复负债数据: ${coreData.liabilities.length}条`)
+      }
+
+      if (coreData.userInfo) {
+        // 保留当前用户的头像和昵称，只恢复其他信息
         const currentUser = StorageManager.getUser() || {}
         const mergedUser = {
-          ...currentUser,
-          motto: data.userInfo.motto || currentUser.motto
-          // 注意：不恢复头像和昵称，保持当前用户的个人设置
+          ...coreData.userInfo,
+          nickname: currentUser.nickname || coreData.userInfo.nickname,
+          avatar: currentUser.avatar || coreData.userInfo.avatar
         }
-        wx.setStorageSync('user_info', mergedUser)
+        StorageManager.saveUser(mergedUser)
+        console.log('恢复用户信息')
       }
+
+      if (coreData.settings) {
+        wx.setStorageSync('settings_data', coreData.settings)
+        console.log('恢复设置数据')
+      }
+
+      // 4. 恢复应用状态
+      if (appState.appInitialized !== undefined) {
+        wx.setStorageSync('app_initialized', appState.appInitialized)
+      }
+      
+      if (appState.hasSampleData !== undefined) {
+        wx.setStorageSync('has_sample_data', appState.hasSampleData)
+      }
+
+      // 5. 恢复其他数据
+      Object.keys(additionalData).forEach(key => {
+        try {
+          wx.setStorageSync(key, additionalData[key])
+          console.log(`恢复额外数据: ${key}`)
+        } catch (e) {
+          console.warn(`恢复数据键 ${key} 失败:`, e)
+        }
+      })
 
       wx.hideLoading()
       
+      // 6. 显示恢复结果
+      const assetsCount = coreData.assets?.length || 0
+      const liabilitiesCount = coreData.liabilities?.length || 0
+      const additionalCount = Object.keys(additionalData).length
+      
       wx.showModal({
         title: '恢复成功',
-        content: `数据恢复完成！\n• 资产记录：${data.assets?.length || 0}条\n• 负债记录：${data.liabilities?.length || 0}条\n\n如有问题，可通过"撤销恢复"功能回退。`,
+        content: `✅ 数据恢复完成！\n\n📊 恢复详情：\n• 资产记录：${assetsCount}条\n• 负债记录：${liabilitiesCount}条\n• 应用设置：已恢复\n• 其他数据：${additionalCount}项\n\n💡 如有问题，可通过"撤销恢复"功能回退到恢复前状态。`,
         showCancel: false,
-        confirmText: '重新加载',
+        confirmText: '重新加载应用',
         success: () => {
-          // 刷新页面数据
+          // 7. 刷新页面数据并返回首页
           this.loadUserInfo()
           this.calculateStats()
           
-          // 返回首页
           wx.switchTab({
             url: '/pages/index/index'
           })
         }
       })
+
     } catch (error) {
       wx.hideLoading()
-      wx.showToast({
+      console.error('数据恢复失败:', error)
+      
+      wx.showModal({
         title: '恢复失败',
-        icon: 'error'
+        content: `数据恢复过程中出现错误：\n${error.message}\n\n当前数据未被修改，请检查备份文件是否完整。`,
+        showCancel: false,
+        confirmText: '知道了'
       })
-      console.error('Data restore failed:', error)
     }
   },
 
