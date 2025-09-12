@@ -17,7 +17,9 @@ App({
   },
 
   globalData: {
-    userInfo: null
+    userInfo: null,
+    startTutorial: false,  // 教程启动标识
+    testTutorialPositions: false  // 测试定位精度标识
   },
 
   initApp() {

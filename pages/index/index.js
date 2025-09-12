@@ -16,6 +16,68 @@ Page({
     cashflowStatus: '健康',
     assetsCount: 0,
     liabilitiesCount: 0,
+  // 引导教程系统
+  showTutorial: false,
+  tutorialStep: 0,
+  currentTutorialStep: {},
+  bubbleStyle: {
+    position: 'fixed',
+    opacity: '0',
+    visibility: 'hidden'
+  }, // 动态计算的气泡位置样式
+  arrowClass: 'arrow-up', // 箭头方向类名
+  debugMode: false, // 调试模式
+    tutorialSteps: [
+      {
+        title: '欢迎使用大鹅爱记账',
+        content: '这是您的财务管理主页，采用企业级会计准则帮您科学管理财富。让我们一起了解各个功能吧！',
+        target: '.user-info-section',
+        position: 'center-top'
+      },
+      {
+        title: '净资产总览',
+        content: '这里显示您的总净资产（资产-负债）。不同于传统记账的流水账，这是真正反映财富状况的核心指标。',
+        target: '.net-worth',
+        position: 'center-bottom'
+      },
+      {
+        title: '现金流分析',
+        content: '现金流比余额更重要！这里显示每月的现金流入、流出和净现金流，帮助您评估财务健康度。',
+        target: '.cashflow-overview',
+        position: 'center-bottom'
+      },
+      {
+        title: '智能统计信息',
+        content: '这里显示资产数量、负债数量和现金流状态，让您快速了解整体财务概况。',
+        target: '.user-info-bottom',
+        position: 'center-bottom'
+      },
+      {
+        title: '功能工具栏',
+        content: '这里提供筛选、排序和搜索功能。您可以按类别、状态、金额等条件快速筛选记录。',
+        target: '.function-bar',
+        position: 'center-bottom'
+      },
+      {
+        title: '资产负债列表',
+        content: '这里按照会计准则分类显示您的所有资产和负债。点击任一项可查看详情、编辑或查看生命周期分析。',
+        target: '.data-section',
+        position: 'center-top'
+      },
+      {
+        title: '添加记录',
+        content: '点击这个浮动按钮可以快速添加新的资产或负债记录。支持工作收入、投资、房产、负债等多种类型。',
+        target: '.float-btn',
+        position: 'left-top'
+      },
+      {
+        title: '个人中心功能',
+        content: '点击右上角的用户头像可以进入个人中心，管理个人信息、查看财务报告、设置梦想储蓄罐、备份数据等高级功能。',
+        target: '.avatar-container',
+        position: 'center-bottom'
+      }
+    ],
+    showTutorialOverlay: false,
     searchKeyword: '',
     sortFieldIndex: 0,
     sortOrderIndex: 0,
@@ -111,11 +173,40 @@ Page({
     this.initCategories()
     this.checkLogin()
     this.loadData()
+    this.checkTutorial()
+    // 初始化当前教程步骤
+    this.setData({
+      currentTutorialStep: this.data.tutorialSteps[0] || {}
+    })
   },
 
   onShow() {
     this.checkLogin()  // 重新检查登录状态和加载用户信息
     this.loadData()
+    this.checkTutorial()  // 重新检查示例数据
+    
+    // 检查是否有启动教程的全局标识
+    const shouldStartTutorial = getApp().globalData.startTutorial
+    console.log('检查启动教程标识:', shouldStartTutorial)
+    if (shouldStartTutorial) {
+      getApp().globalData.startTutorial = false  // 重置标识
+      console.log('准备启动教程，500ms后执行')
+      setTimeout(() => {
+        console.log('开始执行教程检查')
+        this.checkAndShowTutorial()
+      }, 500)
+    }
+    
+    // 检查是否有测试定位精度的全局标识
+    const shouldTestPositions = getApp().globalData.testTutorialPositions
+    if (shouldTestPositions) {
+      getApp().globalData.testTutorialPositions = false  // 重置标识
+      console.log('⚠️ 启动开发者测试模式：自动测试教程定位')
+      setTimeout(() => {
+        this.startPositionTest()
+      }, 1000)  // 给页面更多时间渲染
+      return // 测试模式不执行正常的教程检查
+    }
   },
 
   // 初始化分类数据
@@ -168,7 +259,7 @@ Page({
       this.setData({
         userInfo: {
           ...user,
-          avatar: displayAvatar || '/static/default-avatar.png'
+          avatar: displayAvatar || '/static/default-avatar.svg'
         }
       })
     } else {
@@ -231,6 +322,491 @@ Page({
 
     this.calculateCashflow()
     this.updateFilteredData()
+  },
+
+  // 检查是否显示引导教程
+  checkTutorial() {
+    const assets = StorageManager.getAssets()
+    const liabilities = StorageManager.getLiabilities()
+    
+    // 检查是否有示例数据标识
+    const hasSampleData = wx.getStorageSync('has_sample_data')
+    const tutorialCompleted = wx.getStorageSync('tutorial_completed')
+    
+    // 如果用户已经完成教程，不再显示提示
+    if (tutorialCompleted) {
+      return
+    }
+    
+    // 如果有示例数据标识，或者检测到数据中有isSample标记，显示引导选项
+    const hasDemo = hasSampleData !== false || 
+      assets.some(item => item.isSample) || 
+      liabilities.some(item => item.isSample)
+    
+    if (hasDemo && (assets.length > 0 || liabilities.length > 0)) {
+      this.setData({
+        showTutorialOverlay: true
+      })
+    }
+  },
+
+  // 检查并强制显示教程选择（从个人中心调用）
+  checkAndShowTutorial() {
+    const assets = StorageManager.getAssets()
+    const liabilities = StorageManager.getLiabilities()
+    
+    // 检查是否有示例数据
+    const hasSampleData = wx.getStorageSync('has_sample_data')
+    const hasDemo = hasSampleData !== false || 
+      assets.some(item => item.isSample) || 
+      liabilities.some(item => item.isSample)
+    
+    if (hasDemo && (assets.length > 0 || liabilities.length > 0)) {
+      // 有示例数据，显示选择界面
+      this.setData({
+        showTutorialOverlay: true
+      })
+    } else {
+      // 没有示例数据，直接开始教程
+      console.log('没有示例数据，启动正常教程模式')
+      this.forceStartTutorial()
+    }
+  },
+
+  // 关闭引导选择覆盖层
+  closeTutorialOverlay() {
+    this.setData({
+      showTutorialOverlay: false
+    })
+  },
+
+  // 直接进入应用
+  enterDirectly() {
+    // 标记教程已完成
+    wx.setStorageSync('tutorial_completed', true)
+    // 关闭选择覆盖层
+    this.closeTutorialOverlay()
+    wx.showToast({
+      title: '欢迎使用大鹅爱记账',
+      icon: 'success'
+    })
+  },
+
+  // 开始引导教程
+  startTutorial() {
+    this.setData({
+      showTutorialOverlay: false,
+      showTutorial: true,
+      tutorialStep: 0,
+      currentTutorialStep: this.data.tutorialSteps[0] || {}
+    }, () => {
+      // 在setData回调中执行，确保DOM更新完成
+      setTimeout(() => {
+        this.highlightTarget()
+      }, 100)
+    })
+  },
+
+  // 强制启动教程（从个人中心调用）
+  forceStartTutorial() {
+    this.setData({
+      showTutorial: true,
+      tutorialStep: 0,
+      showTutorialOverlay: false,
+      currentTutorialStep: this.data.tutorialSteps[0] || {}
+    }, () => {
+      // 在setData回调中执行，确保DOM更新完成
+      setTimeout(() => {
+        this.highlightTarget()
+      }, 100)
+    })
+  },
+
+  // 下一步教程
+  nextTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1
+      const nextStepData = tutorialSteps[nextStep]
+      
+      this.setData({
+        tutorialStep: nextStep,
+        currentTutorialStep: nextStepData || {}
+      }, () => {
+        // 在setData回调中执行，确保DOM更新完成
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 200)
+      })
+    } else {
+      this.completeTutorial()
+    }
+  },
+
+  // 上一步教程
+  prevTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1
+      this.setData({
+        tutorialStep: prevStep,
+        currentTutorialStep: tutorialSteps[prevStep] || {}
+      }, () => {
+        // 在setData回调中执行，确保DOM更新完成
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 200)
+      })
+    }
+  },
+
+  // 完成教程
+  completeTutorial() {
+    wx.setStorageSync('tutorial_completed', true)
+    this.setData({
+      showTutorial: false
+    })
+    
+    wx.showModal({
+      title: '教程完成',
+      content: '恭喜您完成了引导教程！\n\n您可以选择清除示例数据开始记录，或者继续体验功能。',
+      confirmText: '清除示例数据',
+      cancelText: '继续体验',
+      success: (res) => {
+        if (res.confirm) {
+          this.clearSampleData()
+        }
+      }
+    })
+  },
+
+  // 跳过教程
+  skipTutorial() {
+    wx.showModal({
+      title: '跳过教程',
+      content: '确定要跳过引导教程吗？',
+      success: (res) => {
+        if (res.confirm) {
+          this.completeTutorial()
+        }
+      }
+    })
+  },
+
+  // 开始定位测试
+  startPositionTest() {
+    console.log('开始定位测试')
+    
+    // 设置测试模式
+    this.setData({
+      debugMode: true,
+      showTutorial: true,
+      tutorialStep: 0,
+      currentTutorialStep: this.data.tutorialSteps[0] || {}
+    })
+    
+    // 开始自动遍历所有步骤
+    this.autoTestAllSteps()
+  },
+
+  // 自动测试所有步骤
+  autoTestAllSteps() {
+    const { tutorialSteps } = this.data
+    let currentIndex = 0
+    
+    const testNextStep = () => {
+      if (currentIndex >= tutorialSteps.length) {
+        // 所有步骤测试完成
+        this.setData({
+          showTutorial: false,
+          debugMode: false
+        })
+        
+        wx.showModal({
+          title: '定位测试完成',
+          content: `已完成所有 ${tutorialSteps.length} 个步骤的定位测试。\n\n请检查控制台日志查看详细的定位信息。`,
+          showCancel: false,
+          confirmText: '确定'
+        })
+        return
+      }
+      
+      // 设置当前步骤
+      this.setData({
+        tutorialStep: currentIndex,
+        currentTutorialStep: tutorialSteps[currentIndex]
+      })
+      
+      // 高亮目标元素并计算位置
+      this.highlightTarget(tutorialSteps[currentIndex].target)
+      
+      console.log(`测试步骤 ${currentIndex + 1}/${tutorialSteps.length}:`, {
+        title: tutorialSteps[currentIndex].title,
+        target: tutorialSteps[currentIndex].target,
+        position: tutorialSteps[currentIndex].position
+      })
+      
+      // 3秒后测试下一步
+      setTimeout(() => {
+        currentIndex++
+        testNextStep()
+      }, 3000)
+    }
+    
+    // 开始测试
+    testNextStep()
+  },
+
+  // 清除示例数据
+  clearSampleData() {
+    wx.showLoading({ title: '清除中...' })
+    
+    try {
+      // 清除示例数据
+      StorageManager.clearSampleData()
+      // 重新加载数据
+      this.loadData()
+      
+      wx.hideLoading()
+      wx.showToast({
+        title: '示例数据已清除',
+        icon: 'success'
+      })
+    } catch (error) {
+      wx.hideLoading()
+      wx.showToast({
+        title: '清除失败',
+        icon: 'error'
+      })
+    }
+  },
+
+  // 高亮目标元素并计算气泡位置
+  highlightTarget(retryCount = 0) {
+    const currentStep = this.data.currentTutorialStep
+    if (!currentStep.target) return
+    
+    // 防抖机制：清除之前的定时器
+    if (this.highlightTimer) {
+      clearTimeout(this.highlightTimer)
+    }
+    
+    // 延迟执行，确保DOM渲染完成
+    this.highlightTimer = setTimeout(() => {
+      // 使用小程序API获取元素位置信息
+      const query = wx.createSelectorQuery().in(this)
+      query.select(currentStep.target).boundingClientRect((rect) => {
+        if (rect && rect.width > 0 && rect.height > 0) {
+          // 找到了有效的目标元素
+          console.log(`找到目标元素 ${currentStep.target}:`, rect)
+          this.calculateBubblePosition(rect, currentStep.position)
+        } else {
+          console.warn(`未找到目标元素 (尝试 ${retryCount + 1}/3):`, currentStep.target)
+          
+          // 重试机制：最多重试3次
+          if (retryCount < 2) {
+            setTimeout(() => {
+              this.highlightTarget(retryCount + 1)
+            }, 200)
+          } else {
+            // 重试失败，使用默认位置
+            console.error('目标元素查找失败，使用默认位置')
+            this.setData({
+              bubbleStyle: {
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: '1',
+                visibility: 'visible'
+              },
+              arrowClass: 'arrow-up'
+            })
+          }
+        }
+      })
+      query.exec()
+    }, retryCount === 0 ? 500 : 200) // 增加首次延迟到500ms，重试200ms
+  },
+
+  // 计算气泡位置
+  calculateBubblePosition(targetRect, preferredPosition) {
+    // 防止重复计算
+    if (this.isCalculatingPosition) {
+      console.log('气泡定位计算进行中，跳过重复调用')
+      return
+    }
+    this.isCalculatingPosition = true
+    
+    // 获取窗口信息
+    const systemInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const windowHeight = systemInfo.windowHeight
+    const windowWidth = systemInfo.windowWidth
+    const pixelRatio = systemInfo.pixelRatio || 2
+    
+    // 气泡默认尺寸（考虑rpx到px的转换）
+    const bubbleWidth = Math.min(300, windowWidth * 0.85) // 最大不超过屏幕85%宽度，适应新的按钮布局
+    const bubbleHeight = 200
+    const margin = 20
+    
+    let bubbleStyle = {}
+    let arrowClass = ''
+    
+    // 目标元素中心点
+    const targetCenterX = targetRect.left + targetRect.width / 2
+    const targetCenterY = targetRect.top + targetRect.height / 2
+    
+    // 调试信息
+    const debugInfo = {
+      target: this.data.currentTutorialStep.target,
+      rect: targetRect,
+      window: { width: windowWidth, height: windowHeight },
+      center: { x: targetCenterX, y: targetCenterY },
+      pixelRatio: pixelRatio,
+      bubbleSize: { width: bubbleWidth, height: bubbleHeight },
+      preferredPosition: preferredPosition
+    }
+    
+    console.log('目标元素信息:', debugInfo)
+    
+    // 安全边界检查函数
+    const ensureSafeBounds = (style) => {
+      if (style.left && parseInt(style.left) < margin) {
+        style.left = margin + 'px'
+      }
+      if (style.right && parseInt(style.right) < margin) {
+        style.right = margin + 'px'
+      }
+      if (style.top && parseInt(style.top) < margin) {
+        style.top = margin + 'px'
+      }
+      if (style.bottom && parseInt(style.bottom) < margin) {
+        style.bottom = margin + 'px'
+      }
+      
+      // 确保不超出右边界
+      if (style.left && parseInt(style.left) + bubbleWidth > windowWidth - margin) {
+        style.left = (windowWidth - bubbleWidth - margin) + 'px'
+      }
+      
+      // 确保不超出下边界
+      if (style.top && parseInt(style.top) + bubbleHeight > windowHeight - margin) {
+        style.top = (windowHeight - bubbleHeight - margin) + 'px'
+      }
+      
+      return style
+    }
+    
+    // 特殊处理不同的目标元素
+    if (this.data.currentTutorialStep.target === '.float-btn') {
+      // 浮动按钮：确保气泡在屏幕范围内，显示在左上方
+      const maxRight = windowWidth - bubbleWidth - margin
+      const rightPos = Math.min(windowWidth - targetRect.left + margin, maxRight)
+      const maxBottom = windowHeight - bubbleHeight - margin  
+      const bottomPos = Math.min(windowHeight - targetRect.top + margin, maxBottom)
+      
+      bubbleStyle = {
+        position: 'fixed',
+        right: rightPos + 'px',
+        bottom: bottomPos + 'px',
+        left: 'auto',
+        top: 'auto',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-down-right'
+    } else if (this.data.currentTutorialStep.target === '.avatar-container') {
+      // 用户头像：显示在左下方，确保不超出屏幕
+      const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetRect.left))
+      const topPos = Math.min(targetRect.bottom + margin, windowHeight - bubbleHeight - margin)
+      
+      bubbleStyle = {
+        position: 'fixed',
+        left: leftPos + 'px',
+        top: topPos + 'px',
+        bottom: 'auto',
+        right: 'auto',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-up'
+    } else if (targetRect.bottom > windowHeight * 0.7) {
+      // 目标在屏幕下方，气泡显示在上方
+      const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+      bubbleStyle = {
+        position: 'fixed',
+        left: leftPos + 'px',
+        bottom: (windowHeight - targetRect.top + margin) + 'px',
+        top: 'auto',
+        right: 'auto',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-down'
+    } else if (targetRect.top < windowHeight * 0.3) {
+      // 目标在屏幕上方，气泡显示在下方
+      const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+      bubbleStyle = {
+        position: 'fixed',
+        left: leftPos + 'px',
+        top: (targetRect.bottom + margin) + 'px',
+        bottom: 'auto',
+        right: 'auto',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-up'
+    } else {
+      // 目标在屏幕中间，根据空间选择最佳位置
+      const spaceAbove = targetRect.top
+      const spaceBelow = windowHeight - targetRect.bottom
+      
+      if (spaceBelow > spaceAbove) {
+        // 下方空间更大，气泡显示在下方
+        const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+        bubbleStyle = {
+          position: 'fixed',
+          left: leftPos + 'px',
+          top: (targetRect.bottom + margin) + 'px',
+          bottom: 'auto',
+          right: 'auto',
+          transform: 'none'
+        }
+        arrowClass = 'arrow-up'
+      } else {
+        // 上方空间更大，气泡显示在上方
+        const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+        bubbleStyle = {
+          position: 'fixed',
+          left: leftPos + 'px',
+          bottom: (windowHeight - targetRect.top + margin) + 'px',
+          top: 'auto',
+          right: 'auto',
+          transform: 'none'
+        }
+        arrowClass = 'arrow-down'
+      }
+    }
+    
+    // 应用安全边界检查
+    bubbleStyle = ensureSafeBounds(bubbleStyle)
+    
+    // 输出最终计算结果
+    console.log('气泡定位结果:', {
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass,
+      debugMode: this.data.debugMode
+    })
+    
+    // 确保气泡可见
+    bubbleStyle.opacity = '1'
+    bubbleStyle.visibility = 'visible'
+    
+    this.setData({
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass
+    })
+    
+    // 释放锁
+    this.isCalculatingPosition = false
   },
 
   // 计算现金流数据

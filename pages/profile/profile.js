@@ -38,7 +38,7 @@ Page({
         // 1. 如果有自定义头像，优先使用自定义头像
         // 2. 如果没有自定义头像但有微信头像，使用微信头像  
         // 3. 最后使用默认头像
-        avatar: userInfo.avatar || userInfo.wechatAvatar || '/static/default-avatar.png',
+        avatar: userInfo.avatar || userInfo.wechatAvatar || '/static/default-avatar.svg',
         nickname: userInfo.useWechatInfo && userInfo.wechatNickname ? userInfo.wechatNickname : userInfo.nickname,
         motto: userInfo.motto || '理财从认识资产负债开始'
       }
@@ -91,7 +91,13 @@ Page({
 
   // 新的头像选择处理 - 使用微信官方推荐的方式
   onChooseAvatar(e) {
-    const { avatarUrl } = e.detail
+    const { avatarUrl } = e.detail || {}
+    
+    // 检查是否真的选择了头像（用户可能取消了操作）
+    if (!avatarUrl) {
+      console.log('用户取消了头像选择')
+      return
+    }
     
     // 将临时文件保存到本地永久存储
     const fileName = `avatar_${Date.now()}.jpg`
@@ -132,6 +138,7 @@ Page({
         })
       },
       fail: (err) => {
+        console.error('头像保存失败:', err)
         wx.showToast({
           title: '头像保存失败',
           icon: 'error'
@@ -1658,6 +1665,152 @@ ${this.generateDetailedBackupContent(backupData)}
           // 跳转到登录页
           wx.reLaunch({
             url: '/pages/login/login'
+          })
+        }
+      }
+    })
+  },
+
+  // 开发者选项（长按用户名触发）
+  showDeveloperOptions() {
+    const options = ['重置引导教程', '测试启动教程', '测试定位精度', '查看存储状态', '取消']
+    
+    wx.showActionSheet({
+      itemList: options,
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.resetTutorial()
+        } else if (res.tapIndex === 1) {
+          this.testStartTutorial()
+        } else if (res.tapIndex === 2) {
+          this.testTutorialPositions()
+        } else if (res.tapIndex === 3) {
+          this.showStorageStatus()
+        }
+      }
+    })
+  },
+
+  // 重置引导教程
+  resetTutorial() {
+    wx.showModal({
+      title: '重置引导教程',
+      content: '确定要重置引导教程吗？下次进入首页时将重新显示欢迎界面和教程选项。',
+      success: (res) => {
+        if (res.confirm) {
+          wx.removeStorageSync('tutorial_completed')
+          wx.showToast({
+            title: '重置成功',
+            icon: 'success'
+          })
+        }
+      }
+    })
+  },
+
+  // 测试启动教程
+  testStartTutorial() {
+    console.log('测试启动教程')
+    
+    // 设置全局标识
+    getApp().globalData.startTutorial = true
+    
+    // 跳转到首页
+    wx.switchTab({
+      url: '/pages/index/index',
+      success: () => {
+        wx.showToast({
+          title: '教程启动中...',
+          icon: 'loading'
+        })
+      },
+      fail: () => {
+        wx.showToast({
+          title: '跳转失败',
+          icon: 'error'
+        })
+      }
+    })
+  },
+
+  // 测试教程定位精度
+  testTutorialPositions() {
+    console.log('测试教程定位精度')
+    
+    wx.showModal({
+      title: '开发者选项：测试定位精度',
+      content: '⚠️ 这是开发者测试功能！\n\n将自动测试所有教程步骤的气泡定位，每步停留3秒。\n\n普通用户请点取消。',
+      success: (res) => {
+        if (res.confirm) {
+          // 设置测试模式标识
+          getApp().globalData.testTutorialPositions = true
+          
+          // 跳转到首页
+          wx.reLaunch({
+            url: '/pages/index/index',
+            success: () => {
+              wx.showToast({
+                title: '定位测试启动中...',
+                icon: 'loading'
+              })
+            },
+            fail: () => {
+              wx.showToast({
+                title: '跳转失败',
+                icon: 'error'
+              })
+            }
+          })
+        }
+      }
+    })
+  },
+
+  // 查看存储状态
+  showStorageStatus() {
+    const hasSampleData = wx.getStorageSync('has_sample_data')
+    const tutorialCompleted = wx.getStorageSync('tutorial_completed')
+    const assets = StorageManager.getAssets()
+    const liabilities = StorageManager.getLiabilities()
+    
+    const sampleAssets = assets.filter(item => item.isSample)
+    const sampleLiabilities = liabilities.filter(item => item.isSample)
+    
+    const status = `示例数据标识: ${hasSampleData}\n教程完成状态: ${tutorialCompleted}\n示例资产: ${sampleAssets.length}/${assets.length}\n示例负债: ${sampleLiabilities.length}/${liabilities.length}`
+    
+    wx.showModal({
+      title: '存储状态',
+      content: status,
+      showCancel: false
+    })
+  },
+
+  // 功能引导教程回顾
+  handleTutorialReview() {
+    wx.showModal({
+      title: '功能引导',
+      content: '要重新开始引导教程吗？这将帮助您更好地了解各项功能。',
+      confirmText: '开始教程',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          // 设置全局标识，让首页启动教程
+          getApp().globalData.startTutorial = true
+          console.log('设置启动教程标识:', getApp().globalData.startTutorial)
+          
+          // 跳转到首页
+          wx.reLaunch({
+            url: '/pages/index/index',
+            success: () => {
+              console.log('跳转首页成功')
+            },
+            fail: (error) => {
+              console.error('跳转失败:', error)
+              wx.showToast({
+                title: '跳转失败，请手动切换到首页',
+                icon: 'none'
+              })
+            }
           })
         }
       }

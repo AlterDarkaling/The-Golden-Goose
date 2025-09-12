@@ -15,6 +15,48 @@ Page({
     showLogoModal: false, // logo选择弹窗
     logoSelectorType: 'emoji', // 当前选择类型：emoji 或 image
     showSalaryHistoryModal: false, // 薪资历史管理弹窗
+    // 教程系统
+    showTutorial: false,
+    tutorialStep: 0,
+    currentTutorialStep: {},
+    bubbleStyle: {
+      position: 'fixed',
+      opacity: '0',
+      visibility: 'hidden'
+    },
+    arrowClass: 'arrow-up',
+    tutorialSteps: [
+      {
+        title: '选择项目类型',
+        content: '首先需要选择您要添加的是资产还是负债。\n\n💰 资产：能为您带来收入或具有价值的项目\n💸 负债：需要您支付费用或承担债务的项目',
+        target: '.type-selection',
+        position: 'center-bottom'
+      },
+      {
+        title: '资产分类说明',
+        content: '资产主要分为：\n\n🏢 投资性资产：股票、基金、债券等\n🏠 固定资产：房产、车辆等\n💼 工作收入：工资、奖金等\n🛍️ 消费性资产：电子产品、服装等',
+        target: '.form-section',
+        position: 'center-top'
+      },
+      {
+        title: '负债分类说明', 
+        content: '负债主要分为：\n\n🏠 房贷：购房贷款\n🚗 车贷：购车贷款\n💳 信用卡债务：信用卡欠款\n📚 教育贷款：助学贷款等\n💰 其他借款：个人借贷等',
+        target: '.form-section',
+        position: 'center-top'
+      },
+      {
+        title: '填写基本信息',
+        content: '为您的资产或负债起一个容易识别的名称，并选择合适的图标。这将帮助您在列表中快速找到它们。',
+        target: '.form-group',
+        position: 'center-bottom'
+      },
+      {
+        title: '完成添加',
+        content: '填写完所有必要信息后，点击保存按钮即可完成添加。您随时可以在详情页面中编辑这些信息。',
+        target: '.button-group',
+        position: 'center-top'
+      }
+    ],
     emojiCategories: {
       finance: ['💰', '💳', '💎', '💸', '💵', '💴', '💶', '💷', '🪙', '💹'],
       property: ['🏠', '🏢', '🏭', '🏪', '🚗', '🚙', '🚕', '🛻', '🏍️', '🚲'],
@@ -180,11 +222,185 @@ Page({
     } else {
       // 新增模式：用户必须先选择类型
       this.initFormData()
+      // 检查是否是首次添加，如果是则显示教程
+      this.checkFirstTimeAddition()
     }
   },
 
   onShow() {
     // 页面显示时的处理
+  },
+
+  // 检查是否首次添加资产负债
+  checkFirstTimeAddition() {
+    // 检查是否显示过编辑页教程
+    const hasShownEditTutorial = wx.getStorageSync('edit_tutorial_shown') || false
+    
+    if (!hasShownEditTutorial) {
+      // 延迟显示教程，确保页面渲染完成
+      setTimeout(() => {
+        this.startTutorial()
+      }, 800)
+    }
+  },
+
+  // 开始教程
+  startTutorial() {
+    this.setData({
+      showTutorial: true,
+      tutorialStep: 0,
+      currentTutorialStep: this.data.tutorialSteps[0] || {}
+    }, () => {
+      setTimeout(() => {
+        this.highlightTarget()
+      }, 300)
+    })
+  },
+
+  // 下一步教程
+  nextTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1
+      const nextStepData = tutorialSteps[nextStep]
+      
+      this.setData({
+        tutorialStep: nextStep,
+        currentTutorialStep: nextStepData || {}
+      }, () => {
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 200)
+      })
+    } else {
+      this.completeTutorial()
+    }
+  },
+
+  // 上一步教程
+  prevTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1
+      this.setData({
+        tutorialStep: prevStep,
+        currentTutorialStep: tutorialSteps[prevStep] || {}
+      }, () => {
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 200)
+      })
+    }
+  },
+
+  // 完成教程
+  completeTutorial() {
+    wx.setStorageSync('edit_tutorial_shown', true)
+    this.setData({
+      showTutorial: false
+    })
+    
+    wx.showToast({
+      title: '教程完成，开始添加吧！',
+      icon: 'success'
+    })
+  },
+
+  // 跳过教程
+  skipTutorial() {
+    wx.showModal({
+      title: '跳过教程',
+      content: '确定要跳过分类介绍教程吗？',
+      success: (res) => {
+        if (res.confirm) {
+          this.completeTutorial()
+        }
+      }
+    })
+  },
+
+  // 高亮目标元素
+  highlightTarget() {
+    const currentStep = this.data.currentTutorialStep
+    if (!currentStep.target) return
+    
+    setTimeout(() => {
+      const query = wx.createSelectorQuery().in(this)
+      query.select(currentStep.target).boundingClientRect((rect) => {
+        if (rect && rect.width > 0 && rect.height > 0) {
+          this.calculateBubblePosition(rect, currentStep.position)
+        } else {
+          // 如果找不到目标，使用默认位置
+          this.setData({
+            bubbleStyle: {
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: '1',
+              visibility: 'visible'
+            },
+            arrowClass: 'arrow-up'
+          })
+        }
+      })
+      query.exec()
+    }, 300)
+  },
+
+  // 计算气泡位置
+  calculateBubblePosition(targetRect, preferredPosition) {
+    const systemInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const windowHeight = systemInfo.windowHeight
+    const windowWidth = systemInfo.windowWidth
+    
+    const bubbleWidth = Math.min(300, windowWidth * 0.85)
+    const bubbleHeight = 180
+    const margin = 20
+    
+    let bubbleStyle = {}
+    let arrowClass = ''
+    
+    const targetCenterX = targetRect.left + targetRect.width / 2
+    const targetCenterY = targetRect.top + targetRect.height / 2
+    
+    // 根据目标位置计算气泡位置
+    if (targetRect.bottom > windowHeight * 0.7) {
+      // 目标在屏幕下方，气泡显示在上方
+      const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+      bubbleStyle = {
+        position: 'fixed',
+        left: leftPos + 'px',
+        bottom: (windowHeight - targetRect.top + margin) + 'px',
+        top: 'auto',
+        right: 'auto',
+        transform: 'none',
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-down'
+    } else {
+      // 目标在屏幕上方或中间，气泡显示在下方
+      const leftPos = Math.max(margin, Math.min(windowWidth - bubbleWidth - margin, targetCenterX - bubbleWidth / 2))
+      bubbleStyle = {
+        position: 'fixed',
+        left: leftPos + 'px',
+        top: (targetRect.bottom + margin) + 'px',
+        bottom: 'auto',
+        right: 'auto',
+        transform: 'none',
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-up'
+    }
+    
+    this.setData({
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass
+    })
   },
 
   // 选择类型（资产或负债）

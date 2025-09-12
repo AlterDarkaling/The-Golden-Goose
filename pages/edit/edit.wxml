@@ -988,3 +988,39 @@
     </view>
   </view>
 </view>
+
+<!-- 引导教程 -->
+<view wx:if="{{showTutorial}}" class="tutorial-guide">
+  <!-- 教程遮罩 -->
+  <view class="tutorial-mask"></view>
+
+  <!-- 教程气泡 -->
+  <view class="tutorial-bubble"
+        style="position: {{bubbleStyle.position || 'fixed'}}; left: {{bubbleStyle.left || 'auto'}}; top: {{bubbleStyle.top || 'auto'}}; bottom: {{bubbleStyle.bottom || 'auto'}}; right: {{bubbleStyle.right || 'auto'}}; transform: {{bubbleStyle.transform || 'none'}}; opacity: {{bubbleStyle.opacity || '1'}}; visibility: {{bubbleStyle.visibility || 'visible'}};">
+    <view class="bubble-header">
+      <text class="bubble-title">{{currentTutorialStep.title}}</text>
+      <view class="bubble-close" bindtap="skipTutorial">×</view>
+    </view>
+    <view class="bubble-content">
+      <text class="bubble-text">{{currentTutorialStep.content}}</text>
+    </view>
+    <view class="bubble-footer">
+      <view class="tutorial-progress">
+        <text class="progress-text">{{tutorialStep + 1}} / {{tutorialSteps.length}}</text>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{(tutorialStep + 1) / tutorialSteps.length * 100}}%"></view>
+        </view>
+      </view>
+      <view class="tutorial-actions">
+        <view wx:if="{{tutorialStep > 0}}" class="tutorial-btn secondary" bindtap="prevTutorialStep">
+          上一步
+        </view>
+        <view class="tutorial-btn primary" bindtap="nextTutorialStep">
+          {{tutorialStep < tutorialSteps.length - 1 ? '下一步' : '完成'}}
+        </view>
+      </view>
+    </view>
+    <!-- 气泡箭头 -->
+    <view class="bubble-arrow {{arrowClass || 'arrow-up'}}"></view>
+  </view>
+</view>

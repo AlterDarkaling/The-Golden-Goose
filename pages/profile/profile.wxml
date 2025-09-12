@@ -5,7 +5,7 @@
       <view class="avatar-container">
         <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
           <image 
-            src="{{displayInfo.avatar || '/static/default-avatar.png'}}" 
+            src="{{displayInfo.avatar || '/static/default-avatar.svg'}}" 
             class="user-avatar"
             mode="aspectFill"
           />
@@ -13,7 +13,7 @@
       </view>
       <view class="user-info">
         <view class="nickname-container">
-          <text class="username" bindtap="chooseNickname">{{displayInfo.nickname || '大鹅爱记账用户'}}</text>
+          <text class="username" bindtap="chooseNickname" bindlongpress="showDeveloperOptions">{{displayInfo.nickname || '大鹅爱记账用户'}}</text>
           <!-- 隐藏的微信原生昵称输入，用于直接触发微信昵称选择 -->
           <input 
             type="nickname" 
@@ -129,6 +129,17 @@
         <view class="setting-content">
           <text class="setting-title">理财启蒙</text>
           <text class="setting-desc">了解现代财务管理理念和会计知识</text>
+        </view>
+      </view>
+      <text class="setting-arrow">></text>
+    </view>
+
+    <view class="setting-item" bindtap="handleTutorialReview">
+      <view class="setting-left">
+        <view class="setting-icon">🎯</view>
+        <view class="setting-content">
+          <text class="setting-title">功能引导</text>
+          <text class="setting-desc">重新查看应用功能介绍和使用教程</text>
         </view>
       </view>
       <text class="setting-arrow">></text>

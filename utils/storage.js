@@ -277,11 +277,35 @@ const StorageManager = {
 
   // 清除示例数据
   clearSampleData() {
-    // 清除所有示例数据
-    wx.setStorageSync('assets_data', [])
-    wx.setStorageSync('liabilities_data', [])
-    // 标记示例数据已清除
-    wx.setStorageSync('has_sample_data', false)
+    try {
+      // 获取现有数据
+      const assets = this.getAssets()
+      const liabilities = this.getLiabilities()
+      
+      // 过滤掉示例数据（保留非示例数据）
+      const nonSampleAssets = assets.filter(item => !item.isSample)
+      const nonSampleLiabilities = liabilities.filter(item => !item.isSample)
+      
+      // 保存过滤后的数据
+      wx.setStorageSync('assets_data', nonSampleAssets)
+      wx.setStorageSync('liabilities_data', nonSampleLiabilities)
+      
+      // 标记示例数据已清除
+      wx.setStorageSync('has_sample_data', false)
+      
+      console.log('示例数据清除完成', {
+        原资产数量: assets.length,
+        清除后资产数量: nonSampleAssets.length,
+        原负债数量: liabilities.length,
+        清除后负债数量: nonSampleLiabilities.length
+      })
+    } catch (error) {
+      console.error('清除示例数据失败:', error)
+      // 如果出错，直接清空所有数据
+      wx.setStorageSync('assets_data', [])
+      wx.setStorageSync('liabilities_data', [])
+      wx.setStorageSync('has_sample_data', false)
+    }
   },
 
   // 格式化购买日期显示

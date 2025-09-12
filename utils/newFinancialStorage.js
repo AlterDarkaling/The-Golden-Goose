@@ -38,7 +38,7 @@ class NewFinancialStorage {
       return wx.getStorageSync(this.KEYS.USER_INFO) || {
         id: 'user_' + Date.now(),
         nickname: '用户',
-        avatar: '/static/default-avatar.png',
+        avatar: '/static/default-avatar.svg',
         motto: '理财从认识资产负债开始',
         createTime: new Date().toISOString()
       }

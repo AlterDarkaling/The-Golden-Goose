@@ -426,8 +426,8 @@
 /* 浮动添加按钮 */
 .float-btn {
   position: fixed;
-  bottom: 60rpx;
-  right: 60rpx;
+  bottom: max(80rpx, env(safe-area-inset-bottom, 40rpx) + 40rpx);
+  right: max(40rpx, env(safe-area-inset-right, 20rpx) + 20rpx);
   width: 100rpx;
   height: 100rpx;
   border-radius: 50%;
@@ -437,6 +437,9 @@
   justify-content: center;
   box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
   z-index: 100;
+  margin: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .float-btn-icon {
@@ -542,3 +545,592 @@
 .cashflow-amount.negative {
   color: #f44336;
 }
+
+/* 引导教程系统 */
+.tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.tutorial-welcome {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 40rpx;
+  max-width: 640rpx;
+  width: 100%;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: tutorialFadeIn 0.4s ease-out;
+}
+
+@keyframes tutorialFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(40rpx);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.welcome-icon {
+  font-size: 56rpx;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.welcome-title {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+.welcome-body {
+  margin-bottom: 40rpx;
+}
+
+.welcome-description {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.welcome-tip {
+  display: block;
+  font-size: 26rpx;
+  color: #888;
+  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.welcome-options {
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.option-item:last-child {
+  margin-bottom: 0;
+}
+
+.option-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  width: 40rpx;
+  text-align: center;
+}
+
+.option-text {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.welcome-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.welcome-btn.secondary {
+  background: #f5f5f5;
+  color: #666;
+  border: 2rpx solid #e0e0e0;
+}
+
+.welcome-btn.secondary:active {
+  background: #e0e0e0;
+  transform: scale(0.98);
+}
+
+.welcome-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.3);
+}
+
+.welcome-btn.primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.4);
+}
+
+/* 引导教程步骤 */
+.tutorial-guide {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+.tutorial-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.tutorial-bubble {
+  position: fixed;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  max-width: min(600rpx, 90vw);
+  min-width: min(400rpx, 70vw);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
+  z-index: 1002;
+  pointer-events: auto;
+  animation: bubbleSlideIn 0.3s ease-out;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+@keyframes bubbleSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20rpx) scale(0.9);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(10rpx) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 气泡位置 */
+.tutorial-bubble.center-top {
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tutorial-bubble.center-bottom {
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tutorial-bubble.left-top {
+  top: 30%;
+  left: 40rpx;
+  right: auto;
+  transform: none;
+}
+
+.tutorial-bubble.right-top {
+  top: 30%;
+  right: 40rpx;
+  left: auto;
+  transform: none;
+}
+
+.tutorial-bubble.center-middle {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 兼容旧版本位置 */
+.tutorial-bubble.bottom {
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tutorial-bubble.top {
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bubble-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.bubble-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.bubble-close {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #999;
+  cursor: pointer;
+}
+
+.bubble-close:active {
+  background: #e0e0e0;
+}
+
+.bubble-content {
+  margin-bottom: 24rpx;
+}
+
+.bubble-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.bubble-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  min-height: 60rpx;
+  gap: 20rpx;
+  flex-wrap: nowrap;
+}
+
+.tutorial-progress {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.progress-text {
+  font-size: 24rpx;
+  color: #999;
+  min-width: 80rpx;
+}
+
+.progress-bar {
+  width: 120rpx;
+  height: 6rpx;
+  background: #e0e0e0;
+  border-radius: 3rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3rpx;
+  transition: width 0.3s ease;
+}
+
+.tutorial-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16rpx;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.tutorial-btn {
+  display: inline-block;
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  flex-shrink: 0;
+  min-width: 120rpx;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.tutorial-btn.secondary {
+  background: #f5f5f5;
+  color: #666;
+  border: 1rpx solid #e0e0e0;
+}
+
+.tutorial-btn.secondary:active {
+  background: #e0e0e0;
+  transform: scale(0.96);
+}
+
+.tutorial-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.tutorial-btn.primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.4);
+}
+
+/* 动态定位的气泡样式 */
+.tutorial-bubble.dynamic-position {
+  position: fixed !important;
+  max-width: min(600rpx, 90vw);
+  min-width: min(400rpx, 70vw);
+  width: auto;
+  z-index: 1002;
+  box-sizing: border-box;
+}
+
+/* 气泡箭头 */
+.bubble-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* 向上箭头（气泡在目标下方） */
+.bubble-arrow.arrow-up {
+  top: -16rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-bottom: 16rpx solid #fff;
+  filter: drop-shadow(0 -2rpx 4rpx rgba(0, 0, 0, 0.1));
+}
+
+/* 向下箭头（气泡在目标上方） */
+.bubble-arrow.arrow-down {
+  bottom: -16rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-top: 16rpx solid #fff;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
+}
+
+/* 向左箭头（气泡在目标右侧） */
+.bubble-arrow.arrow-left {
+  left: -16rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 16rpx solid transparent;
+  border-bottom: 16rpx solid transparent;
+  border-right: 16rpx solid #fff;
+}
+
+/* 向右箭头（气泡在目标左侧） */
+.bubble-arrow.arrow-right {
+  right: -16rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 16rpx solid transparent;
+  border-bottom: 16rpx solid transparent;
+  border-left: 16rpx solid #fff;
+}
+
+/* 右下角箭头（特殊位置） */
+.bubble-arrow.arrow-down-right {
+  bottom: -16rpx;
+  right: 40rpx;
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-top: 16rpx solid #fff;
+}
+
+/* 左下角箭头（特殊位置） */
+.bubble-arrow.arrow-down-left {
+  bottom: -16rpx;
+  left: 40rpx;
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-top: 16rpx solid #fff;
+}
+
+/* 兼容旧版本箭头 */
+.bubble-arrow.center-top,
+.bubble-arrow.top {
+  top: -16rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-bottom: 16rpx solid #fff;
+}
+
+.bubble-arrow.center-bottom,
+.bubble-arrow.bottom {
+  bottom: -16rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-top: 16rpx solid #fff;
+}
+
+/* 目标元素高亮效果 */
+.tutorial-highlight {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* 高亮样式基础 */
+.tutorial-guide .user-info-section,
+.tutorial-guide .net-worth,
+.tutorial-guide .cashflow-overview,
+.tutorial-guide .user-info-bottom,
+.tutorial-guide .function-bar,
+.tutorial-guide .list-container {
+  transition: all 0.3s ease;
+}
+
+/* 高亮样式 - 通过CSS选择器实现 */
+.tutorial-guide .user-info-section {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 16rpx;
+}
+
+.tutorial-guide .net-worth {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 12rpx;
+}
+
+.tutorial-guide .cashflow-overview {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 16rpx;
+}
+
+.tutorial-guide .user-info-bottom {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 12rpx;
+}
+
+.tutorial-guide .function-bar {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 16rpx;
+}
+
+.tutorial-guide .list-container {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 16rpx;
+}
+
+.tutorial-guide .float-btn {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.4), 0 12rpx 40rpx rgba(102, 126, 234, 0.2);
+  animation: tutorialPulse 2s infinite;
+}
+
+@keyframes tutorialPulse {
+  0% {
+    box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12rpx rgba(102, 126, 234, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.4);
+  }
+}
+
+/* 调试模式样式 */
+.tutorial-bubble.debug-mode {
+  border: 3rpx solid #ff6b6b !important;
+  background: linear-gradient(135deg, #fff9c4 0%, #f0f9ff 100%) !important;
+}
+
+.tutorial-bubble.debug-mode::before {
+  content: "DEBUG";
+  position: absolute;
+  top: -24rpx;
+  right: -24rpx;
+  background: #ff6b6b;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  font-weight: bold;
+  z-index: 10;
+}
+
+.tutorial-bubble.debug-mode .bubble-title {
+  color: #d63031 !important;
+  font-weight: bold;
+}
+
+.tutorial-bubble.debug-mode .bubble-text {
+  color: #2d3436 !important;
+}
+
+/* 用户头像高亮样式 */
+.tutorial-guide .avatar-container {
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.3), 0 8rpx 32rpx rgba(102, 126, 234, 0.1);
+  border-radius: 50%;
+  animation: tutorialPulse 2s infinite;
+}
+

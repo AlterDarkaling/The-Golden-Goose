@@ -8,7 +8,7 @@
       </view>
       <view class="avatar-container" bindtap="chooseAvatar">
         <image 
-          src="{{userInfo.avatar || '/static/default-avatar.png'}}" 
+          src="{{userInfo.avatar || '/static/default-avatar.svg'}}" 
           class="avatar"
           mode="aspectFill"
         />
@@ -189,5 +189,80 @@
   <!-- 浮动添加按钮 -->
   <view class="float-btn" bindtap="handleFloatBtnClick">
     <text class="float-btn-icon">+</text>
+  </view>
+
+  <!-- 引导教程选择覆盖层 -->
+  <view wx:if="{{showTutorialOverlay}}" class="tutorial-overlay">
+    <view class="tutorial-welcome">
+      <view class="welcome-header">
+        <text class="welcome-icon">🎉</text>
+        <text class="welcome-title">欢迎使用大鹅爱记账</text>
+      </view>
+      <view class="welcome-body">
+        <text class="welcome-description">
+          这是一款专业的个人财务管理工具，采用企业级会计准则帮您科学管理资产负债。
+        </text>
+        <text class="welcome-tip">
+          当前显示的是演示数据，您可以选择：
+        </text>
+        <view class="welcome-options">
+          <view class="option-item">
+            <text class="option-icon">🎯</text>
+            <text class="option-text">跟随引导教程，了解各项功能</text>
+          </view>
+          <view class="option-item">
+            <text class="option-icon">🚀</text>
+            <text class="option-text">直接开始使用，自由探索</text>
+          </view>
+        </view>
+      </view>
+      <view class="welcome-actions">
+        <view class="welcome-btn secondary" bindtap="enterDirectly">
+          直接进入
+        </view>
+        <view class="welcome-btn primary" bindtap="startTutorial">
+          开始教程
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 引导教程步骤 -->
+  <view wx:if="{{showTutorial}}" class="tutorial-guide">
+    <!-- 教程遮罩 -->
+    <view class="tutorial-mask"></view>
+    
+    <!-- 教程气泡 -->
+    <view class="tutorial-bubble dynamic-position {{debugMode ? 'debug-mode' : ''}}" 
+          style="position: {{bubbleStyle.position || 'fixed'}}; left: {{bubbleStyle.left || 'auto'}}; top: {{bubbleStyle.top || 'auto'}}; bottom: {{bubbleStyle.bottom || 'auto'}}; right: {{bubbleStyle.right || 'auto'}}; transform: {{bubbleStyle.transform || 'none'}};">
+      <view class="bubble-header">
+        <text class="bubble-title">{{currentTutorialStep.title}}</text>
+        <view class="bubble-close" bindtap="skipTutorial">×</view>
+      </view>
+      <view class="bubble-content">
+        <text class="bubble-text">{{currentTutorialStep.content}}</text>
+      </view>
+      <view class="bubble-footer">
+        <view class="tutorial-progress">
+          <text class="progress-text">{{tutorialStep + 1}} / {{tutorialSteps.length}}</text>
+          <view class="progress-bar">
+            <view class="progress-fill" style="width: {{(tutorialStep + 1) / tutorialSteps.length * 100}}%"></view>
+          </view>
+        </view>
+        <view class="tutorial-actions">
+          <view wx:if="{{tutorialStep > 0}}" class="tutorial-btn secondary" bindtap="prevTutorialStep">
+            上一步
+          </view>
+          <view class="tutorial-btn primary" bindtap="nextTutorialStep">
+            {{tutorialStep < tutorialSteps.length - 1 ? '下一步' : '完成'}}
+          </view>
+        </view>
+      </view>
+      <!-- 气泡箭头 -->
+      <view class="bubble-arrow {{arrowClass || 'arrow-up'}}"></view>
+    </view>
+    
+    <!-- 高亮目标元素（通过CSS实现） -->
+    <view class="tutorial-highlight" data-target="{{currentTutorialStep.target}}"></view>
   </view>
 </view>
