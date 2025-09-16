@@ -723,11 +723,22 @@
   box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
   z-index: 1002;
   pointer-events: auto;
-  animation: bubbleSlideIn 0.3s ease-out;
+  /* 初始状态完全隐藏 */
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -50%) scale(0.8);
+  transition: opacity 0.2s ease-out, visibility 0.2s ease-out, transform 0.2s ease-out;
   box-sizing: border-box;
   will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* 气泡显示状态 */
+.tutorial-bubble.visible {
+  opacity: 1;
+  visibility: visible;
+  animation: bubbleSlideIn 0.3s ease-out;
 }
 
 @keyframes bubbleSlideIn {

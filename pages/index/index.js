@@ -23,9 +23,13 @@ Page({
   bubbleStyle: {
     position: 'fixed',
     opacity: '0',
-    visibility: 'hidden'
+    visibility: 'hidden',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)'
   }, // 动态计算的气泡位置样式
   arrowClass: 'arrow-up', // 箭头方向类名
+  bubbleVisible: false, // 气泡是否可见
   debugMode: false, // 调试模式
     tutorialSteps: [
       {
@@ -386,10 +390,39 @@ Page({
     wx.setStorageSync('tutorial_completed', true)
     // 关闭选择覆盖层
     this.closeTutorialOverlay()
-    wx.showToast({
-      title: '欢迎使用大鹅爱记账',
-      icon: 'success'
-    })
+    
+    // 自动清除示例数据
+    wx.showLoading({ title: '清除示例数据中...' })
+    
+    try {
+      StorageManager.clearSampleData()
+      // 重新加载数据
+      this.loadData()
+      
+      wx.hideLoading()
+      wx.showToast({
+        title: '欢迎使用！',
+        icon: 'success',
+        duration: 1500
+      })
+      
+      // 延迟显示第二个提示
+      setTimeout(() => {
+        wx.showToast({
+          title: '示例数据已清除',
+          icon: 'none',
+          duration: 1500
+        })
+      }, 1600)
+    } catch (error) {
+      wx.hideLoading()
+      console.error('清除示例数据失败:', error)
+      wx.showToast({
+        title: '欢迎使用！',
+        icon: 'success',
+        duration: 1500
+      })
+    }
   },
 
   // 开始引导教程
@@ -398,7 +431,18 @@ Page({
       showTutorialOverlay: false,
       showTutorial: true,
       tutorialStep: 0,
-      currentTutorialStep: this.data.tutorialSteps[0] || {}
+      currentTutorialStep: this.data.tutorialSteps[0] || {},
+      // 确保气泡初始状态为隐藏
+      bubbleStyle: {
+        position: 'fixed',
+        opacity: '0',
+        visibility: 'hidden',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+      },
+      arrowClass: 'arrow-up',
+      bubbleVisible: false
     }, () => {
       // 在setData回调中执行，确保DOM更新完成
       setTimeout(() => {
@@ -413,7 +457,18 @@ Page({
       showTutorial: true,
       tutorialStep: 0,
       showTutorialOverlay: false,
-      currentTutorialStep: this.data.tutorialSteps[0] || {}
+      currentTutorialStep: this.data.tutorialSteps[0] || {},
+      // 确保气泡初始状态为隐藏
+      bubbleStyle: {
+        position: 'fixed',
+        opacity: '0',
+        visibility: 'hidden',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+      },
+      arrowClass: 'arrow-up',
+      bubbleVisible: false
     }, () => {
       // 在setData回调中执行，确保DOM更新完成
       setTimeout(() => {
@@ -432,12 +487,19 @@ Page({
       
       this.setData({
         tutorialStep: nextStep,
-        currentTutorialStep: nextStepData || {}
+        currentTutorialStep: nextStepData || {},
+        // 在切换步骤时先隐藏气泡
+        bubbleStyle: {
+          ...this.data.bubbleStyle,
+          opacity: '0',
+          visibility: 'hidden'
+        },
+        bubbleVisible: false
       }, () => {
         // 在setData回调中执行，确保DOM更新完成
         setTimeout(() => {
           this.highlightTarget()
-        }, 200)
+        }, 50)
       })
     } else {
       this.completeTutorial()
@@ -452,12 +514,19 @@ Page({
       const prevStep = tutorialStep - 1
       this.setData({
         tutorialStep: prevStep,
-        currentTutorialStep: tutorialSteps[prevStep] || {}
+        currentTutorialStep: tutorialSteps[prevStep] || {},
+        // 在切换步骤时先隐藏气泡
+        bubbleStyle: {
+          ...this.data.bubbleStyle,
+          opacity: '0',
+          visibility: 'hidden'
+        },
+        bubbleVisible: false
       }, () => {
         // 在setData回调中执行，确保DOM更新完成
         setTimeout(() => {
           this.highlightTarget()
-        }, 200)
+        }, 50)
       })
     }
   },
@@ -469,24 +538,45 @@ Page({
       showTutorial: false
     })
     
-    wx.showModal({
-      title: '教程完成',
-      content: '恭喜您完成了引导教程！\n\n您可以选择清除示例数据开始记录，或者继续体验功能。',
-      confirmText: '清除示例数据',
-      cancelText: '继续体验',
-      success: (res) => {
-        if (res.confirm) {
-          this.clearSampleData()
-        }
-      }
-    })
+    // 自动清除示例数据
+    wx.showLoading({ title: '清除示例数据中...' })
+    
+    try {
+      StorageManager.clearSampleData()
+      // 重新加载数据
+      this.loadData()
+      
+      wx.hideLoading()
+      wx.showToast({
+        title: '教程完成！',
+        icon: 'success',
+        duration: 1500
+      })
+      
+      // 延迟显示第二个提示
+      setTimeout(() => {
+        wx.showToast({
+          title: '示例数据已清除',
+          icon: 'none',
+          duration: 1500
+        })
+      }, 1600)
+    } catch (error) {
+      wx.hideLoading()
+      console.error('清除示例数据失败:', error)
+      wx.showToast({
+        title: '教程完成！',
+        icon: 'success',
+        duration: 1500
+      })
+    }
   },
 
   // 跳过教程
   skipTutorial() {
     wx.showModal({
       title: '跳过教程',
-      content: '确定要跳过引导教程吗？',
+      content: '确定要跳过引导教程吗？示例数据将被清除。',
       success: (res) => {
         if (res.confirm) {
           this.completeTutorial()
@@ -602,6 +692,9 @@ Page({
           // 找到了有效的目标元素
           console.log(`找到目标元素 ${currentStep.target}:`, rect)
           this.calculateBubblePosition(rect, currentStep.position)
+          
+          // 预加载下一步的位置（如果存在）
+          this.preloadNextStep()
         } else {
           console.warn(`未找到目标元素 (尝试 ${retryCount + 1}/3):`, currentStep.target)
           
@@ -609,7 +702,7 @@ Page({
           if (retryCount < 2) {
             setTimeout(() => {
               this.highlightTarget(retryCount + 1)
-            }, 200)
+            }, 100)
           } else {
             // 重试失败，使用默认位置
             console.error('目标元素查找失败，使用默认位置')
@@ -628,7 +721,7 @@ Page({
         }
       })
       query.exec()
-    }, retryCount === 0 ? 500 : 200) // 增加首次延迟到500ms，重试200ms
+    }, retryCount === 0 ? 100 : 100) // 优化延迟：首次100ms，重试100ms
   },
 
   // 计算气泡位置
@@ -639,6 +732,19 @@ Page({
       return
     }
     this.isCalculatingPosition = true
+    
+    // 缓存机制：如果目标元素和位置没有变化，使用缓存结果
+    const cacheKey = `${this.data.currentTutorialStep.target}_${targetRect.left}_${targetRect.top}_${preferredPosition}`
+    if (this.positionCache && this.positionCache.key === cacheKey) {
+      console.log('使用缓存的位置计算结果')
+      this.setData({
+        bubbleStyle: this.positionCache.bubbleStyle,
+        arrowClass: this.positionCache.arrowClass,
+        bubbleVisible: true
+      })
+      this.isCalculatingPosition = false
+      return
+    }
     
     // 获取窗口信息
     const systemInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
@@ -802,11 +908,113 @@ Page({
     
     this.setData({
       bubbleStyle: bubbleStyle,
-      arrowClass: arrowClass
+      arrowClass: arrowClass,
+      bubbleVisible: true
     })
+    
+    // 保存缓存
+    this.positionCache = {
+      key: cacheKey,
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass
+    }
     
     // 释放锁
     this.isCalculatingPosition = false
+  },
+
+  // 预加载下一步位置
+  preloadNextStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    const nextStep = tutorialStep + 1
+    
+    // 如果有下一步，预加载其位置信息
+    if (nextStep < tutorialSteps.length) {
+      const nextStepData = tutorialSteps[nextStep]
+      if (nextStepData && nextStepData.target) {
+        // 异步获取下一步目标元素位置
+        setTimeout(() => {
+          const query = wx.createSelectorQuery().in(this)
+          query.select(nextStepData.target).boundingClientRect((rect) => {
+            if (rect && rect.width > 0 && rect.height > 0) {
+              // 预计算下一步位置并缓存
+              const cacheKey = `${nextStepData.target}_${rect.left}_${rect.top}_${nextStepData.position}`
+              if (!this.positionCache || this.positionCache.key !== cacheKey) {
+                console.log('预加载下一步位置:', nextStepData.target)
+                this.preCalculatePosition(rect, nextStepData.position, cacheKey)
+              }
+            }
+          })
+          query.exec()
+        }, 100)
+      }
+    }
+  },
+
+  // 预计算位置（不更新UI）
+  preCalculatePosition(targetRect, preferredPosition, cacheKey) {
+    // 获取窗口信息（复用主计算逻辑的简化版本）
+    const systemInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const windowHeight = systemInfo.windowHeight
+    const windowWidth = systemInfo.windowWidth
+    
+    const bubbleWidth = Math.min(300, windowWidth * 0.85)
+    const bubbleHeight = 200
+    const margin = 20
+    
+    const targetCenterX = targetRect.left + targetRect.width / 2
+    const targetCenterY = targetRect.top + targetRect.height / 2
+    
+    let bubbleStyle = {}
+    let arrowClass = ''
+    
+    // 简化的位置计算逻辑
+    const spaceAbove = targetRect.top
+    const spaceBelow = windowHeight - (targetRect.top + targetRect.height)
+    const spaceLeft = targetCenterX
+    const spaceRight = windowWidth - targetCenterX
+    
+    if (spaceBelow >= bubbleHeight + margin) {
+      // 下方有足够空间
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${Math.max(margin, Math.min(targetCenterX - bubbleWidth / 2, windowWidth - bubbleWidth - margin))}px`,
+        top: `${targetRect.top + targetRect.height + 10}px`,
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-up'
+    } else if (spaceAbove >= bubbleHeight + margin) {
+      // 上方有足够空间
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${Math.max(margin, Math.min(targetCenterX - bubbleWidth / 2, windowWidth - bubbleWidth - margin))}px`,
+        top: `${targetRect.top - bubbleHeight - 10}px`,
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-down'
+    } else {
+      // 使用默认居中位置
+      bubbleStyle = {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-up'
+    }
+    
+    // 保存到缓存
+    this.positionCache = {
+      key: cacheKey,
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass
+    }
+    
+    console.log('预计算位置完成，已缓存:', cacheKey)
   },
 
   // 计算现金流数据

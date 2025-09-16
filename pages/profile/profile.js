@@ -16,7 +16,47 @@ Page({
     tempNickname: '',
     showMottoInput: false,
     tempMotto: '',
-    showHiddenNicknameInput: false
+    showHiddenNicknameInput: false,
+    // 教程相关
+    showTutorial: false,
+    tutorialStep: 0,
+    currentTutorialStep: {},
+    bubbleStyle: {
+      position: 'fixed',
+      opacity: '0',
+      visibility: 'hidden',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)'
+    },
+    arrowClass: 'arrow-up',
+    bubbleVisible: false,
+    tutorialSteps: [
+      {
+        title: '个人中心',
+        content: '这里是您的个人资料和设置中心，您可以管理头像、昵称、个人签名等信息。',
+        target: '.user-card',
+        position: 'center-bottom'
+      },
+      {
+        title: '统计数据',
+        content: '这里显示您的使用统计：使用天数、净资产和记录数量，帮助您了解理财进展。',
+        target: '.stats-container',
+        position: 'center-bottom'
+      },
+      {
+        title: '功能菜单',
+        content: '这里提供了财务报告、梦想储蓄罐、数据备份等实用功能，帮助您更好地管理财务。',
+        target: '.menu-grid',
+        position: 'center-bottom'
+      },
+      {
+        title: '更多功能',
+        content: '这里有理财启蒙知识、功能引导、意见反馈等更多实用功能。',
+        target: '.settings-section',
+        position: 'center-top'
+      }
+    ]
   },
 
   onLoad() {
@@ -27,6 +67,12 @@ Page({
   onShow() {
     this.loadUserInfo()
     this.calculateStats()
+    // 检查个人中心教程
+    try {
+      this.checkProfileTutorial()
+    } catch (error) {
+      console.error('教程检查失败:', error)
+    }
   },
 
   loadUserInfo() {
@@ -1815,5 +1861,318 @@ ${this.generateDetailedBackupContent(backupData)}
         }
       }
     })
+  },
+
+  // 检查个人中心教程
+  checkProfileTutorial: function() {
+    const profileTutorialCompleted = wx.getStorageSync('profile_tutorial_completed')
+    const mainTutorialCompleted = wx.getStorageSync('tutorial_completed')
+    
+    // 只有在主教程完成后，且个人中心教程未完成时，才显示个人中心教程
+    if (mainTutorialCompleted && !profileTutorialCompleted) {
+      setTimeout(() => {
+        this.startProfileTutorial()
+      }, 500)
+    }
+  },
+
+  // 开始个人中心教程
+  startProfileTutorial() {
+    this.setData({
+      showTutorial: true,
+      tutorialStep: 0,
+      currentTutorialStep: this.data.tutorialSteps[0] || {},
+      bubbleStyle: {
+        position: 'fixed',
+        opacity: '0',
+        visibility: 'hidden',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+      },
+      arrowClass: 'arrow-up',
+      bubbleVisible: false
+    }, () => {
+      setTimeout(() => {
+        this.highlightTarget()
+      }, 100)
+    })
+  },
+
+  // 下一步教程
+  nextTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1
+      const nextStepData = tutorialSteps[nextStep]
+      
+      this.setData({
+        tutorialStep: nextStep,
+        currentTutorialStep: nextStepData || {},
+        bubbleStyle: {
+          ...this.data.bubbleStyle,
+          opacity: '0',
+          visibility: 'hidden'
+        },
+        bubbleVisible: false
+      }, () => {
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 50)
+      })
+    } else {
+      this.completeProfileTutorial()
+    }
+  },
+
+  // 上一步教程
+  prevTutorialStep() {
+    const { tutorialStep, tutorialSteps } = this.data
+    
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1
+      this.setData({
+        tutorialStep: prevStep,
+        currentTutorialStep: tutorialSteps[prevStep] || {},
+        bubbleStyle: {
+          ...this.data.bubbleStyle,
+          opacity: '0',
+          visibility: 'hidden'
+        },
+        bubbleVisible: false
+      }, () => {
+        setTimeout(() => {
+          this.highlightTarget()
+        }, 50)
+      })
+    }
+  },
+
+  // 完成个人中心教程
+  completeProfileTutorial() {
+    wx.setStorageSync('profile_tutorial_completed', true)
+    this.setData({
+      showTutorial: false
+    })
+    
+    wx.showToast({
+      title: '个人中心教程完成！',
+      icon: 'success',
+      duration: 2000
+    })
+  },
+
+  // 跳过教程
+  skipTutorial() {
+    wx.showModal({
+      title: '跳过教程',
+      content: '确定要跳过个人中心引导教程吗？',
+      success: (res) => {
+        if (res.confirm) {
+          this.completeProfileTutorial()
+        }
+      }
+    })
+  },
+
+  // 高亮目标元素
+  highlightTarget(retryCount = 0) {
+    const currentStep = this.data.currentTutorialStep
+    if (!currentStep.target) {
+      console.warn('当前步骤没有目标元素')
+      return
+    }
+    
+    // 防抖机制
+    if (this.highlightTimer) {
+      clearTimeout(this.highlightTimer)
+    }
+    
+    console.log(`开始查找目标元素: ${currentStep.target} (尝试 ${retryCount + 1}/5)`)
+    
+    this.highlightTimer = setTimeout(() => {
+      const query = wx.createSelectorQuery().in(this)
+      
+      // 添加多个选择器查询，提高成功率
+      query.select(currentStep.target).boundingClientRect()
+      query.selectViewport().scrollOffset()
+      
+      query.exec((res) => {
+        const rect = res[0]
+        const scrollOffset = res[1]
+        
+        console.log('查询结果:', { rect, scrollOffset })
+        
+        if (rect && rect.width > 0 && rect.height > 0) {
+          console.log(`✅ 找到目标元素 ${currentStep.target}:`, rect)
+          
+          // 调整矩形位置，考虑滚动偏移
+          const adjustedRect = {
+            ...rect,
+            top: rect.top + (scrollOffset?.scrollTop || 0),
+            left: rect.left + (scrollOffset?.scrollLeft || 0)
+          }
+          
+          console.log('调整后的矩形:', adjustedRect)
+          this.calculateBubblePosition(adjustedRect, currentStep.position)
+        } else {
+          console.warn(`❌ 未找到目标元素 (尝试 ${retryCount + 1}/5):`, currentStep.target)
+          
+          if (retryCount < 4) {
+            // 增加重试次数和延迟时间
+            const delay = Math.min(200 + retryCount * 100, 1000)
+            setTimeout(() => {
+              this.highlightTarget(retryCount + 1)
+            }, delay)
+          } else {
+            console.error('目标元素查找失败，使用默认位置')
+            this.setData({
+              bubbleStyle: {
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: '1',
+                visibility: 'visible'
+              },
+              arrowClass: 'arrow-up',
+              bubbleVisible: true
+            })
+          }
+        }
+      })
+    }, retryCount === 0 ? 200 : Math.min(300 + retryCount * 100, 800))
+  },
+
+  // 计算气泡位置
+  calculateBubblePosition(targetRect, preferredPosition) {
+    if (this.isCalculatingPosition) {
+      return
+    }
+    this.isCalculatingPosition = true
+    
+    const systemInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const windowHeight = systemInfo.windowHeight
+    const windowWidth = systemInfo.windowWidth
+    
+    // 将rpx转换为px
+    const bubbleWidth = Math.min(300, windowWidth * 0.8)
+    const bubbleHeight = 180
+    const margin = 15
+    const arrowSize = 10
+    
+    const targetCenterX = targetRect.left + targetRect.width / 2
+    const targetCenterY = targetRect.top + targetRect.height / 2
+    
+    let bubbleStyle = {}
+    let arrowClass = ''
+    
+    console.log('目标元素位置:', {
+      left: targetRect.left,
+      top: targetRect.top,
+      width: targetRect.width,
+      height: targetRect.height,
+      centerX: targetCenterX,
+      centerY: targetCenterY
+    })
+    
+    console.log('窗口信息:', {
+      windowWidth,
+      windowHeight,
+      bubbleWidth,
+      bubbleHeight
+    })
+    
+    // 计算各个方向的可用空间
+    const spaceAbove = targetRect.top
+    const spaceBelow = windowHeight - (targetRect.top + targetRect.height)
+    const spaceLeft = targetRect.left
+    const spaceRight = windowWidth - (targetRect.left + targetRect.width)
+    
+    console.log('可用空间:', {
+      spaceAbove,
+      spaceBelow,
+      spaceLeft,
+      spaceRight
+    })
+    
+    // 优先级：下方 -> 上方 -> 左方 -> 右方 -> 居中
+    if (spaceBelow >= bubbleHeight + arrowSize + margin) {
+      // 下方有足够空间
+      const bubbleLeft = Math.max(margin, Math.min(targetCenterX - bubbleWidth / 2, windowWidth - bubbleWidth - margin))
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${bubbleLeft}px`,
+        top: `${targetRect.top + targetRect.height + arrowSize + 5}px`,
+        opacity: '1',
+        visibility: 'visible',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-up'
+      console.log('选择下方位置')
+    } else if (spaceAbove >= bubbleHeight + arrowSize + margin) {
+      // 上方有足够空间
+      const bubbleLeft = Math.max(margin, Math.min(targetCenterX - bubbleWidth / 2, windowWidth - bubbleWidth - margin))
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${bubbleLeft}px`,
+        top: `${targetRect.top - bubbleHeight - arrowSize - 5}px`,
+        opacity: '1',
+        visibility: 'visible',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-down'
+      console.log('选择上方位置')
+    } else if (spaceRight >= bubbleWidth + arrowSize + margin) {
+      // 右方有足够空间
+      const bubbleTop = Math.max(margin, Math.min(targetCenterY - bubbleHeight / 2, windowHeight - bubbleHeight - margin))
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${targetRect.left + targetRect.width + arrowSize + 5}px`,
+        top: `${bubbleTop}px`,
+        opacity: '1',
+        visibility: 'visible',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-left'
+      console.log('选择右方位置')
+    } else if (spaceLeft >= bubbleWidth + arrowSize + margin) {
+      // 左方有足够空间
+      const bubbleTop = Math.max(margin, Math.min(targetCenterY - bubbleHeight / 2, windowHeight - bubbleHeight - margin))
+      bubbleStyle = {
+        position: 'fixed',
+        left: `${targetRect.left - bubbleWidth - arrowSize - 5}px`,
+        top: `${bubbleTop}px`,
+        opacity: '1',
+        visibility: 'visible',
+        transform: 'none'
+      }
+      arrowClass = 'arrow-right'
+      console.log('选择左方位置')
+    } else {
+      // 空间不足，使用居中位置
+      bubbleStyle = {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        opacity: '1',
+        visibility: 'visible'
+      }
+      arrowClass = 'arrow-up'
+      console.log('选择居中位置')
+    }
+    
+    console.log('最终气泡样式:', bubbleStyle)
+    console.log('箭头类:', arrowClass)
+    
+    this.setData({
+      bubbleStyle: bubbleStyle,
+      arrowClass: arrowClass,
+      bubbleVisible: true
+    })
+    
+    this.isCalculatingPosition = false
   }
 })

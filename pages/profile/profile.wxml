@@ -1,6 +1,6 @@
 <view class="profile-container">
   <!-- 头部用户信息卡片 -->
-  <view class="user-card">
+  <view class="user-card {{showTutorial && tutorialStep === 0 ? 'tutorial-highlight' : ''}}">
     <view class="user-header">
       <view class="avatar-container">
         <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
@@ -82,7 +82,7 @@
     </view>
     
     <!-- 统计数据 -->
-    <view class="stats-container">
+    <view class="stats-container {{showTutorial && tutorialStep === 1 ? 'tutorial-highlight' : ''}}">
       <view class="stat-item">
         <text class="stat-number">{{stats.usageDays}}</text>
         <text class="stat-label">使用天数</text>
@@ -100,7 +100,7 @@
 
   <!-- 功能菜单 -->
   <view class="menu-section">
-    <view class="menu-grid">
+    <view class="menu-grid {{showTutorial && tutorialStep === 2 ? 'tutorial-highlight' : ''}}">
       <view class="menu-item" bindtap="handleFinancialReport">
         <view class="menu-icon">📊</view>
         <text class="menu-label">财务报告</text>
@@ -122,7 +122,7 @@
   </view>
 
   <!-- 功能列表 -->
-  <view class="settings-section">
+  <view class="settings-section {{showTutorial && tutorialStep === 3 ? 'tutorial-highlight' : ''}}">
     <view class="setting-item" bindtap="handleAboutBooks">
       <view class="setting-left">
         <view class="setting-icon">📚</view>
@@ -171,5 +171,39 @@
   <!-- 退出登录按钮 -->
   <view class="logout-section">
     <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+
+  <!-- 个人中心引导教程 -->
+  <view wx:if="{{showTutorial}}" class="tutorial-guide">
+    <!-- 教程遮罩 -->
+    <view class="tutorial-mask"></view>
+    
+    <!-- 教程气泡 -->
+    <view class="tutorial-bubble dynamic-position {{bubbleVisible ? 'visible' : ''}}" 
+          style="position: {{bubbleStyle.position || 'fixed'}}; left: {{bubbleStyle.left || 'auto'}}; top: {{bubbleStyle.top || 'auto'}}; bottom: {{bubbleStyle.bottom || 'auto'}}; right: {{bubbleStyle.right || 'auto'}}; transform: {{bubbleStyle.transform || 'none'}}; opacity: {{bubbleStyle.opacity || '0'}}; visibility: {{bubbleStyle.visibility || 'hidden'}};">
+      <view class="bubble-header">
+        <text class="bubble-title">{{currentTutorialStep.title}}</text>
+        <view class="bubble-close" bindtap="skipTutorial">×</view>
+      </view>
+      <view class="bubble-content">
+        <text class="bubble-text">{{currentTutorialStep.content}}</text>
+      </view>
+      <view class="bubble-footer">
+        <view class="tutorial-progress">
+          <text class="progress-text">{{tutorialStep + 1}} / {{tutorialSteps.length}}</text>
+          <view class="progress-bar">
+            <view class="progress-fill" style="width: {{(tutorialStep + 1) / tutorialSteps.length * 100}}%"></view>
+          </view>
+        </view>
+        <view class="tutorial-actions">
+          <view wx:if="{{tutorialStep > 0}}" class="tutorial-btn secondary" bindtap="prevTutorialStep">上一步</view>
+          <view wx:if="{{tutorialStep < tutorialSteps.length - 1}}" class="tutorial-btn primary" bindtap="nextTutorialStep">下一步</view>
+          <view wx:if="{{tutorialStep === tutorialSteps.length - 1}}" class="tutorial-btn primary" bindtap="completeProfileTutorial">完成</view>
+        </view>
+      </view>
+      
+      <!-- 箭头指示器 -->
+      <view class="bubble-arrow {{arrowClass}}"></view>
+    </view>
   </view>
 </view>

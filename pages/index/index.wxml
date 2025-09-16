@@ -203,7 +203,7 @@
           这是一款专业的个人财务管理工具，采用企业级会计准则帮您科学管理资产负债。
         </text>
         <text class="welcome-tip">
-          当前显示的是演示数据，您可以选择：
+          当前显示的是演示数据，完成选择后演示数据将被自动清除：
         </text>
         <view class="welcome-options">
           <view class="option-item">
@@ -233,8 +233,8 @@
     <view class="tutorial-mask"></view>
     
     <!-- 教程气泡 -->
-    <view class="tutorial-bubble dynamic-position {{debugMode ? 'debug-mode' : ''}}" 
-          style="position: {{bubbleStyle.position || 'fixed'}}; left: {{bubbleStyle.left || 'auto'}}; top: {{bubbleStyle.top || 'auto'}}; bottom: {{bubbleStyle.bottom || 'auto'}}; right: {{bubbleStyle.right || 'auto'}}; transform: {{bubbleStyle.transform || 'none'}};">
+    <view class="tutorial-bubble dynamic-position {{debugMode ? 'debug-mode' : ''}} {{bubbleVisible ? 'visible' : ''}}" 
+          style="position: {{bubbleStyle.position || 'fixed'}}; left: {{bubbleStyle.left || 'auto'}}; top: {{bubbleStyle.top || 'auto'}}; bottom: {{bubbleStyle.bottom || 'auto'}}; right: {{bubbleStyle.right || 'auto'}}; transform: {{bubbleStyle.transform || 'none'}}; opacity: {{bubbleStyle.opacity || '0'}}; visibility: {{bubbleStyle.visibility || 'hidden'}};">
       <view class="bubble-header">
         <text class="bubble-title">{{currentTutorialStep.title}}</text>
         <view class="bubble-close" bindtap="skipTutorial">×</view>
