@@ -265,9 +265,13 @@
 }
 
 .delete-btn {
-  background: #f8f9fa;
+  background: var(--btn-bg-light, #f8f9fa);
   color: #dc3545;
   border: 2rpx solid #dc3545;
+}
+
+.dark-theme .delete-btn {
+  background: var(--btn-bg-light-dark, #404040);
 }
 
 /* 财务信息样式 */
@@ -282,7 +286,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 0;
-  border-bottom: 1rpx solid #f1f3f4;
+  border-bottom: 1rpx solid var(--border-light, #f1f3f4);
+}
+
+.dark-theme .finance-item {
+  border-bottom: 1rpx solid var(--border-light-dark, #555);
 }
 
 .finance-item:last-child {
@@ -290,23 +298,35 @@
 }
 
 .finance-item.important {
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   margin: 0 -20rpx;
   padding: 20rpx;
   border-radius: 12rpx;
   border: none;
 }
 
+.dark-theme .finance-item.important {
+  background: var(--item-bg-light-dark, #404040);
+}
+
 .finance-label {
   font-size: 28rpx;
-  color: #495057;
+  color: var(--text-color, #495057);
   font-weight: 500;
+}
+
+.dark-theme .finance-label {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .finance-value {
   font-size: 30rpx;
   font-weight: 600;
-  color: #212529;
+  color: var(--text-color, #212529);
+}
+
+.dark-theme .finance-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .finance-value.positive {
@@ -329,7 +349,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid #f1f3f4;
+  border-bottom: 1rpx solid var(--border-light, #f1f3f4);
+}
+
+.dark-theme .special-item {
+  border-bottom: 1rpx solid var(--border-light-dark, #555);
 }
 
 .special-item:last-child {
@@ -353,15 +377,23 @@
 
 /* 折旧信息样式 */
 .depreciation-info {
-  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+  background: var(--depreciation-bg, linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%));
   border-radius: 12rpx;
   padding: 20rpx;
   border-left: 4rpx solid #ffc107;
 }
 
+.dark-theme .depreciation-info {
+  background: var(--depreciation-bg-dark, linear-gradient(135deg, #4a4a2a 0%, #4f4f3a 100%));
+}
+
 .depreciation-info .special-item {
-  border-bottom: 1rpx solid rgba(255, 193, 7, 0.2);
+  border-bottom: 1rpx solid var(--depreciation-border, rgba(255, 193, 7, 0.2));
   padding: 12rpx 0;
+}
+
+.dark-theme .depreciation-info .special-item {
+  border-bottom: 1rpx solid var(--depreciation-border-dark, rgba(255, 193, 7, 0.4));
 }
 
 .depreciation-info .special-item:last-child {
@@ -430,17 +462,26 @@
 }
 
 .other-costs {
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 12rpx;
   padding: 24rpx;
-  border: 1rpx solid #e9ecef;
+  border: 1rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .other-costs {
+  background: var(--item-bg-light-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
 }
 
 .empty-costs {
   text-align: center;
-  color: #999;
+  color: var(--text-secondary, #999);
   font-size: 28rpx;
   padding: 40rpx 0;
+}
+
+.dark-theme .empty-costs {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .cost-item {
@@ -448,7 +489,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid var(--border-light, #f0f0f0);
+}
+
+.dark-theme .cost-item {
+  border-bottom: 1rpx solid var(--border-light-dark, #555);
 }
 
 .cost-item:last-child {
@@ -462,8 +507,12 @@
 
 .cost-name {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 8rpx;
+}
+
+.dark-theme .cost-name {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .cost-amount {
@@ -474,12 +523,20 @@
 
 .cost-date {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-secondary, #999);
+}
+
+.dark-theme .cost-date {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .cost-item:active {
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   transform: scale(0.98);
+}
+
+.dark-theme .cost-item:active {
+  background: var(--item-bg-light-dark, #404040);
 }
 
 .costs-summary {
@@ -488,12 +545,29 @@
   align-items: center;
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 2rpx solid #e9ecef;
+  border-top: 2rpx solid var(--border-color, #e9ecef);
 }
 
-.summary-label {
+.dark-theme .costs-summary {
+  border-top: 2rpx solid var(--border-color-dark, #555);
+}
+
+.costs-summary .summary-label {
   font-size: 28rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
+}
+
+.dark-theme .costs-summary .summary-label {
+  color: var(--text-secondary-dark, #aaaaaa);
+}
+
+.total-income-summary .summary-label {
+  font-size: 28rpx;
+  color: var(--summary-text, #856404);
+}
+
+.dark-theme .total-income-summary .summary-label {
+  color: var(--summary-text-dark, #cccc99);
 }
 
 .summary-amount {
@@ -541,8 +615,13 @@
   height: 24rpx;
   border-radius: 50%;
   margin-bottom: 16rpx;
-  border: 4rpx solid #fff;
+  border: 4rpx solid var(--card-bg, #fff);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .node-dot {
+  border: 4rpx solid var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 2rpx 8rpx rgba(255, 255, 255, 0.15);
 }
 
 .timeline-node.past .node-dot {
@@ -568,14 +647,20 @@
 }
 
 .node-card {
-  background: #fff;
-  border: 1rpx solid #e9ecef;
+  background: var(--card-bg, #fff);
+  border: 1rpx solid var(--border-color, #e9ecef);
   border-radius: 12rpx;
   padding: 8rpx 6rpx;
   text-align: center;
   min-width: 100rpx;
   max-width: 110rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.dark-theme .node-card {
+  background: var(--card-bg-dark, #2d2d2d);
+  border: 1rpx solid var(--border-color-dark, #555);
+  box-shadow: 0 2rpx 8rpx rgba(255, 255, 255, 0.06);
 }
 
 .node-card.highlight {
@@ -585,20 +670,32 @@
 
 .node-title {
   font-size: 18rpx;
-  color: #999;
+  color: var(--text-secondary, #999);
   margin-bottom: 4rpx;
+}
+
+.dark-theme .node-title {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .node-value {
   font-size: 22rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 3rpx;
+}
+
+.dark-theme .node-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .node-date {
   font-size: 16rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
+}
+
+.dark-theme .node-date {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .node-extra {
@@ -616,24 +713,37 @@
 
 .stat-item {
   flex: 1;
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 8rpx;
   padding: 16rpx;
   text-align: center;
-  border: 1rpx solid #e9ecef;
+  border: 1rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .stat-item {
+  background: var(--item-bg-light-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
 }
 
 .stat-label {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 6rpx;
   display: block;
+}
+
+.dark-theme .stat-label {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .stat-value {
   font-size: 24rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .stat-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .stat-value.negative {
@@ -652,9 +762,13 @@
 .milestones-title {
   font-size: 26rpx;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 16rpx;
   display: block;
+}
+
+.dark-theme .milestones-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .milestones-list {
@@ -666,10 +780,15 @@
 .milestone-item {
   display: flex;
   align-items: center;
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 8rpx;
   padding: 16rpx;
-  border: 1rpx solid #e9ecef;
+  border: 1rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .milestone-item {
+  background: var(--item-bg-light-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
 }
 
 .milestone-icon {
@@ -683,14 +802,22 @@
 
 .milestone-title {
   font-size: 24rpx;
-  color: #333;
+  color: var(--text-color, #333);
   display: block;
   margin-bottom: 4rpx;
 }
 
+.dark-theme .milestone-title {
+  color: var(--text-color-dark, #ffffff);
+}
+
 .milestone-date {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
+}
+
+.dark-theme .milestone-date {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 /* 收入统计样式 */
@@ -731,15 +858,23 @@
 
 .step-dot.past {
   background: #6c757d;
-  border: 3rpx solid #fff;
+  border: 3rpx solid var(--card-bg, #fff);
   box-shadow: 0 0 0 2rpx #6c757d;
+}
+
+.dark-theme .step-dot.past {
+  border: 3rpx solid var(--card-bg-dark, #2d2d2d);
 }
 
 .step-dot.current {
   background: #007bff;
-  border: 3rpx solid #fff;
+  border: 3rpx solid var(--card-bg, #fff);
   box-shadow: 0 0 0 2rpx #007bff;
   animation: pulse 2s infinite;
+}
+
+.dark-theme .step-dot.current {
+  border: 3rpx solid var(--card-bg-dark, #2d2d2d);
 }
 
 @keyframes pulse {
@@ -760,24 +895,36 @@
   top: 30rpx;
   width: 2rpx;
   height: 70rpx;
-  background: #e9ecef;
+  background: var(--border-color, #e9ecef);
   z-index: 1;
+}
+
+.dark-theme .step-line {
+  background: var(--border-color-dark, #555);
 }
 
 .step-content {
   flex: 1;
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 12rpx;
   padding: 20rpx;
   border-left: 4rpx solid #007bff;
 }
 
+.dark-theme .step-content {
+  background: var(--item-bg-light-dark, #404040);
+}
+
 .step-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #495057;
+  color: var(--text-color, #495057);
   margin-bottom: 8rpx;
   display: block;
+}
+
+.dark-theme .step-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .step-value {
@@ -790,9 +937,13 @@
 
 .step-date {
   font-size: 24rpx;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
   margin-bottom: 6rpx;
   display: block;
+}
+
+.dark-theme .step-date {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .step-duration {
@@ -814,24 +965,37 @@
 
 /* 移除不支持的:has()选择器，保持默认2列布局 */
 
-.info-item {
-  background: #f8f9fa;
+.basic-info-grid .info-item {
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 12rpx;
   padding: 20rpx;
-  border: 1rpx solid #e9ecef;
+  border: 1rpx solid var(--border-color, #e9ecef);
 }
 
-.info-label {
+.dark-theme .basic-info-grid .info-item {
+  background: var(--item-bg-light-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
+}
+
+.basic-info-grid .info-label {
   font-size: 24rpx;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
   margin-bottom: 8rpx;
   display: block;
 }
 
-.info-value {
+.dark-theme .basic-info-grid .info-label {
+  color: var(--text-secondary-dark, #aaaaaa);
+}
+
+.basic-info-grid .info-value {
   font-size: 28rpx;
-  color: #212529;
+  color: var(--text-color, #212529);
   font-weight: 500;
+}
+
+.dark-theme .basic-info-grid .info-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 /* 工作收入：薪资概览样式 */
@@ -872,12 +1036,17 @@
 }
 
 .analysis-item {
-  background: #fff;
-  border: 2rpx solid #e9ecef;
+  background: var(--card-bg, #fff);
+  border: 2rpx solid var(--border-color, #e9ecef);
   border-radius: 12rpx;
   padding: 24rpx;
   text-align: center;
   transition: all 0.3s ease;
+}
+
+.dark-theme .analysis-item {
+  background: var(--card-bg-dark, #2d2d2d);
+  border: 2rpx solid var(--border-color-dark, #555);
 }
 
 .analysis-item:hover {
@@ -895,16 +1064,25 @@
 
 .analysis-label {
   font-size: 24rpx;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
+}
+
+.dark-theme .analysis-label {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 /* 工作收入：收入结构样式 */
 .income-category {
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 12rpx;
   padding: 20rpx;
   margin-bottom: 16rpx;
-  border: 1rpx solid #e9ecef;
+  border: 1rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .income-category {
+  background: var(--item-bg-light-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
 }
 
 .category-header {
@@ -917,7 +1095,11 @@
 .category-title {
   font-size: 28rpx;
   font-weight: 500;
-  color: #495057;
+  color: var(--text-color, #495057);
+}
+
+.dark-theme .category-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .category-amount {
@@ -928,17 +1110,26 @@
 
 .category-desc {
   font-size: 24rpx;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
   margin-top: 8rpx;
+}
+
+.dark-theme .category-desc {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 /* 总收入汇总 */
 .total-income-summary {
-  background: #fff3cd;
-  border: 1rpx solid #ffeaa7;
+  background: var(--summary-bg, #fff3cd);
+  border: 1rpx solid var(--summary-border, #ffeaa7);
   border-radius: 12rpx;
   padding: 20rpx;
   margin-top: 20rpx;
+}
+
+.dark-theme .total-income-summary {
+  background: var(--summary-bg-dark, #4a4a2a);
+  border: 1rpx solid var(--summary-border-dark, #666633);
 }
 
 .summary-row {
@@ -949,21 +1140,33 @@
 }
 
 .summary-row.main-summary {
-  border-bottom: 1rpx solid #ffeaa7;
+  border-bottom: 1rpx solid var(--summary-border, #ffeaa7);
   margin-bottom: 12rpx;
   padding-bottom: 12rpx;
+}
+
+.dark-theme .summary-row.main-summary {
+  border-bottom: 1rpx solid var(--summary-border-dark, #666633);
 }
 
 .main-summary .summary-label {
   font-size: 32rpx;
   font-weight: 600;
-  color: #856404;
+  color: var(--summary-text, #856404);
+}
+
+.dark-theme .main-summary .summary-label {
+  color: var(--summary-text-dark, #cccc99);
 }
 
 .main-summary .summary-amount {
   font-size: 36rpx;
   font-weight: 700;
-  color: #856404;
+  color: var(--summary-text, #856404);
+}
+
+.dark-theme .main-summary .summary-amount {
+  color: var(--summary-text-dark, #cccc99);
 }
 
 .summary-label {
@@ -971,10 +1174,20 @@
   color: #856404;
 }
 
-.summary-amount {
+.total-income-summary .summary-amount {
   font-size: 28rpx;
   font-weight: 600;
-  color: #856404;
+  color: var(--summary-text, #856404);
+}
+
+.dark-theme .total-income-summary .summary-amount {
+  color: var(--summary-text-dark, #cccc99);
+}
+
+.costs-summary .summary-amount {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #e74c3c;
 }
 
 /* 收入发展轨迹样式 */
@@ -997,8 +1210,13 @@
   height: 32rpx;
   border-radius: 50%;
   margin-bottom: 16rpx;
-  border: 4rpx solid #fff;
+  border: 4rpx solid var(--card-bg, #fff);
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .milestone-dot {
+  border: 4rpx solid var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 2rpx 8rpx rgba(255, 255, 255, 0.15);
 }
 
 .milestone-dot.start {
@@ -1027,20 +1245,32 @@
 
 .milestone-content .milestone-title {
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 8rpx;
+}
+
+.dark-theme .milestone-content .milestone-title {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .milestone-value {
   font-size: 28rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 6rpx;
+}
+
+.dark-theme .milestone-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .milestone-content .milestone-date {
   font-size: 22rpx;
-  color: #999;
+  color: var(--text-secondary, #999);
+}
+
+.dark-theme .milestone-content .milestone-date {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .income-stats {
@@ -1049,6 +1279,10 @@
   gap: 20rpx;
   margin-top: 30rpx;
   padding: 24rpx;
-  background: #f8f9fa;
+  background: var(--item-bg-light, #f8f9fa);
   border-radius: 12rpx;
+}
+
+.dark-theme .income-stats {
+  background: var(--item-bg-light-dark, #404040);
 }

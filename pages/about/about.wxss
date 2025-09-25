@@ -8,6 +8,15 @@
 
 .about-container.dark-theme {
   background: var(--bg-color-dark, #1e1e1e);
+  
+  /* 深色主题变量 */
+  --card-bg-dark: #2d2d2d;
+  --text-color-dark: #ffffff;
+  --text-secondary-dark: #aaaaaa;
+  --text-tertiary-dark: #888888;
+  --item-bg-dark: #404040;
+  --border-color-dark: #404040;
+  --story-bg-dark: #3d3d2a;
 }
 
 /* 页面标题 */
@@ -118,23 +127,35 @@
 .concept-label {
   font-size: 26rpx;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-secondary, #495057);
   display: block;
   margin-bottom: 8rpx;
 }
 
+.dark-theme .concept-label {
+  color: var(--text-secondary-dark, #aaaaaa);
+}
+
 .concept-desc {
   font-size: 24rpx;
-  color: #6c757d;
+  color: var(--text-tertiary, #6c757d);
   line-height: 1.6;
+}
+
+.dark-theme .concept-desc {
+  color: var(--text-tertiary-dark, #888888);
 }
 
 /* 故事部分 */
 .story-section {
-  background: #fff8e1;
+  background: var(--story-bg, #fff8e1);
   border-radius: 16rpx;
   padding: 24rpx;
   border-left: 6rpx solid #ffc107;
+}
+
+.dark-theme .story-section {
+  background: var(--story-bg-dark, #3d3d2a);
 }
 
 .story-title {
@@ -153,10 +174,15 @@
 
 /* 初衷部分 */
 .purpose-section {
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 20rpx;
   padding: 40rpx 30rpx;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.dark-theme .purpose-section {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 4rpx 20rpx rgba(255, 255, 255, 0.08);
 }
 
 .purpose-header {
@@ -173,7 +199,11 @@
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .purpose-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .purpose-content {
@@ -182,10 +212,14 @@
 
 .purpose-text {
   font-size: 26rpx;
-  color: #495057;
+  color: var(--text-secondary, #495057);
   line-height: 1.6;
   margin-bottom: 30rpx;
   display: block;
+}
+
+.dark-theme .purpose-text {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .purpose-list {
@@ -197,8 +231,12 @@
   align-items: flex-start;
   margin-bottom: 20rpx;
   padding: 16rpx;
-  background: #f8f9fa;
+  background: var(--item-bg, #f8f9fa);
   border-radius: 12rpx;
+}
+
+.dark-theme .purpose-item {
+  background: var(--item-bg-dark, #404040);
 }
 
 .purpose-bullet {
@@ -209,9 +247,13 @@
 
 .purpose-desc {
   font-size: 24rpx;
-  color: #495057;
+  color: var(--text-secondary, #495057);
   line-height: 1.6;
   flex: 1;
+}
+
+.dark-theme .purpose-desc {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .purpose-footer {

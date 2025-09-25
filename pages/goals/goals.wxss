@@ -9,6 +9,12 @@
 
 .goals-container.dark-theme {
   background-color: var(--bg-color-dark, #1e1e1e);
+  
+  /* 输入框样式 */
+  --input-bg: #2d2d2d;
+  --text-color: #ffffff;
+  --btn-bg: #404040;
+  --text-secondary: #aaaaaa;
 }
 
 /* 目标列表 */
@@ -371,11 +377,15 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+.dark-theme .modal-content {
+  background: var(--card-bg-dark, #2d2d2d);
 }
 
 .modal-header {
@@ -396,13 +406,18 @@
   width: 60rpx;
   height: 60rpx;
   border-radius: 30rpx;
-  background: #f8f9fa;
-  color: #6c757d;
+  background: var(--btn-bg, #f8f9fa);
+  color: var(--text-secondary, #6c757d);
   border: none;
   font-size: 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.dark-theme .close-btn {
+  background: var(--btn-bg-dark, #555);
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .form-section {
@@ -416,19 +431,30 @@
 .form-label {
   display: block;
   font-size: 28rpx;
-  color: #495057;
+  color: var(--text-color, #495057);
   font-weight: 500;
   margin-bottom: 16rpx;
+}
+
+.dark-theme .form-label {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
-  background: #f8f9fa;
+  background: var(--input-bg, #f8f9fa);
   border-radius: 12rpx;
   padding: 24rpx;
   font-size: 28rpx;
   border: 2rpx solid transparent;
+  color: var(--text-color, #212529);
+}
+
+.dark-theme .form-input,
+.dark-theme .form-textarea {
+  background: var(--input-bg-dark, #404040);
+  color: var(--text-color-dark, #ffffff);
 }
 
 .form-input {
@@ -448,11 +474,11 @@
   justify-content: space-between;
   align-items: center;
   min-height: 80rpx;
-  background: #f8f9fa;
+  background: var(--input-bg, #f8f9fa);
   border-radius: 12rpx;
   padding: 16rpx 24rpx;
   font-size: 28rpx;
-  color: #495057;
+  color: var(--text-color, #495057);
 }
 
 .picker-content {
@@ -541,8 +567,8 @@
 }
 
 .cancel-btn {
-  background: #f8f9fa;
-  color: #6c757d;
+  background: var(--btn-bg, #f8f9fa);
+  color: var(--text-secondary, #6c757d);
 }
 
 .save-btn {

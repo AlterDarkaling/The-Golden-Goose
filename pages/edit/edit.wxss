@@ -20,6 +20,9 @@
   --text-color-tertiary: #b3b3b3;
   --text-color-disabled: #666666;
   
+  /* 输入框背景色 */
+  --input-bg: #2d2d2d;
+  
   /* 边框色 */
   --border-color-light: #333333;
   --border-color-normal: #404040;
@@ -67,11 +70,12 @@
 .form-input {
   width: 100%;
   height: 80rpx;
-  background: #f8f9fa;
+  background: var(--input-bg, #f8f9fa);
   border-radius: 12rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   border: 2rpx solid transparent;
+  color: var(--text-color-primary, #212529);
 }
 
 .form-picker {
@@ -83,11 +87,11 @@
   justify-content: space-between;
   align-items: center;
   height: 80rpx;
-  background: #f8f9fa;
+  background: var(--input-bg, #f8f9fa);
   border-radius: 12rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
-  color: #495057;
+  color: var(--text-color-primary, #495057);
 }
 
 .picker-arrow {
@@ -98,11 +102,12 @@
 .form-textarea {
   width: 100%;
   height: 160rpx;
-  background: #f8f9fa;
+  background: var(--input-bg, #f8f9fa);
   border-radius: 12rpx;
   padding: 24rpx;
   font-size: 28rpx;
   border: 2rpx solid transparent;
+  color: var(--text-color-primary, #212529);
 }
 
 .char-count {
@@ -141,8 +146,8 @@
 }
 
 .btn-cancel {
-  background: #f8f9fa;
-  color: #6c757d;
+  background: var(--btn-cancel-bg, #f8f9fa);
+  color: var(--btn-cancel-color, #6c757d);
 }
 
 .btn-save {

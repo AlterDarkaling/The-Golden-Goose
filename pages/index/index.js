@@ -1526,38 +1526,45 @@ Page({
     return actualMonthlyIncome.toFixed(2)
   },
 
-  // 计算消费型资产的每日成本
+  // 计算消费型资产的历史平均每日成本
   calculateDailyCost(asset) {
-    // 月度运营成本除以30天
-    const monthlyOperatingCost = parseFloat(asset.monthlyOperatingCost) || 0
-    const dailyOperatingCost = monthlyOperatingCost / 30
-    
-    // 折旧成本计算
-    let dailyDepreciation = 0
     const originalValue = parseFloat(asset.originalValue) || parseFloat(asset.initialValue) || 0
+    const currentValue = parseFloat(asset.currentValue) || originalValue
     
-    if (originalValue > 0) {
-      let depreciationRate = 0
-      
-      // 优先使用用户设置的折旧率
-      if (asset.depreciationRate) {
-        depreciationRate = parseFloat(asset.depreciationRate) / 100
-      } else {
-        // 使用系统默认折旧率
-        depreciationRate = DepreciationEngine.getDepreciationRate(asset.categoryL3 || asset.categoryL2 || '')
-      }
-      
-      // 年折旧额 / 365天
-      dailyDepreciation = (originalValue * depreciationRate) / 365
+    if (originalValue <= 0) {
+      return "0.00"
     }
     
-    const totalDailyCost = dailyOperatingCost + dailyDepreciation
+    // 计算使用天数
+    const createTime = asset.createDate || asset.createTime
+    if (!createTime) {
+      return "0.00"
+    }
+    
+    const now = new Date()
+    const createDate = new Date(createTime)
+    const daysUsed = Math.max(1, Math.floor((now - createDate) / (1000 * 60 * 60 * 24)))
+    
+    // 计算累计折旧损失
+    const accumulatedDepreciation = Math.max(0, originalValue - currentValue)
+    
+    // 计算累计运营成本
+    let operatingCost = 0
+    const monthlyOperatingCost = parseFloat(asset.monthlyOperatingCost) || 0
+    if (monthlyOperatingCost > 0) {
+      const monthsUsed = Math.max(0, (now - createDate) / (1000 * 60 * 60 * 24 * 30))
+      operatingCost = monthsUsed * monthlyOperatingCost
+    }
+    
+    // 计算历史平均每日成本（总成本损失 ÷ 使用天数）
+    const totalCostLoss = accumulatedDepreciation + operatingCost
+    const dailyCost = totalCostLoss / daysUsed
     
     // 如果成本太小，返回最小显示值
-    if (totalDailyCost < 0.01 && originalValue > 0) {
+    if (dailyCost < 0.01 && originalValue > 0) {
       return "0.01"  // 最小显示1分钱，表示该资产确实有成本
     }
     
-    return totalDailyCost.toFixed(2)
+    return dailyCost.toFixed(2)
   }
 })

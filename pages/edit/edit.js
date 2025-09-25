@@ -1027,6 +1027,39 @@ Page({
     })
   },
 
+  // 计算负债的历史平均每日成本
+  calculateLiabilityDailyCost(formData, monthlyPayment) {
+    const originalAmount = parseFloat(formData.originalAmount) || 0
+    const currentAmount = parseFloat(formData.currentAmount) || originalAmount
+    
+    if (originalAmount <= 0) {
+      return 0
+    }
+    
+    // 计算使用天数（从创建时间到现在）
+    const createTime = formData.createDate || formData.createTime || new Date().toISOString()
+    const now = new Date()
+    const createDate = new Date(createTime)
+    const daysUsed = Math.max(1, Math.floor((now - createDate) / (1000 * 60 * 60 * 24)))
+    
+    // 计算已偿还本金（原始金额 - 当前余额）
+    const paidPrincipal = Math.max(0, originalAmount - currentAmount)
+    
+    // 计算累计利息支出
+    let totalInterestPaid = 0
+    const monthsUsed = Math.max(0, (now - createDate) / (1000 * 60 * 60 * 24 * 30))
+    if (monthlyPayment > 0 && monthsUsed > 0) {
+      // 简化计算：总还款 - 已偿还本金 = 累计利息
+      const totalPayments = monthlyPayment * monthsUsed
+      totalInterestPaid = Math.max(0, totalPayments - paidPrincipal)
+    }
+    
+    // 历史平均每日成本 = 累计利息支出 ÷ 使用天数
+    const dailyCost = totalInterestPaid / daysUsed
+    
+    return dailyCost
+  },
+
   // 表单验证
   validateForm() {
     const { formData, type } = this.data
@@ -1272,7 +1305,7 @@ Page({
       originalAmount: parseFloat(formData.originalAmount) || 0,
       currentAmount: parseFloat(formData.currentAmount) || parseFloat(formData.originalAmount) || 0,
       monthlyPayment: actualMonthlyPayment,
-      dailyCost: actualMonthlyPayment / 30,
+      dailyCost: this.calculateLiabilityDailyCost(formData, actualMonthlyPayment),
       annualRate: parseFloat(formData.annualRate) || 0,
       // 消费性资产特有字段
       monthlyOperatingCost: monthlyOperatingCost,

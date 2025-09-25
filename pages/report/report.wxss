@@ -9,6 +9,15 @@
 
 .report-container.dark-theme {
   background: var(--bg-gradient-dark, linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%));
+  
+  /* 深色主题变量 */
+  --card-bg-dark: #2d2d2d;
+  --text-color-dark: #ffffff;
+  --text-secondary-dark: #aaaaaa;
+  --text-tertiary-dark: #888888;
+  --rate-bg-dark: #404040;
+  --btn-bg-dark: #404040;
+  --border-color-dark: #555555;
 }
 
 /* 报表导航 */
@@ -269,18 +278,30 @@
 }
 
 .health-score.excellent {
-  background: #E8F5E8;
+  background: var(--excellent-bg, #E8F5E8);
   color: #4CAF50;
 }
 
+.dark-theme .health-score.excellent {
+  background: var(--excellent-bg-dark, #2a4a2a);
+}
+
 .health-score.good {
-  background: #FFF3E0;
+  background: var(--good-bg, #FFF3E0);
   color: #FF9800;
 }
 
+.dark-theme .health-score.good {
+  background: var(--good-bg-dark, #4a3a1a);
+}
+
 .health-score.warning {
-  background: #FFEBEE;
+  background: var(--warning-bg, #FFEBEE);
   color: #F44336;
+}
+
+.dark-theme .health-score.warning {
+  background: var(--warning-bg-dark, #4a2a2a);
 }
 
 .health-metrics {
@@ -306,16 +327,25 @@
 .metric-value {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .metric-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 /* 图表卡片 */
 .chart-card {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .chart-card {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
 }
 
 .chart-header {
@@ -325,7 +355,11 @@
 .chart-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .chart-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .chart-content {
@@ -343,9 +377,13 @@
 .chart-bar {
   flex: 1;
   height: 16rpx;
-  background: #f0f0f0;
+  background: var(--chart-bg, #f0f0f0);
   border-radius: 8rpx;
   overflow: hidden;
+}
+
+.dark-theme .chart-bar {
+  background: var(--chart-bg-dark, #555);
 }
 
 .bar-fill {
@@ -363,8 +401,12 @@
 
 .chart-name {
   font-size: 26rpx;
-  color: #333;
+  color: var(--text-color, #333);
   min-width: 80rpx;
+}
+
+.dark-theme .chart-name {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .chart-value {
@@ -376,17 +418,26 @@
 
 .chart-percentage {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   min-width: 40rpx;
+}
+
+.dark-theme .chart-percentage {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 /* 资产负债表 */
 .balance-sheet {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .balance-sheet {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
 }
 
 .balance-section {
@@ -405,7 +456,11 @@
 .section-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .section-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .section-total {
@@ -433,8 +488,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 20rpx;
-  background: #f8f9fa;
+  background: var(--item-bg, #f8f9fa);
   border-radius: 12rpx;
+}
+
+.dark-theme .balance-item {
+  background: var(--item-bg-dark, #404040);
 }
 
 .item-info {
@@ -444,15 +503,23 @@
 .item-name {
   font-size: 28rpx;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color, #333);
   display: block;
   margin-bottom: 6rpx;
 }
 
+.dark-theme .item-name {
+  color: var(--text-color-dark, #ffffff);
+}
+
 .item-desc {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   font-style: italic;
+}
+
+.dark-theme .item-desc {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .item-value {
@@ -467,8 +534,12 @@
 
 .balance-divider {
   height: 2rpx;
-  background: #e0e0e0;
+  background: var(--divider-color, #e0e0e0);
   margin: 30rpx 0;
+}
+
+.dark-theme .balance-divider {
+  background: var(--divider-color-dark, #555);
 }
 
 .balance-divider.thick {
@@ -492,11 +563,16 @@
 
 /* 利润表 */
 .income-statement {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .income-statement {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
 }
 
 .income-section {
@@ -514,8 +590,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 16rpx 20rpx;
-  background: #f8f9fa;
+  background: var(--item-bg, #f8f9fa);
   border-radius: 10rpx;
+}
+
+.dark-theme .income-item {
+  background: var(--item-bg-dark, #404040);
 }
 
 .income-divider {
@@ -547,18 +627,27 @@
 }
 
 .pie-chart {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
 }
 
+.dark-theme .pie-chart {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
+}
+
 .pie-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 20rpx;
   display: block;
+}
+
+.dark-theme .pie-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .pie-content {
@@ -582,22 +671,35 @@
 .pie-name {
   flex: 1;
   font-size: 26rpx;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .pie-name {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .pie-percentage {
   font-size: 24rpx;
   font-weight: 600;
-  color: #666;
+  color: var(--text-secondary, #666);
+}
+
+.dark-theme .pie-percentage {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 /* 现金流量表 */
 .cashflow-statement {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .cashflow-statement {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
 }
 
 .cashflow-item {
@@ -623,15 +725,23 @@
 .cashflow-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
   display: block;
   margin-bottom: 6rpx;
 }
 
+.dark-theme .cashflow-title {
+  color: var(--text-color-dark, #ffffff);
+}
+
 .cashflow-subtitle {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   font-style: italic;
+}
+
+.dark-theme .cashflow-subtitle {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .cashflow-value {
@@ -661,19 +771,28 @@
 
 /* 趋势图表 */
 .trend-chart {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-top: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
 }
 
+.dark-theme .trend-chart {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
+}
+
 .trend-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 30rpx;
   display: block;
+}
+
+.dark-theme .trend-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .trend-content {
@@ -716,30 +835,47 @@
 
 .bar-label {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
+}
+
+.dark-theme .bar-label {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .bar-value {
   font-size: 20rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .bar-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 /* 财务分析 */
 .ratio-analysis {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
 }
 
+.dark-theme .ratio-analysis {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
+}
+
 .analysis-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 30rpx;
   display: block;
+}
+
+.dark-theme .analysis-title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .ratio-grid {
@@ -764,33 +900,51 @@
 
 .ratio-name {
   font-size: 24rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 12rpx;
   display: block;
+}
+
+.dark-theme .ratio-name {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .ratio-value {
   font-size: 36rpx;
   font-weight: 700;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 8rpx;
   display: block;
 }
 
+.dark-theme .ratio-value {
+  color: var(--text-color-dark, #ffffff);
+}
+
 .ratio-desc {
   font-size: 20rpx;
-  color: #999;
+  color: var(--text-tertiary, #999);
   font-style: italic;
+}
+
+.dark-theme .ratio-desc {
+  color: var(--text-tertiary-dark, #888888);
 }
 
 /* 折旧分析 */
 .depreciation-analysis,
 .loan-analysis {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .depreciation-analysis,
+.dark-theme .loan-analysis {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 8rpx 32rpx rgba(255, 255, 255, 0.1);
 }
 
 .depreciation-list,
@@ -820,16 +974,27 @@
 .loan-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
+}
+
+.dark-theme .asset-name,
+.dark-theme .loan-name {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .depreciation-rate,
 .loan-rate {
   font-size: 22rpx;
-  color: #666;
-  background: #e9ecef;
+  color: var(--text-secondary, #666);
+  background: var(--rate-bg, #e9ecef);
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
+}
+
+.dark-theme .depreciation-rate,
+.dark-theme .loan-rate {
+  color: var(--text-secondary-dark, #aaaaaa);
+  background: var(--rate-bg-dark, #404040);
 }
 
 .depreciation-values,
@@ -846,9 +1011,13 @@
 
 .value-label {
   font-size: 22rpx;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 6rpx;
   display: block;
+}
+
+.dark-theme .value-label {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .value-amount {
@@ -896,10 +1065,17 @@
 }
 
 .action-btn.secondary {
-  background: white;
-  color: #333;
-  border: 2rpx solid #e0e0e0;
+  background: var(--btn-bg, white);
+  color: var(--text-color, #333);
+  border: 2rpx solid var(--border-color, #e0e0e0);
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .action-btn.secondary {
+  background: var(--btn-bg-dark, #404040);
+  color: var(--text-color-dark, #ffffff);
+  border: 2rpx solid var(--border-color-dark, #555555);
+  box-shadow: 0 4rpx 16rpx rgba(255, 255, 255, 0.1);
 }
 
 .action-btn:active {

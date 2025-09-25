@@ -171,7 +171,7 @@ Page({
         default: break
       }
     })
-    const totalIncomeNum = workIncome + investmentIncome + operatingIncome
+    const totalIncomeNum = this.roundToPrecision(workIncome + investmentIncome + operatingIncome)
 
     // 费用拆分（基础版）
     let operatingExpenses = 0
@@ -181,7 +181,7 @@ Page({
     liabilities.forEach(l => {
       const principal = this.firstNumber(l.currentAmount, l.originalAmount, l.initialAmount, 0)
       const rate = this.firstNumber(l.annualRate, 0)
-      const interest = principal * (rate / 100) / 12
+      const interest = this.roundToPrecision(principal * (rate / 100) / 12)
       financialExpenses += interest
     })
 
@@ -191,23 +191,23 @@ Page({
         depreciationExpenses += this.computeMonthlyDepreciation(a)
       }
     })
-    const totalExpensesNum = operatingExpenses + financialExpenses + depreciationExpenses
+    const totalExpensesNum = this.roundToPrecision(operatingExpenses + financialExpenses + depreciationExpenses)
 
     // 总览月收入/支出
     const monthlyIncome = totalIncomeNum
     const monthlyExpenses = totalExpensesNum
-    const monthlyCashFlow = monthlyIncome - monthlyExpenses
+    const monthlyCashFlow = this.roundToPrecision(monthlyIncome - monthlyExpenses)
 
     // 现金流（基础版）
     // 经营活动现金流：净收入 + 非现金费用（加回折旧）
-    const operatingCashFlowNum = monthlyCashFlow + depreciationExpenses
+    const operatingCashFlowNum = this.roundToPrecision(monthlyCashFlow + depreciationExpenses)
     // 投资活动现金流：金融资产产生的现金收益（这里用 investmentIncome 简化）
-    const investingCashFlowNum = investmentIncome
+    const investingCashFlowNum = this.roundToPrecision(investmentIncome)
     // 筹资活动现金流：负债月还款总额为现金流出
     let totalMonthlyPayment = 0
     liabilities.forEach(l => { totalMonthlyPayment += this.firstNumber(l.monthlyPayment, 0) })
-    const financingCashFlowNum = -totalMonthlyPayment
-    const netCashFlowNum = operatingCashFlowNum + investingCashFlowNum + financingCashFlowNum
+    const financingCashFlowNum = this.roundToPrecision(-totalMonthlyPayment)
+    const netCashFlowNum = this.roundToPrecision(operatingCashFlowNum + investingCashFlowNum + financingCashFlowNum)
 
     // 计算占比（排除工作收入）
     const assetsBreakdownTotal = currentAssetsSum + financialAssetsSum + physicalAssetsSum + otherAssetsSum
@@ -300,6 +300,12 @@ Page({
     return 0
   },
 
+  // 数字精度处理函数，避免浮点数精度问题
+  roundToPrecision(num, precision = 2) {
+    const factor = Math.pow(10, precision)
+    return Math.round(Number(num) * factor) / factor
+  },
+
   // 金额文本
   signCurrency(n) {
     const v = Number(n) || 0
@@ -309,7 +315,9 @@ Page({
 
   absCurrency(n) {
     const v = Math.abs(Number(n) || 0)
-    return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    // 先四舍五入到2位小数，避免浮点数精度问题
+    const rounded = Math.round(v * 100) / 100
+    return rounded.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   },
 
   // 百分比文本（基于子项与总额）
@@ -331,7 +339,10 @@ Page({
   ratioStr(value, decimals = 2) {
     const v = Number(value)
     if (!Number.isFinite(v)) return (0).toFixed(decimals)
-    return v.toFixed(decimals)
+    // 先四舍五入到指定小数位，避免浮点数精度问题
+    const factor = Math.pow(10, decimals)
+    const rounded = Math.round(v * factor) / factor
+    return rounded.toFixed(decimals)
   },
 
   // 周期缩放因子
@@ -401,7 +412,7 @@ Page({
     let rate = this.firstNumber(asset.depreciationRate, 10) // 默认10%
     // 支持 0.1 或 10 两种表达
     rate = rate > 1 ? rate / 100 : rate
-    return original * rate / 12
+    return this.roundToPrecision(original * rate / 12)
   },
 
   // 构建折旧明细（简版）
@@ -414,9 +425,9 @@ Page({
         rate = rate > 1 ? rate / 100 : rate
         const months = this.computeUsageMonths(a)
         const years = months / 12
-        const currentValueNum = original * Math.pow(1 - rate, years)
-        const monthlyDep = original * rate / 12
-        const totalDep = original - currentValueNum
+        const currentValueNum = this.roundToPrecision(original * Math.pow(1 - rate, years))
+        const monthlyDep = this.roundToPrecision(original * rate / 12)
+        const totalDep = this.roundToPrecision(original - currentValueNum)
 
         list.push({
           name: a.name || '消费性资产',
