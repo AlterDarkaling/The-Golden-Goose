@@ -26,14 +26,66 @@ Page({
       labels: [],
       maxValue: 0,
       lineStyle: ''
+    },
+    // 主题相关
+    isDarkTheme: false
+  },
+
+  // 设置主题
+  setTheme(isDark) {
+    try {
+      // 设置导航栏颜色
+      wx.setNavigationBarColor({
+        frontColor: isDark ? '#ffffff' : '#000000',
+        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        animation: {
+          duration: 100,
+          timingFunc: 'easeInOut'
+        }
+      })
+      
+      // 设置页面背景色 - 修复白色边框
+      if (wx.setBackgroundColor) {
+        const bgColor = isDark ? '#1e1e1e' : '#ffffff'
+        
+        wx.setBackgroundColor({
+          backgroundColor: bgColor,
+          backgroundColorTop: bgColor,
+          backgroundColorBottom: bgColor
+        })
+        
+        setTimeout(() => {
+          wx.setBackgroundColor({
+            backgroundColor: bgColor,
+            backgroundColorTop: bgColor,
+            backgroundColorBottom: bgColor
+          })
+        }, 50)
+      }
+      
+      // 重新渲染界面以应用主题
+      this.setData({
+        isDarkTheme: isDark
+      })
+    } catch (error) {
+      console.error('设置页面主题失败:', error)
     }
   },
 
   onLoad(options) {
+    // 初始化主题状态
+    const app = getApp()
+    const isDark = app.globalData.isDarkTheme || false
+    
     this.setData({
       type: options.type || 'asset',
-      itemId: options.id || ''
+      itemId: options.id || '',
+      isDarkTheme: isDark
     })
+    
+    // 设置导航栏主题
+    this.setTheme(isDark)
+    
     this.loadItemData()
   },
 

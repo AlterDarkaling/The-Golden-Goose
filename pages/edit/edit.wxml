@@ -1,4 +1,4 @@
-<view class="edit-container">
+<view class="edit-container {{isDarkTheme ? 'dark-theme' : ''}}">
   <view class="header">
     <text class="header-title">{{isEdit ? '编辑' : '添加'}}项目</text>
   </view>

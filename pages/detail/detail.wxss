@@ -1,13 +1,24 @@
 .detail-container {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-color, #f5f5f5);
   padding-bottom: 120rpx;
+  margin-top: -1rpx;
+  padding-top: 1rpx;
+}
+
+.detail-container.dark-theme {
+  background: var(--bg-color-dark, #1e1e1e);
 }
 
 .header-section {
-  background: white;
+  background: var(--card-bg, white);
   padding: 60rpx 40rpx;
-  border-bottom: 1rpx solid #e9ecef;
+  border-bottom: 1rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .header-section {
+  background: var(--card-bg-dark, #2d2d2d);
+  border-bottom: 1rpx solid var(--border-color-dark, #404040);
 }
 
 .item-header {
@@ -24,9 +35,14 @@
   align-items: center;
   justify-content: center;
   border-radius: 16rpx;
-  background: #f8f9fa;
-  border: 1rpx solid #e9ecef;
+  background: var(--logo-bg, #f8f9fa);
+  border: 1rpx solid var(--border-color, #e9ecef);
   flex-shrink: 0;
+}
+
+.dark-theme .item-logo {
+  background: var(--logo-bg-dark, #404040);
+  border: 1rpx solid var(--border-color-dark, #555);
 }
 
 .logo-image-display {
@@ -77,24 +93,38 @@
 .title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #212529;
+  color: var(--text-color, #212529);
+}
+
+.dark-theme .title {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .info-section {
-  background: white;
+  background: var(--card-bg, white);
   margin: 20rpx;
   border-radius: 16rpx;
   padding: 40rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
 }
 
+.dark-theme .info-section {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 4rpx 16rpx rgba(255, 255, 255, 0.05);
+}
+
 .section-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #212529;
+  color: var(--text-color, #212529);
   margin-bottom: 30rpx;
   padding-bottom: 16rpx;
-  border-bottom: 2rpx solid #f8f9fa;
+  border-bottom: 2rpx solid var(--border-light, #f8f9fa);
+}
+
+.dark-theme .section-title {
+  color: var(--text-color-dark, #ffffff);
+  border-bottom: 2rpx solid var(--border-light-dark, #404040);
 }
 
 .info-grid {
@@ -111,13 +141,21 @@
 
 .info-label {
   font-size: 26rpx;
-  color: #6c757d;
+  color: var(--text-secondary, #6c757d);
+}
+
+.dark-theme .info-label {
+  color: var(--text-secondary-dark, #aaaaaa);
 }
 
 .info-value {
   font-size: 30rpx;
-  color: #212529;
+  color: var(--text-color, #212529);
   font-weight: 500;
+}
+
+.dark-theme .info-value {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .info-value.status {
@@ -179,12 +217,17 @@
 }
 
 .notes-content {
-  background: #f8f9fa;
+  background: var(--notes-bg, #f8f9fa);
   padding: 30rpx;
   border-radius: 12rpx;
   font-size: 28rpx;
-  color: #495057;
+  color: var(--text-color, #495057);
   line-height: 1.6;
+}
+
+.dark-theme .notes-content {
+  background: var(--notes-bg-dark, #404040);
+  color: var(--text-color-dark, #ffffff);
 }
 
 .action-section {
@@ -192,13 +235,19 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--card-bg, white);
   padding: 20rpx 40rpx;
-  border-top: 1rpx solid #e9ecef;
+  border-top: 1rpx solid var(--border-color, #e9ecef);
   display: flex;
   gap: 20rpx;
   z-index: 10;
   box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .action-section {
+  background: var(--card-bg-dark, #2d2d2d);
+  border-top: 1rpx solid var(--border-color-dark, #404040);
+  box-shadow: 0 -4rpx 12rpx rgba(255, 255, 255, 0.1);
 }
 
 .action-btn {

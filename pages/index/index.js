@@ -16,6 +16,8 @@ Page({
     cashflowStatus: '健康',
     assetsCount: 0,
     liabilitiesCount: 0,
+    // 主题相关
+    isDarkTheme: false,
   // 引导教程系统
   showTutorial: false,
   tutorialStep: 0,
@@ -173,11 +175,72 @@ Page({
     filteredLiabilities: []
   },
 
+  // 设置主题
+  setTheme(isDark) {
+    try {
+      // 强制设置导航栏颜色（确保立即生效）
+      wx.setNavigationBarColor({
+        frontColor: isDark ? '#ffffff' : '#000000',
+        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        animation: {
+          duration: 100,
+          timingFunc: 'easeInOut'
+        }
+      })
+      
+      // 设置页面背景色（包括导航栏底部区域）- 修复白色边框
+      if (wx.setBackgroundColor) {
+        const bgColor = isDark ? '#1e1e1e' : '#ffffff'
+        
+        // 多次设置确保覆盖系统默认的白色边框
+        wx.setBackgroundColor({
+          backgroundColor: bgColor,
+          backgroundColorTop: bgColor,
+          backgroundColorBottom: bgColor
+        })
+        
+        // 延迟设置确保生效
+        setTimeout(() => {
+          wx.setBackgroundColor({
+            backgroundColor: bgColor,
+            backgroundColorTop: bgColor,
+            backgroundColorBottom: bgColor
+          })
+        }, 50)
+      }
+      
+      // 动态设置页面class来应用CSS主题
+      try {
+        const query = wx.createSelectorQuery().in(this)
+        query.select('page').exec((res) => {
+          // 这个方法在小程序中可能不可用，作为备用方案
+        })
+      } catch (error) {
+        // 忽略错误，使用其他方式
+      }
+      
+      // 重新渲染界面以应用主题
+      this.setData({
+        isDarkTheme: isDark
+      })
+    } catch (error) {
+      console.error('设置页面主题失败:', error)
+    }
+  },
+
   onLoad() {
     this.initCategories()
     this.checkLogin()
     this.loadData()
     this.checkTutorial()
+    // 初始化主题状态
+    const app = getApp()
+    const isDark = app.globalData.isDarkTheme || false
+    this.setData({
+      isDarkTheme: isDark
+    })
+    // 设置导航栏主题
+    this.setTheme(isDark)
     // 初始化当前教程步骤
     this.setData({
       currentTutorialStep: this.data.tutorialSteps[0] || {}
@@ -185,6 +248,16 @@ Page({
   },
 
   onShow() {
+    // 确保主题设置正确（避免页面切换时的白色闪烁）
+    const app = getApp()
+    if (app.globalData.isDarkTheme !== undefined) {
+      this.setTheme(app.globalData.isDarkTheme)
+      // 同步主题状态到页面数据
+      this.setData({
+        isDarkTheme: app.globalData.isDarkTheme
+      })
+    }
+    
     this.checkLogin()  // 重新检查登录状态和加载用户信息
     this.loadData()
     this.checkTutorial()  // 重新检查示例数据

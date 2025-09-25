@@ -11,12 +11,14 @@
     "pages/add-cost/add-cost"
   ],
   "window": {
-    "backgroundTextStyle": "light",
+    "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTitleText": "大鹅爱记账",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#F5F5F5"
   },
+  "darkmode": true,
+  "themeLocation": "theme.json",
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",

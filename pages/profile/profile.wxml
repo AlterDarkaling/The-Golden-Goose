@@ -1,4 +1,4 @@
-<view class="profile-container">
+<view class="profile-container {{isDarkTheme ? 'dark-theme' : ''}}">
   <!-- 头部用户信息卡片 -->
   <view class="user-card {{showTutorial && tutorialStep === 0 ? 'tutorial-highlight' : ''}}">
     <view class="user-header">
@@ -123,6 +123,53 @@
 
   <!-- 功能列表 -->
   <view class="settings-section {{showTutorial && tutorialStep === 3 ? 'tutorial-highlight' : ''}}">
+    <view class="setting-item" bindtap="toggleAutoFollowSystem">
+      <view class="setting-left">
+        <view class="setting-icon">🔄</view>
+        <view class="setting-content">
+          <text class="setting-title">跟随系统主题</text>
+          <text class="setting-desc">{{autoFollowSystem ? '自动跟随微信暗黑模式设置' : '使用手动设置的主题'}}</text>
+        </view>
+      </view>
+      <view class="setting-switch">
+        <switch checked="{{autoFollowSystem}}" bindchange="toggleAutoFollowSystem" color="#667eea" />
+      </view>
+    </view>
+
+    <view class="setting-item" bindtap="toggleTheme" wx:if="{{!autoFollowSystem}}">
+      <view class="setting-left">
+        <view class="setting-icon">{{isDarkTheme ? '🌙' : '☀️'}}</view>
+        <view class="setting-content">
+          <text class="setting-title">{{isDarkTheme ? '深色模式' : '浅色模式'}}</text>
+          <text class="setting-desc">{{isDarkTheme ? '切换到浅色主题' : '切换到深色主题'}}</text>
+        </view>
+      </view>
+      <text class="setting-arrow">></text>
+    </view>
+
+    <view class="setting-item" wx:if="{{autoFollowSystem}}">
+      <view class="setting-left">
+        <view class="setting-icon">{{isDarkTheme ? '🌙' : '☀️'}}</view>
+        <view class="setting-content">
+          <text class="setting-title">当前主题：{{isDarkTheme ? '深色模式' : '浅色模式'}}</text>
+          <text class="setting-desc">跟随微信系统设置自动切换</text>
+        </view>
+      </view>
+      <text class="setting-info">自动</text>
+    </view>
+
+    <!-- 调试工具：仅在开发模式下显示 -->
+    <view class="setting-item" bindtap="testThemeChange" wx:if="{{false}}">
+      <view class="setting-left">
+        <view class="setting-icon">🧪</view>
+        <view class="setting-content">
+          <text class="setting-title">测试主题变化</text>
+          <text class="setting-desc">调试工具：模拟系统主题变化</text>
+        </view>
+      </view>
+      <text class="setting-arrow">></text>
+    </view>
+
     <view class="setting-item" bindtap="handleAboutBooks">
       <view class="setting-left">
         <view class="setting-icon">📚</view>

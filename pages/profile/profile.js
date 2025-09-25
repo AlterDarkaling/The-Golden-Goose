@@ -17,6 +17,9 @@ Page({
     showMottoInput: false,
     tempMotto: '',
     showHiddenNicknameInput: false,
+    // 主题相关
+    isDarkTheme: false,
+    autoFollowSystem: true,
     // 教程相关
     showTutorial: false,
     tutorialStep: 0,
@@ -59,12 +62,81 @@ Page({
     ]
   },
 
+  // 设置主题
+  setTheme(isDark) {
+    try {
+      // 强制设置导航栏颜色（确保立即生效）
+      wx.setNavigationBarColor({
+        frontColor: isDark ? '#ffffff' : '#000000',
+        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        animation: {
+          duration: 100,
+          timingFunc: 'easeInOut'
+        }
+      })
+      
+      // 设置页面背景色 - 修复白色边框
+      if (wx.setBackgroundColor) {
+        const bgColor = isDark ? '#1e1e1e' : '#ffffff'
+        
+        // 多次设置确保覆盖系统默认的白色边框
+        wx.setBackgroundColor({
+          backgroundColor: bgColor,
+          backgroundColorTop: bgColor,
+          backgroundColorBottom: bgColor
+        })
+        
+        // 延迟设置确保生效
+        setTimeout(() => {
+          wx.setBackgroundColor({
+            backgroundColor: bgColor,
+            backgroundColorTop: bgColor,
+            backgroundColorBottom: bgColor
+          })
+        }, 50)
+      }
+      
+      // 重新渲染界面以应用主题
+      this.setData({
+        isDarkTheme: isDark
+      })
+    } catch (error) {
+      console.error('设置页面主题失败:', error)
+    }
+  },
+
   onLoad() {
     this.loadUserInfo()
     this.calculateStats()
+    // 初始化主题状态
+    const app = getApp()
+    const isDark = app.globalData.isDarkTheme || false
+    const autoFollow = app.globalData.autoFollowSystem !== undefined ? app.globalData.autoFollowSystem : true
+    
+    
+    this.setData({
+      isDarkTheme: isDark,
+      autoFollowSystem: autoFollow
+    })
+    // 设置导航栏主题
+    this.setTheme(isDark)
   },
 
   onShow() {
+    // 确保主题设置正确（避免页面切换时的白色闪烁）
+    const app = getApp()
+    
+    
+    if (app.globalData.isDarkTheme !== undefined) {
+      this.setTheme(app.globalData.isDarkTheme)
+      // 同步主题状态到页面数据
+      this.setData({
+        isDarkTheme: app.globalData.isDarkTheme,
+        autoFollowSystem: app.globalData.autoFollowSystem
+      })
+      
+    }
+    
     this.loadUserInfo()
     this.calculateStats()
     // 检查个人中心教程
@@ -1777,6 +1849,134 @@ ${this.generateDetailedBackupContent(backupData)}
         })
       }
     })
+  },
+
+  // 切换主题
+  toggleTheme() {
+    const app = getApp()
+    
+    if (app.globalData.autoFollowSystem) {
+      // 如果当前是自动跟随模式，显示选择弹窗
+      wx.showModal({
+        title: '主题设置',
+        content: '当前为自动跟随系统模式。您希望：',
+        cancelText: '手动切换',
+        confirmText: '跟随系统',
+        success: (res) => {
+          if (res.confirm) {
+            // 保持自动跟随系统
+            wx.showToast({
+              title: '保持跟随系统主题',
+              icon: 'none',
+              duration: 1500
+            })
+          } else {
+            // 切换到手动模式
+            app.toggleTheme()
+            this.setTheme(app.globalData.isDarkTheme)
+            this.setData({
+              isDarkTheme: app.globalData.isDarkTheme,
+              autoFollowSystem: app.globalData.autoFollowSystem
+            })
+            
+            wx.showToast({
+              title: app.globalData.isDarkTheme ? '已切换到深色模式' : '已切换到浅色模式',
+              icon: 'success',
+              duration: 1500
+            })
+          }
+        }
+      })
+    } else {
+      // 手动模式下直接切换
+      app.toggleTheme()
+      this.setTheme(app.globalData.isDarkTheme)
+      this.setData({
+        isDarkTheme: app.globalData.isDarkTheme
+      })
+      
+      wx.showToast({
+        title: app.globalData.isDarkTheme ? '已切换到深色模式' : '已切换到浅色模式',
+        icon: 'success',
+        duration: 1500
+      })
+    }
+  },
+
+  // 切换自动跟随系统主题
+  toggleAutoFollowSystem(e) {
+    const app = getApp()
+    // 如果是switch组件触发的，使用switch的值；否则使用当前状态的反转
+    const newAutoFollow = e && e.detail !== undefined ? e.detail.value : !app.globalData.autoFollowSystem
+    
+    app.setAutoFollowSystem(newAutoFollow)
+    
+    this.setData({
+      autoFollowSystem: newAutoFollow,
+      isDarkTheme: app.globalData.isDarkTheme
+    })
+    
+    wx.showToast({
+      title: newAutoFollow ? '已开启跟随系统主题' : '已关闭跟随系统主题',
+      icon: 'success',
+      duration: 1500
+    })
+  },
+
+  // 测试主题变化（调试用）
+  testThemeChange() {
+    const app = getApp()
+    
+    try {
+      const systemInfo = wx.getSystemInfoSync()
+      const debugInfo = `
+调试信息：
+• 系统主题: ${systemInfo.theme}
+• 当前应用主题: ${app.globalData.isDarkTheme ? '深色' : '浅色'}
+• 自动跟随状态: ${app.globalData.autoFollowSystem ? '开启' : '关闭'}
+• wx.onThemeChange支持: ${typeof wx.onThemeChange === 'function' ? '是' : '否'}
+• 微信版本: ${systemInfo.version}
+
+点击确定模拟主题变化`
+      
+      wx.showModal({
+        title: '主题调试工具',
+        content: debugInfo,
+        success: (res) => {
+          if (res.confirm) {
+            if (app.globalData.autoFollowSystem) {
+              // 模拟系统主题变化
+              const newTheme = app.globalData.isDarkTheme ? 'light' : 'dark'
+              console.log('模拟主题变化:', newTheme)
+              
+              // 手动触发主题变化事件
+              const isDarkTheme = newTheme === 'dark'
+              app.globalData.isDarkTheme = isDarkTheme
+              app.setTheme(isDarkTheme)
+              app.notifyPagesThemeChange(isDarkTheme)
+              
+              wx.showToast({
+                title: `模拟切换到${isDarkTheme ? '深色' : '浅色'}模式`,
+                icon: 'success',
+                duration: 1500
+              })
+            } else {
+              wx.showToast({
+                title: '请先开启跟随系统主题',
+                icon: 'none',
+                duration: 1500
+              })
+            }
+          }
+        }
+      })
+    } catch (error) {
+      wx.showModal({
+        title: '调试错误',
+        content: `获取系统信息失败: ${error.message}`,
+        showCancel: false
+      })
+    }
   },
 
   // 测试教程定位精度

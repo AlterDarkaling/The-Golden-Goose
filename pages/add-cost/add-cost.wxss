@@ -1,18 +1,29 @@
 /* 添加费用页面样式 */
 .add-cost-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   padding: 20rpx;
+  margin-top: -1rpx;
+  padding-top: 21rpx;
+}
+
+.add-cost-container.dark-theme {
+  background: var(--bg-gradient-dark, linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%));
 }
 
 /* 头部信息 */
 .header-section {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg-translucent, rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10rpx);
   border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .header-section {
+  background: var(--card-bg-translucent-dark, rgba(45, 45, 45, 0.95));
+  box-shadow: 0 4rpx 16rpx rgba(255, 255, 255, 0.1);
 }
 
 .item-info {
@@ -24,7 +35,11 @@
 .item-name {
   font-size: 32rpx;
   font-weight: bold;
-  color: #212529;
+  color: var(--text-color, #212529);
+}
+
+.dark-theme .item-name {
+  color: var(--text-color-dark, #ffffff);
 }
 
 .item-type {
@@ -37,12 +52,17 @@
 
 /* 表单部分 */
 .form-section {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg-translucent, rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10rpx);
   border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .form-section {
+  background: var(--card-bg-translucent-dark, rgba(45, 45, 45, 0.95));
+  box-shadow: 0 4rpx 16rpx rgba(255, 255, 255, 0.1);
 }
 
 .section-title {

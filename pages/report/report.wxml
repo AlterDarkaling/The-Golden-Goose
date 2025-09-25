@@ -1,4 +1,4 @@
-<scroll-view class="report-container" scroll-y="true">
+<scroll-view class="report-container {{isDarkTheme ? 'dark-theme' : ''}}" scroll-y="true">
   <!-- 报表切换导航 -->
   <view class="report-nav">
     <scroll-view class="nav-scroll" scroll-x="true">

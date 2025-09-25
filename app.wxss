@@ -1,8 +1,97 @@
 /**app.wxss**/
 /*每个页面公共css */
+
+/* CSS变量定义 - 浅色主题（默认） */
 page {
-  background-color: #f5f5f5;
+  /* 背景色 */
+  --bg-color-primary: #f5f5f5;
+  --bg-color-secondary: #ffffff;
+  --bg-color-tertiary: #f8f9fa;
+  
+  /* 文本色 */
+  --text-color-primary: #212529;
+  --text-color-secondary: #495057;
+  --text-color-tertiary: #6c757d;
+  --text-color-disabled: #adb5bd;
+  
+  /* 边框色 */
+  --border-color-light: #e9ecef;
+  --border-color-normal: #dee2e6;
+  --border-color-dark: #adb5bd;
+  
+  /* 阴影 */
+  --shadow-light: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  --shadow-normal: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+  
+  /* 渐变色（保持不变） */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-success: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+  --gradient-error: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+  
+  /* 品牌色（保持不变） */
+  --color-primary: #667eea;
+  --color-success: #4caf50;
+  --color-error: #f44336;
+  --color-warning: #ff9800;
+  --color-info: #2196f3;
+  
+  background-color: var(--bg-color-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* 深色主题 */
+page.dark-theme {
+  /* 背景色 */
+  --bg-color-primary: #121212;
+  --bg-color-secondary: #1e1e1e;
+  --bg-color-tertiary: #2d2d2d;
+  
+  /* 文本色 */
+  --text-color-primary: #ffffff;
+  --text-color-secondary: #e0e0e0;
+  --text-color-tertiary: #b3b3b3;
+  --text-color-disabled: #666666;
+  
+  /* 边框色 */
+  --border-color-light: #333333;
+  --border-color-normal: #404040;
+  --border-color-dark: #555555;
+  
+  /* 阴影 */
+  --shadow-light: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+  --shadow-normal: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+  --shadow-heavy: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
+  
+  background-color: var(--bg-color-primary);
+}
+
+/* 修复导航栏底部白色边框 */
+page {
+  /* 确保页面顶部背景色与导航栏一致 */
+  padding-top: 0;
+  margin-top: 0;
+}
+
+/* 深色主题下的导航栏边框修复 */
+.dark-theme page {
+  background-color: var(--bg-color-primary);
+}
+
+/* 针对导航栏下方白色边框的修复 */
+.container,
+.profile-container,
+.edit-container {
+  margin-top: 0;
+  padding-top: 0;
+  /* 确保容器顶部紧贴导航栏 */
+}
+
+.dark-theme .container,
+.dark-theme .profile-container,
+.dark-theme .edit-container {
+  background-color: var(--bg-color-primary);
+  /* 深色主题下容器背景色与导航栏一致 */
 }
 
 /* 全局按钮样式 */
@@ -26,15 +115,15 @@ text {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--border-color-light);
   border-radius: 3rpx;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--border-color-dark);
   border-radius: 3rpx;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--text-color-disabled);
 }

@@ -1,7 +1,13 @@
 .about-container {
   padding: 40rpx 30rpx;
-  background: #f8f9fa;
+  background: var(--bg-color, #f8f9fa);
   min-height: 100vh;
+  margin-top: -1rpx;
+  padding-top: 41rpx;
+}
+
+.about-container.dark-theme {
+  background: var(--bg-color-dark, #1e1e1e);
 }
 
 /* 页面标题 */
@@ -37,11 +43,16 @@
 }
 
 .book-card {
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 20rpx;
   margin-bottom: 30rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.dark-theme .book-card {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 4rpx 20rpx rgba(255, 255, 255, 0.08);
 }
 
 .book-header {
@@ -81,18 +92,27 @@
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color, #333);
   margin-bottom: 24rpx;
   padding-bottom: 12rpx;
-  border-bottom: 2rpx solid #e9ecef;
+  border-bottom: 2rpx solid var(--border-color, #e9ecef);
+}
+
+.dark-theme .concept-title {
+  color: var(--text-color-dark, #ffffff);
+  border-bottom: 2rpx solid var(--border-color-dark, #404040);
 }
 
 .concept-item {
   margin-bottom: 20rpx;
   padding: 16rpx;
-  background: #f8f9fa;
+  background: var(--item-bg, #f8f9fa);
   border-radius: 12rpx;
   border-left: 6rpx solid #667eea;
+}
+
+.dark-theme .concept-item {
+  background: var(--item-bg-dark, #404040);
 }
 
 .concept-label {

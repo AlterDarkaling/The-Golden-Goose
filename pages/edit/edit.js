@@ -15,6 +15,8 @@ Page({
     showLogoModal: false, // logo选择弹窗
     logoSelectorType: 'emoji', // 当前选择类型：emoji 或 image
     showSalaryHistoryModal: false, // 薪资历史管理弹窗
+    // 主题相关
+    isDarkTheme: false,
     // 教程系统
     showTutorial: false,
     tutorialStep: 0,
@@ -202,12 +204,64 @@ Page({
     return this.data.formData.type === 'asset' ? this.data.assetStatusOptions : this.data.liabilityStatusOptions
   },
 
+  // 设置主题
+  setTheme(isDark) {
+    try {
+      // 设置导航栏颜色
+      wx.setNavigationBarColor({
+        frontColor: isDark ? '#ffffff' : '#000000',
+        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        animation: {
+          duration: 100,
+          timingFunc: 'easeInOut'
+        }
+      })
+      
+      // 设置页面背景色 - 修复白色边框
+      if (wx.setBackgroundColor) {
+        const bgColor = isDark ? '#1e1e1e' : '#ffffff'
+        
+        // 多次设置确保覆盖系统默认的白色边框
+        wx.setBackgroundColor({
+          backgroundColor: bgColor,
+          backgroundColorTop: bgColor,
+          backgroundColorBottom: bgColor
+        })
+        
+        // 延迟设置确保生效
+        setTimeout(() => {
+          wx.setBackgroundColor({
+            backgroundColor: bgColor,
+            backgroundColorTop: bgColor,
+            backgroundColorBottom: bgColor
+          })
+        }, 50)
+      }
+      
+      // 重新渲染界面以应用主题
+      this.setData({
+        isDarkTheme: isDark
+      })
+    } catch (error) {
+      console.error('设置页面主题失败:', error)
+    }
+  },
+
   onLoad(options) {
     const isEdit = !!options.id
     this.setData({
       isEdit: isEdit,
       editId: options.id || ''
     })
+    
+    // 初始化主题状态
+    const app = getApp()
+    const isDark = app.globalData.isDarkTheme || false
+    this.setData({
+      isDarkTheme: isDark
+    })
+    // 设置导航栏主题
+    this.setTheme(isDark)
     
     if (isEdit) {
       // 编辑模式：从URL参数或存储中获取类型

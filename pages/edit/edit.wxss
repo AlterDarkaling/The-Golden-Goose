@@ -1,27 +1,54 @@
 .edit-container {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-color-primary);
   padding-bottom: 120rpx;
+  /* 修复导航栏底部白色边框 */
+  margin-top: -1rpx;
+  padding-top: 1rpx;
+}
+
+/* 深色主题容器 */
+.edit-container.dark-theme {
+  /* 背景色 */
+  --bg-color-primary: #121212;
+  --bg-color-secondary: #1e1e1e;
+  --bg-color-tertiary: #2d2d2d;
+  
+  /* 文本色 */
+  --text-color-primary: #ffffff;
+  --text-color-secondary: #e0e0e0;
+  --text-color-tertiary: #b3b3b3;
+  --text-color-disabled: #666666;
+  
+  /* 边框色 */
+  --border-color-light: #333333;
+  --border-color-normal: #404040;
+  --border-color-dark: #555555;
+  
+  /* 阴影 */
+  --shadow-light: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+  --shadow-normal: 0 4rpx 16rpx rgba(0, 0, 0, 0.4);
+  --shadow-heavy: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
 }
 
 .header {
-  background: white;
+  background: var(--bg-color-secondary);
   padding: 30rpx 40rpx;
-  border-bottom: 1rpx solid #e9ecef;
+  border-bottom: 1rpx solid var(--border-color-light);
 }
 
 .header-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #212529;
+  color: var(--text-color-primary);
 }
 
 .form-container {
-  background: white;
+  background: var(--bg-color-secondary);
   margin: 20rpx;
   border-radius: 16rpx;
   padding: 40rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-normal);
 }
 
 .form-group {
@@ -91,9 +118,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bg-color-secondary);
   padding: 20rpx 40rpx;
-  border-top: 1rpx solid #e9ecef;
+  border-top: 1rpx solid var(--border-color-light);
   display: flex;
   gap: 20rpx;
   z-index: 100;
@@ -256,8 +283,8 @@
   display: flex;
   align-items: center;
   padding: 20rpx;
-  background: #fff3cd;
-  border: 1rpx solid #ffeaa7;
+  background: rgba(255, 243, 205, 0.1);
+  border: 1rpx solid rgba(255, 234, 167, 0.3);
   border-radius: 8rpx;
   margin-top: 20rpx;
 }
@@ -321,7 +348,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: var(--bg-color-secondary);
   border-radius: 16rpx;
   width: 90%;
   max-width: 600rpx;
@@ -507,7 +534,7 @@
   padding: 20rpx;
   border: 2rpx solid #e9ecef;
   border-radius: 12rpx;
-  background: #ffffff;
+  background: var(--bg-color-secondary);
   cursor: pointer;
 }
 
@@ -570,7 +597,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bg-color-secondary);
   border-radius: 24rpx 24rpx 0 0;
   max-height: 80vh;
   display: flex;
@@ -613,7 +640,7 @@
 }
 
 .tab-item.active {
-  background: white;
+  background: var(--bg-color-secondary);
   color: #4facfe;
   font-weight: bold;
   box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
@@ -881,7 +908,7 @@
 }
 
 .salary-record-card {
-  background: white;
+  background: var(--bg-color-secondary);
   border-radius: 12rpx;
   padding: 20rpx;
   margin-bottom: 16rpx;

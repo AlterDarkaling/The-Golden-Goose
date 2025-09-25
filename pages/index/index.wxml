@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{isDarkTheme ? 'dark-theme' : ''}}">
   <!-- 个人信息栏 -->
   <view class="user-info-section">
     <view class="user-info-top">

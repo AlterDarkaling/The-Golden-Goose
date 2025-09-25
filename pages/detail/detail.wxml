@@ -1,4 +1,4 @@
-<view class="detail-container">
+<view class="detail-container {{isDarkTheme ? 'dark-theme' : ''}}">
   <!-- 头部信息 -->
   <view class="header-section">
     <view class="item-header">

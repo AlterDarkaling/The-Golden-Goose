@@ -1,4 +1,4 @@
-<view class="goals-container">
+<view class="goals-container {{isDarkTheme ? 'dark-theme' : ''}}">
   <!-- 目标列表 -->
   <view wx:if="{{goals.length > 0}}" class="goals-list">
     <view wx:for="{{goals}}" wx:key="id" class="goal-item {{item.status}}" bindtap="viewGoalDetail" data-goal-id="{{item.id}}">
