@@ -1,4 +1,4 @@
-const StorageManager = require('../../utils/storage.js')
+﻿const StorageManager = require('../../utils/storage.js')
 
 Page({
   data: {
@@ -201,10 +201,9 @@ Page({
 
   // 格式化金额显示
   formatMoney(amount) {
-    if (Math.abs(amount) >= 10000) {
-      return (amount / 10000).toFixed(1) + '万'
-    }
-    return amount.toFixed(0)
+    const num = parseFloat(amount) || 0
+    const sign = num < 0 ? '-' : ''
+    return sign + '¥' + Math.abs(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
 
   // 新的头像选择处理 - 使用微信官方推荐的方式
