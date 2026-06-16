@@ -1,4 +1,4 @@
-﻿const StorageManager = require('../../utils/storage.js')
+const StorageManager = require('../../utils/storage.js')
 
 Page({
   data: {

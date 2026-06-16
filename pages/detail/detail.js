@@ -1,4 +1,4 @@
-﻿Page({
+Page({
   data: {
     type: 'asset',
     itemId: '',

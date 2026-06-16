@@ -1,4 +1,4 @@
-﻿// [DEPRECATED] 此文件实现了完整的会计引擎存储，但未被任何页面引用
+// [DEPRECATED] 此文件实现了完整的会计引擎存储，但未被任何页面引用
 // 所有页面使用 utils/storage.js (StorageManager) 进行数据管理
 // 建议后续整合或移除此文件
 

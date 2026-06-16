@@ -1,4 +1,4 @@
-﻿// 引入本地存储管理工具
+// 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
 const AccountingCategories = require('../../utils/accountingCategories.js')
 const DepreciationEngine = require('../../utils/depreciation.js')

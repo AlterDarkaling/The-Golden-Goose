@@ -1,4 +1,4 @@
-﻿// [DEPRECATED] 此文件未被页面层直接调用，计算逻辑已由 utils/storage.js 中的简化版本替代
+// [DEPRECATED] 此文件未被页面层直接调用，计算逻辑已由 utils/storage.js 中的简化版本替代
 // 如需使用完整会计引擎，请考虑整合到 storage.js 或由 NewFinancialStorage 调用
 
 /**
