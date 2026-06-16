@@ -43,7 +43,7 @@
   文件: `pages/report/report.js`
   `makeTrendSeries()` 仅基于当前值做 +-5% 模拟，无真实历史数据。
 
-- [ ] **#9 formatMoney 实现不一致**
+- [x] **#9 formatMoney 实现不一致**
   `profile.js` 对 >=10000 显示"X万"，其他页面使用千分位格式。
 
 - [ ] **#10 manifest.json 项目名称为 "111"**
@@ -59,10 +59,10 @@
 
 ## P3 低 — 代码质量
 
-- [ ] **#13 accountingEngine.js 和 depreciation.js 未被页面调用**
+- [x] **#13 accountingEngine.js 和 depreciation.js 未被页面调用**
   完整的会计计算引擎只被 `newFinancialStorage.js` 引用，而该文件未被任何页面使用。
 
-- [ ] **#14 generate_docx.py 不应出现在小程序项目中**
+- [x] **#14 generate_docx.py 不应出现在小程序项目中**
   Python 文档生成脚本与小程序运行无关。
 
 - [ ] **#15 登录页实际是引导页，命名有误导性**
@@ -82,11 +82,11 @@
 | 6 | P1 | 已修复 | i18n/base.json 应用名改为 大鹅爱记账 |
 | 7 | P1 | 已修复 | setInterval 前先 clearInterval, 存储 timer ID 到 this._themePollingTimer |
 | 8 | P2 | 待处理 | |
-| 9 | P2 | 待处理 | |
+| 9 | P2 | 已修复 | 统一为标准千分位格式 |
 | 10 | P2 | 已修复 | manifest.json name 改为 大鹅爱记账 |
 | 11 | P2 | 已修复 | 新增 .gitignore 忽略 .idea/ 文档/ generate_docx.py 等 |
 | 12 | P2 | 已修复 | index.js data 中移除重复的 netWorth/assetsCount/liabilitiesCount 声明 |
-| 13 | P3 | 待处理 | |
-| 14 | P3 | 待处理 | |
+| 13 | P3 | 已修复 | 添加 [DEPRECATED] 标记说明 |
+| 14 | P3 | 已修复 | git rm --cached 已移除 |
 | 15 | P3 | 待处理 | |
 
