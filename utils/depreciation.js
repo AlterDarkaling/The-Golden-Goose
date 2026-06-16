@@ -1,3 +1,6 @@
+﻿// [DEPRECATED] 此文件仅被 financialStorage.js 引用，而 financialStorage.js 未被页面层使用
+// 折旧计算已由 utils/storage.js 中的简化版本处理
+
 /**
  * 资产折旧计算引擎
  * 基于传统会计准则，支持多种折旧方式

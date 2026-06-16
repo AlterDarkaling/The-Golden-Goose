@@ -1,3 +1,7 @@
+﻿// [DEPRECATED] 此文件使用独立存储键 (financial_assets/financial_liabilities)，未被页面层使用
+// 所有页面使用 utils/storage.js (StorageManager) 进行数据管理
+// 建议后续整合或移除此文件
+
 /**
  * 财务数据存储管理器
  * 基于传统会计准则，整合折旧计算和贷款管理
