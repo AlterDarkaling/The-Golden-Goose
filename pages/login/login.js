@@ -1,4 +1,4 @@
-Page({
+﻿Page({
   data: {
     // 不再需要登录表单数据
   },
@@ -85,8 +85,8 @@ Page({
         id: 'asset_work_1',
         name: '互联网公司产品经理',
         categoryL1: 'work_income',
-        categoryL2: 'salary_income',
-        categoryL3: 'tech_industry',
+        categoryL2: 'main_job',
+        categoryL3: 'salary',
         status: 'active',
         originalValue: 792000, // 2年总收入：33000 * 12 * 2
         initialValue: 792000,
@@ -100,14 +100,14 @@ Page({
         // 添加薪资历史记录
         salaryHistory: [
           {
-            date: twoYearsAgo.toISOString().split('T')[0],
+            effectiveDate: twoYearsAgo.toISOString().split('T')[0],
             amount: 28000,
-            note: '入职薪资'
+            reason: '入职'
           },
           {
-            date: new Date(twoYearsAgo.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            effectiveDate: new Date(twoYearsAgo.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             amount: 33000,
-            note: '年度调薪'
+            reason: '年度调薪'
           }
         ],
         notes: '互联网公司产品经理，包含绩效奖金，已工作2年',
@@ -119,7 +119,7 @@ Page({
         id: 'asset_work_2',
         name: '周末兼职咨询',
         categoryL1: 'work_income',
-        categoryL2: 'freelance_income',
+        categoryL2: 'part_time_job',
         categoryL3: 'consulting',
         status: 'active',
         originalValue: 120000, // 1年兼职收入：10000 * 12
@@ -133,9 +133,9 @@ Page({
         startDate: oneYearAgo.toISOString().split('T')[0],
         salaryHistory: [
           {
-            date: oneYearAgo.toISOString().split('T')[0],
+            effectiveDate: oneYearAgo.toISOString().split('T')[0],
             amount: 10000,
-            note: '兼职咨询收入'
+            reason: '兼职咨询'
           }
         ],
         notes: '周末兼职产品咨询，时间灵活',
@@ -200,7 +200,7 @@ Page({
         id: 'asset_financial_2',
         name: '腾讯控股股票',
         categoryL1: 'financial_assets',
-        categoryL2: 'individual_stock',
+        categoryL2: 'equity_fund',
         categoryL3: 'hk_stock',
         status: 'active',
         originalValue: 50000,
@@ -219,9 +219,9 @@ Page({
       {
         id: 'asset_fixed_1',
         name: '自住房产',
-        categoryL1: 'fixed_assets',
-        categoryL2: 'real_estate',
-        categoryL3: 'residential',
+        categoryL1: 'physical_assets',
+        categoryL2: 'appreciating_assets',
+        categoryL3: 'real_estate',
         status: 'active',
         originalValue: 800000,
         initialValue: 800000,
@@ -235,9 +235,9 @@ Page({
       {
         id: 'asset_fixed_2',
         name: '投资公寓',
-        categoryL1: 'fixed_assets',
-        categoryL2: 'real_estate',
-        categoryL3: 'commercial',
+        categoryL1: 'physical_assets',
+        categoryL2: 'appreciating_assets',
+        categoryL3: 'real_estate',
         status: 'active',
         originalValue: 600000,
         initialValue: 600000,
@@ -308,8 +308,8 @@ Page({
       {
         id: 'liability_mortgage_1',
         name: '自住房贷款',
-        categoryL1: 'long_term_debt',
-        categoryL2: 'mortgage_debt',
+        categoryL1: 'long_term_liabilities',
+        categoryL2: 'mortgage_loan',
         categoryL3: 'home_mortgage',
         status: 'active',
         originalValue: 500000,
@@ -328,9 +328,9 @@ Page({
       {
         id: 'liability_mortgage_2',
         name: '投资房贷款',
-        categoryL1: 'long_term_debt',
-        categoryL2: 'mortgage_debt',
-        categoryL3: 'investment_mortgage',
+        categoryL1: 'long_term_liabilities',
+        categoryL2: 'mortgage_loan',
+        categoryL3: 'commercial_loan',
         status: 'active',
         originalValue: 300000,
         initialAmount: 300000,
@@ -349,9 +349,9 @@ Page({
       {
         id: 'liability_consumer_1',
         name: '信用卡账单',
-        categoryL1: 'short_term_debt',
-        categoryL2: 'credit_debt',
-        categoryL3: 'credit_card',
+        categoryL1: 'current_liabilities',
+        categoryL2: 'credit_card_debt',
+        categoryL3: 'credit_card_bill',
         status: 'active',
         originalValue: 12000,
         initialAmount: 12000,
@@ -368,9 +368,9 @@ Page({
       {
         id: 'liability_vehicle_1',
         name: '汽车贷款',
-        categoryL1: 'medium_term_debt',
-        categoryL2: 'installment_debt',
-        categoryL3: 'auto_loan',
+        categoryL1: 'long_term_liabilities',
+        categoryL2: 'consumer_loan',
+        categoryL3: 'car_loan',
         status: 'active',
         originalValue: 80000,
         initialAmount: 80000,

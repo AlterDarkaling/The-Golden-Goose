@@ -1,3 +1,5 @@
+﻿const StorageManager = require('../../utils/storage.js')
+
 Page({
   data: {
     // 主题相关
@@ -101,10 +103,10 @@ Page({
   // 加载项目信息
   loadItemInfo() {
     const { itemId, itemType } = this.data
-    const dataKey = itemType === 'asset' ? 'assets_data' : 'liabilities_data'
+    // Using StorageManager for data access
     
     try {
-      const items = wx.getStorageSync(dataKey) || []
+      const items = itemType === 'asset' ? StorageManager.getAssets() : StorageManager.getLiabilities()
       const item = items.find(item => item.id === itemId)
       
       if (item) {
@@ -258,7 +260,7 @@ Page({
   // 更新资产价值
   updateAssetValue(costRecord) {
     try {
-      let assets = wx.getStorageSync('assets_data') || []
+      let assets = StorageManager.getAssets()
       const assetIndex = assets.findIndex(asset => asset.id === costRecord.itemId)
       
       if (assetIndex !== -1) {
@@ -266,8 +268,7 @@ Page({
         const currentValue = asset.currentValue || asset.originalValue || asset.initialValue || 0
         asset.currentValue = Math.max(0, currentValue - costRecord.amount)
         
-        assets[assetIndex] = asset
-        wx.setStorageSync('assets_data', assets)
+        StorageManager.updateAsset(costRecord.itemId, { currentValue: asset.currentValue })
       }
     } catch (error) {
       console.error('更新资产价值失败:', error)

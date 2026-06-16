@@ -1,0 +1,16 @@
+# IDE
+.idea/
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Non-miniapp files
+generate_docx.py
+文档/
+简历项目经历.md
+简练项目经历.md
+
+# Node (if any)
+node_modules/

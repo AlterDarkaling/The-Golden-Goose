@@ -1,4 +1,4 @@
-// app.js
+﻿// app.js
 App({
   onLaunch() {
     // 初始化应用
@@ -166,7 +166,8 @@ App({
     }
     
     // 每2秒检查一次主题变化
-    setInterval(checkTheme, 2000)
+    if (this._themePollingTimer) clearInterval(this._themePollingTimer)
+    this._themePollingTimer = setInterval(checkTheme, 2000)
     checkTheme() // 立即执行一次
   },
 

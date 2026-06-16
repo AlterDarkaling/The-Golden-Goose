@@ -1,4 +1,4 @@
-Page({
+﻿Page({
   data: {
     type: 'asset',
     itemId: '',
@@ -291,13 +291,13 @@ Page({
     
     try {
       if (this.data.type === 'asset') {
-        const category = AccountingCategories.assetCategories[categoryL1]
+        const category = AccountingCategories.ASSET_CATEGORIES[categoryL1]
         if (category && category.subcategories && category.subcategories[categoryL2]) {
           return `${category.label} - ${category.subcategories[categoryL2].label}`
         }
         return category ? category.label : '未分类'
       } else {
-        const category = AccountingCategories.liabilityCategories[categoryL1]
+        const category = AccountingCategories.LIABILITY_CATEGORIES[categoryL1]
         if (category && category.subcategories && category.subcategories[categoryL2]) {
           return `${category.label} - ${category.subcategories[categoryL2].label}`
         }

@@ -1,4 +1,4 @@
-// 引入本地存储管理工具
+﻿// 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
 const AccountingCategories = require('../../utils/accountingCategories.js')
 const DepreciationEngine = require('../../utils/depreciation.js')
@@ -166,11 +166,6 @@ Page({
         ]
       ],
       statusIndex: [0, 0], // 双栏索引：[类型索引, 状态索引]
-    netWorth: 0,
-    dailyCost: 0,
-    dailyIncome: 0,
-    assetsCount: 0,
-    liabilitiesCount: 0,
     filteredAssets: [],
     filteredLiabilities: []
   },
