@@ -347,7 +347,7 @@ const StorageManager = {
       })
     }
   }
-}
+,
 
 
   // ==================== 历史快照 ====================
@@ -386,5 +386,7 @@ const StorageManager = {
     const snapshots = this.getSnapshots()
     snapshots.sort((a, b) => a.month.localeCompare(b.month))
     return snapshots.slice(-months)
-  },
+  }
+}
+
 module.exports = StorageManager
