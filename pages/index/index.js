@@ -1524,7 +1524,8 @@ Page({
   // 计算消费型资产的历史平均每日成本
   calculateDailyCost(asset) {
     const originalValue = parseFloat(asset.originalValue) || parseFloat(asset.initialValue) || 0
-    const currentValue = parseFloat(asset.currentValue) || originalValue
+    const parsedCurrent = parseFloat(asset.currentValue)
+    const currentValue = isNaN(parsedCurrent) ? originalValue : parsedCurrent
     
     if (originalValue <= 0) {
       return "0.00"
