@@ -221,9 +221,20 @@ Page({
     const incomeStabilityNum = totalIncomeNum > 0 ? (workIncome / totalIncomeNum) : 0
 
     // 趋势（基础版，模拟近6个月围绕当前值的变化）
+    // 保存当月快照
+    const now = new Date()
+    const currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
+    StorageManager.saveSnapshot({
+      month: currentMonthKey,
+      netWorth: netWorth,
+      monthlyCashFlow: monthlyCashFlow,
+      totalIncome: totalIncomeNum,
+      totalExpenses: totalExpensesNum
+    })
+
     const months = this.lastSixMonthsLabels()
-    const netWorthSeries = this.makeTrendSeries(netWorth)
-    const cashFlowSeries = this.makeTrendSeries(monthlyCashFlow)
+    const netWorthSeries = this.makeTrendSeries('netWorth')
+    const cashFlowSeries = this.makeTrendSeries('monthlyCashFlow')
     const trendNetWorth = this.buildTrendViewModel(months, netWorthSeries)
     const trendCashFlow = this.buildTrendViewModel(months, cashFlowSeries)
 
@@ -378,13 +389,16 @@ Page({
     return labels
   },
 
-  // 基于当前值模拟序列（±10%波动）
-  makeTrendSeries(currentValue) {
-    const base = Number(currentValue) || 0
+  // 从历史快照获取最近6个月的趋势数据
+  makeTrendSeries(snapshotKey) {
+    const snapshots = StorageManager.getSnapshots()
     const series = []
-    for (let i = 0; i < 6; i++) {
-      const factor = 0.95 + i * 0.02 // 约 ±5%
-      series.push(base * factor)
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+      const snap = snapshots.find(s => s.month === monthKey)
+      series.push(snap ? (snap[snapshotKey] || 0) : 0)
     }
     return series
   },

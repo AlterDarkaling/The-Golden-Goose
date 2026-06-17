@@ -349,4 +349,42 @@ const StorageManager = {
   }
 }
 
+
+  // ==================== 历史快照 ====================
+
+  saveSnapshot(snapshot) {
+    try {
+      const snapshots = this.getSnapshots()
+      const currentMonth = snapshot.month
+      const existingIndex = snapshots.findIndex(s => s.month === currentMonth)
+      if (existingIndex >= 0) {
+        snapshots[existingIndex] = snapshot
+      } else {
+        snapshots.push(snapshot)
+      }
+      // 只保留最近12个月
+      snapshots.sort((a, b) => a.month.localeCompare(b.month))
+      const trimmed = snapshots.slice(-12)
+      wx.setStorageSync('financial_snapshots', trimmed)
+      return true
+    } catch (e) {
+      console.error('保存快照失败:', e)
+      return false
+    }
+  },
+
+  getSnapshots() {
+    try {
+      return wx.getStorageSync('financial_snapshots') || []
+    } catch (e) {
+      console.error('获取快照失败:', e)
+      return []
+    }
+  },
+
+  getRecentSnapshots(months) {
+    const snapshots = this.getSnapshots()
+    snapshots.sort((a, b) => a.month.localeCompare(b.month))
+    return snapshots.slice(-months)
+  },
 module.exports = StorageManager
