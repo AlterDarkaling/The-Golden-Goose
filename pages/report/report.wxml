@@ -1,271 +1,40 @@
-<scroll-view class="report-container {{isDarkTheme ? 'dark-theme' : ''}}" scroll-y="true">
-  <!-- 报表切换导航 -->
-  <view class="report-nav">
-    <scroll-view class="nav-scroll" scroll-x="true">
-      <view class="nav-item {{activeReport === 'overview' ? 'active' : ''}}" 
-            bindtap="switchReport" data-type="overview">
-        <text class="nav-icon">📊</text>
-        <text class="nav-text">概览</text>
-      </view>
-      <view class="nav-item {{activeReport === 'balance' ? 'active' : ''}}" 
-            bindtap="switchReport" data-type="balance">
-        <text class="nav-icon">⚖️</text>
-        <text class="nav-text">资产负债表</text>
-      </view>
-      <view class="nav-item {{activeReport === 'income' ? 'active' : ''}}" 
-            bindtap="switchReport" data-type="income">
-        <text class="nav-icon">💰</text>
-        <text class="nav-text">利润表</text>
-      </view>
-      <view class="nav-item {{activeReport === 'cashflow' ? 'active' : ''}}" 
-            bindtap="switchReport" data-type="cashflow">
-        <text class="nav-icon">💸</text>
-        <text class="nav-text">现金流量表</text>
-      </view>
-      <view class="nav-item {{activeReport === 'analysis' ? 'active' : ''}}" 
-            bindtap="switchReport" data-type="analysis">
-        <text class="nav-icon">📈</text>
-        <text class="nav-text">财务分析</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 时间段选择（仅在概览、利润表、现金流量表显示） -->
-  <view wx:if="{{activeReport === 'overview' || activeReport === 'income' || activeReport === 'cashflow'}}" class="period-selector">
-    <view class="period-item {{periodType === 'monthly' ? 'active' : ''}}" 
-          bindtap="switchPeriod" data-period="monthly">月度</view>
-    <view class="period-item {{periodType === 'quarterly' ? 'active' : ''}}" 
-          bindtap="switchPeriod" data-period="quarterly">季度</view>
-    <view class="period-item {{periodType === 'yearly' ? 'active' : ''}}" 
-          bindtap="switchPeriod" data-period="yearly">年度</view>
-  </view>
-
-
-
-  <!-- 财务概览（极简版） -->
-  <view wx:if="{{activeReport === 'overview'}}" class="report-content">
-    <view class="overview-cards">
-      <view class="overview-card main-card">
-        <view class="card-header">
-          <text class="card-title">净资产</text>
-          <text class="card-icon">💎</text>
-        </view>
-        <view class="card-content">
-          <text class="main-value">{{text.netWorth}}</text>
-          <view class="sub-values">
-            <view class="sub-item">
-              <text class="sub-label">总资产</text>
-              <text class="sub-value">{{text.totalAssets}}</text>
-            </view>
-            <view class="sub-item">
-              <text class="sub-label">总负债</text>
-              <text class="sub-value">{{text.totalLiabilities}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <view class="overview-card">
-        <view class="card-header">
-          <text class="card-title">{{periodLabel}}现金流</text>
-          <text class="card-icon">💸</text>
-        </view>
-        <view class="card-content">
-          <text class="main-value">{{text.monthlyCashFlow}}</text>
-          <view class="sub-values">
-            <view class="sub-item">
-              <text class="sub-label">{{periodLabel}}收入</text>
-              <text class="sub-value">{{text.monthlyIncome}}</text>
-            </view>
-            <view class="sub-item">
-              <text class="sub-label">{{periodLabel}}支出</text>
-              <text class="sub-value">{{text.monthlyExpenses}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
+<view class="report {{isDarkTheme ? 'dark-theme' : ''}}">
+  <!-- Tab 导航 -->
+  <view class="tab-nav">
+    <view class="tab-item {{activeTab === 'daily-cost' ? 'active' : ''}}" bindtap="switchTab" data-tab="daily-cost">
+      <text class="tab-icon">📉</text>
+      <text class="tab-text">每日成本</text>
+    </view>
+    <view class="tab-item {{activeTab === 'assets' ? 'active' : ''}}" bindtap="switchTab" data-tab="assets">
+      <text class="tab-icon">💎</text>
+      <text class="tab-text">资产构成</text>
+    </view>
+    <view class="tab-item {{activeTab === 'debts' ? 'active' : ''}}" bindtap="switchTab" data-tab="debts">
+      <text class="tab-icon">📋</text>
+      <text class="tab-text">负债管理</text>
+    </view>
+    <view class="tab-item {{activeTab === 'health' ? 'active' : ''}}" bindtap="switchTab" data-tab="health">
+      <text class="tab-icon">💚</text>
+      <text class="tab-text">财务健康</text>
     </view>
   </view>
 
-  <!-- 资产负债表（极简版） -->
-  <view wx:if="{{activeReport === 'balance'}}" class="report-content">
-    <view class="balance-sheet">
-      <view class="balance-section">
-        <view class="section-header">
-          <text class="section-title">资产 Assets</text>
-          <text class="section-total">{{text.totalAssets}}</text>
-        </view>
-        <view class="balance-items">
-          <view wx:for="{{breakdown.assets}}" wx:key="name" class="balance-item">
-            <view class="item-info">
-              <text class="item-name">{{item.name}}</text>
-            </view>
-            <text class="item-value">{{item.valueText}}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="balance-divider"></view>
-
-      <view class="balance-section">
-        <view class="section-header">
-          <text class="section-title">负债 Liabilities</text>
-          <text class="section-total">{{text.totalLiabilities}}</text>
-        </view>
-        <view class="balance-items">
-          <view wx:for="{{breakdown.liabilities}}" wx:key="name" class="balance-item">
-            <view class="item-info">
-              <text class="item-name">{{item.name}}</text>
-            </view>
-            <text class="item-value">{{item.valueText}}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="balance-divider thick"></view>
-
-      <view class="balance-section">
-        <view class="section-header net-worth">
-          <text class="section-title">净资产 Net Worth</text>
-          <text class="section-total">{{text.netWorth}}</text>
-        </view>
-      </view>
+  <!-- ========== Tab 1: 每日成本 ========== -->
+  <scroll-view wx:if="{{activeTab === 'daily-cost'}}" class="tab-content" scroll-y>
+    <!-- 总卡片 -->
+    <view class="hero-card">
+      <text class="hero-label">综合日均成本</text>
+      <text class="hero-value">¥{{dailyCostTotal}}</text>
+      <text class="hero-hint">包含折旧、运营费用和贷款利息</text>
     </view>
-  </view>
 
-  <!-- 利润表（基础版） -->
-  <view wx:if="{{activeReport === 'income'}}" class="report-content">
-    <view class="income-statement">
-      <view class="income-section">
-        <view class="section-header">
-          <text class="section-title">收入 Revenue</text>
-          <text class="section-total positive">{{textIncome.totalIncome}}</text>
-        </view>
-        <view class="income-items">
-          <view class="income-item">
-            <text class="item-name">工作收入</text>
-            <text class="item-value positive">{{textIncome.workIncome}}</text>
-          </view>
-          <view class="income-item">
-            <text class="item-name">投资收入</text>
-            <text class="item-value positive">{{textIncome.investmentIncome}}</text>
-          </view>
-          <view class="income-item">
-            <text class="item-name">经营收入</text>
-            <text class="item-value positive">{{textIncome.operatingIncome}}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="income-section">
-        <view class="section-header">
-          <text class="section-title">费用 Expenses</text>
-          <text class="section-total negative">{{textIncome.totalExpenses}}</text>
-        </view>
-        <view class="income-items">
-          <view class="income-item">
-            <text class="item-name">经营费用</text>
-            <text class="item-value negative">{{textIncome.operatingExpenses}}</text>
-          </view>
-          <view class="income-item">
-            <text class="item-name">财务费用</text>
-            <text class="item-value negative">{{textIncome.financialExpenses}}</text>
-          </view>
-          <view class="income-item">
-            <text class="item-name">折旧费用</text>
-            <text class="item-value negative">{{textIncome.depreciationExpenses}}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="income-divider"></view>
-
-      <view class="income-section">
-        <view class="section-header net-income">
-          <text class="section-title">净收入 Net Income</text>
-          <text class="section-total">{{textIncome.netIncome}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 现金流量表（基础版） -->
-  <view wx:if="{{activeReport === 'cashflow'}}" class="report-content">
-    <view class="cashflow-statement">
-      <view class="cashflow-item">
-        <view class="cashflow-header">
-          <text class="cashflow-title">经营活动现金流</text>
-          <text class="cashflow-subtitle">Operating Cash Flow</text>
-        </view>
-        <text class="cashflow-value">{{textCashflow.operatingCashFlow}}</text>
-      </view>
-
-      <view class="cashflow-item">
-        <view class="cashflow-header">
-          <text class="cashflow-title">投资活动现金流</text>
-          <text class="cashflow-subtitle">Investing Cash Flow</text>
-        </view>
-        <text class="cashflow-value">{{textCashflow.investingCashFlow}}</text>
-      </view>
-
-      <view class="cashflow-item">
-        <view class="cashflow-header">
-          <text class="cashflow-title">筹资活动现金流</text>
-          <text class="cashflow-subtitle">Financing Cash Flow</text>
-        </view>
-        <text class="cashflow-value">{{textCashflow.financingCashFlow}}</text>
-      </view>
-
-      <view class="cashflow-divider"></view>
-
-      <view class="cashflow-item total">
-        <view class="cashflow-header">
-          <text class="cashflow-title">净现金流</text>
-          <text class="cashflow-subtitle">Net Cash Flow</text>
-        </view>
-        <text class="cashflow-value">{{textCashflow.netCashFlow}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 财务分析（折旧简版） -->
-  <view wx:if="{{activeReport === 'analysis'}}" class="report-content">
-    <view class="ratio-analysis">
-      <text class="analysis-title">财务比率分析</text>
-      <view class="ratio-grid">
-        <view class="ratio-item">
-          <text class="ratio-name">流动比率</text>
-          <text class="ratio-value">{{textRatios.currentRatio}}</text>
-          <text class="ratio-desc">Current Ratio</text>
-        </view>
-        <view class="ratio-item">
-          <text class="ratio-name">资产负债率</text>
-          <text class="ratio-value">{{textRatios.debtToAssetRatio}}</text>
-          <text class="ratio-desc">Debt-to-Asset</text>
-        </view>
-        <view class="ratio-item">
-          <text class="ratio-name">资产收益率</text>
-          <text class="ratio-value">{{textRatios.returnOnAssets}}</text>
-          <text class="ratio-desc">Return on Assets</text>
-        </view>
-        <view class="ratio-item">
-          <text class="ratio-name">资产周转率</text>
-          <text class="ratio-value">{{textRatios.assetTurnover}}</text>
-          <text class="ratio-desc">Asset Turnover</text>
-        </view>
-        <view class="ratio-item">
-          <text class="ratio-name">收入稳定性</text>
-          <text class="ratio-value">{{textRatios.incomeStability}}</text>
-          <text class="ratio-desc">Income Stability</text>
-        </view>
-      </view>
-    </view>
-    <view class="trend-chart">
-      <text class="trend-title">净资产趋势</text>
-      <view class="trend-content">
-        <view wx:for="{{trendNetWorth}}" wx:key="month" class="trend-bar">
-          <view class="bar-container">
-            <view class="bar-fill {{item.barClass}}" style="height: {{item.barHeight}};"></view>
+    <!-- 趋势图 -->
+    <view class="section">
+      <text class="section-title">近6个月趋势</text>
+      <view class="bar-chart">
+        <view wx:for="{{dailyCostTrend}}" wx:key="month" class="bar-col">
+          <view class="bar-track">
+            <view class="bar-fill" style="height: {{item.barPercent}}%"></view>
           </view>
           <text class="bar-label">{{item.month}}</text>
           <text class="bar-value">{{item.valueText}}</text>
@@ -273,52 +42,160 @@
       </view>
     </view>
 
-    <view class="trend-chart">
-      <text class="trend-title">现金流趋势</text>
-      <view class="trend-content">
-        <view wx:for="{{trendCashFlow}}" wx:key="month" class="trend-bar">
-          <view class="bar-container">
-            <view class="bar-fill {{item.barClass}}" style="height: {{item.barHeight}};"></view>
-          </view>
-          <text class="bar-label">{{item.month}}</text>
-          <text class="bar-value">{{item.valueText}}</text>
+    <!-- TOP5 消耗排行 -->
+    <view class="section">
+      <text class="section-title">消耗 TOP5</text>
+      <view wx:if="{{topCostItems.length === 0}}" class="empty-hint">暂无消费资产数据</view>
+      <view wx:for="{{topCostItems}}" wx:key="name" class="hbar-item">
+        <view class="hbar-header">
+          <text class="hbar-name">{{item.name}}</text>
+          <text class="hbar-value">{{item.costText}}/天</text>
+        </view>
+        <view class="hbar-track">
+          <view class="hbar-fill" style="width: {{item.barPercent}}%"></view>
         </view>
       </view>
     </view>
-    <view wx:if="{{depreciationList.length > 0}}" class="depreciation-analysis">
-      <text class="analysis-title">折旧明细分析</text>
-      <view class="depreciation-list">
-        <view wx:for="{{depreciationList}}" wx:key="name" class="depreciation-item">
-          <view class="depreciation-header">
-            <text class="asset-name">{{item.name}}</text>
-            <text class="depreciation-rate">{{item.rateText}}</text>
-          </view>
-          <view class="depreciation-values">
-            <view class="depreciation-value">
-              <text class="value-label">原值</text>
-              <text class="value-amount">{{item.originalText}}</text>
-            </view>
-            <view class="depreciation-value">
-              <text class="value-label">现值</text>
-              <text class="value-amount">{{item.currentText}}</text>
-            </view>
-            <view class="depreciation-value">
-              <text class="value-label">累计折旧</text>
-              <text class="value-amount negative">{{item.totalDepreciationText}}</text>
-            </view>
-            <view class="depreciation-value">
-              <text class="value-label">月折旧</text>
-              <text class="value-amount negative">{{item.monthlyDepreciationText}}</text>
-            </view>
-          </view>
-          <text class="ratio-desc">使用月数：{{item.usageMonthsText}}</text>
-        </view>
-      </view>
-    </view>
-    <view wx:else class="ratio-analysis">
-      <text class="analysis-title">暂无可分析的折旧资产</text>
-    </view>
-  </view>
 
-  
-</scroll-view>
+    <!-- 成本构成饼图 -->
+    <view class="section">
+      <text class="section-title">成本构成</text>
+      <view wx:if="{{costPieLegend.length > 0}}" class="pie-row">
+        <view class="pie-chart" style="{{costPieStyle}}"></view>
+        <view class="pie-legend">
+          <view wx:for="{{costPieLegend}}" wx:key="label" class="legend-item">
+            <view class="legend-dot" style="background:{{item.color}}"></view>
+            <text class="legend-label">{{item.label}}</text>
+            <text class="legend-pct">{{item.percent}}</text>
+            <text class="legend-val">{{item.valueText}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-hint">暂无成本数据</view>
+    </view>
+  </scroll-view>
+
+  <!-- ========== Tab 2: 资产构成 ========== -->
+  <scroll-view wx:if="{{activeTab === 'assets'}}" class="tab-content" scroll-y>
+    <!-- 资产饼图 -->
+    <view class="section">
+      <text class="section-title">资产类型分布</text>
+      <view wx:if="{{assetPieLegend.length > 0}}" class="pie-row">
+        <view class="pie-chart" style="{{assetPieStyle}}"></view>
+        <view class="pie-legend">
+          <view wx:for="{{assetPieLegend}}" wx:key="label" class="legend-item">
+            <view class="legend-dot" style="background:{{item.color}}"></view>
+            <text class="legend-label">{{item.label}}</text>
+            <text class="legend-pct">{{item.percent}}</text>
+            <text class="legend-val">{{item.valueText}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-hint">暂无资产数据</view>
+    </view>
+
+    <!-- TOP5 资产 -->
+    <view class="section">
+      <text class="section-title">资产排行 TOP5</text>
+      <view wx:if="{{topAssets.length === 0}}" class="empty-hint">暂无资产数据</view>
+      <view wx:for="{{topAssets}}" wx:key="name" class="hbar-item">
+        <view class="hbar-header">
+          <text class="hbar-name">{{item.name}}</text>
+          <text class="hbar-value">{{item.valueText}}</text>
+        </view>
+        <view class="hbar-track">
+          <view class="hbar-fill asset-fill" style="width: {{item.barPercent}}%"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 资产状态 -->
+    <view class="section">
+      <text class="section-title">资产状态</text>
+      <view class="status-grid">
+        <view wx:for="{{assetStatusItems}}" wx:key="name" class="status-card">
+          <view class="status-dot" style="background:{{item.color}}"></view>
+          <text class="status-count">{{item.count}}</text>
+          <text class="status-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- ========== Tab 3: 负债管理 ========== -->
+  <scroll-view wx:if="{{activeTab === 'debts'}}" class="tab-content" scroll-y>
+    <!-- 总负债卡片 -->
+    <view class="hero-card debt-hero">
+      <text class="hero-label">总负债</text>
+      <text class="hero-value">¥{{debtTotal}}</text>
+      <view class="hero-row">
+        <view class="hero-sub">
+          <text class="hero-sub-label">月还款</text>
+          <text class="hero-sub-value">¥{{debtMonthlyPayment}}</text>
+        </view>
+        <view class="hero-sub">
+          <text class="hero-sub-label">月利息</text>
+          <text class="hero-sub-value">¥{{debtTotalInterest}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 负债饼图 -->
+    <view class="section">
+      <text class="section-title">负债类型分布</text>
+      <view wx:if="{{debtPieLegend.length > 0}}" class="pie-row">
+        <view class="pie-chart" style="{{debtPieStyle}}"></view>
+        <view class="pie-legend">
+          <view wx:for="{{debtPieLegend}}" wx:key="label" class="legend-item">
+            <view class="legend-dot" style="background:{{item.color}}"></view>
+            <text class="legend-label">{{item.label}}</text>
+            <text class="legend-pct">{{item.percent}}</text>
+            <text class="legend-val">{{item.valueText}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-hint">暂无负债数据</view>
+    </view>
+
+    <!-- 还款进度 -->
+    <view class="section">
+      <text class="section-title">还款进度</text>
+      <view wx:if="{{debtItems.length === 0}}" class="empty-hint">暂无负债</view>
+      <view wx:for="{{debtItems}}" wx:key="name" class="debt-card">
+        <view class="debt-header">
+          <text class="debt-name">{{item.name}}</text>
+          <text class="debt-pct">{{item.progressPercent}}%</text>
+        </view>
+        <view class="progress-track">
+          <view class="progress-fill" style="width: {{item.progressPercent}}%"></view>
+        </view>
+        <view class="debt-footer">
+          <text class="debt-info">已还 {{item.paidText}} / {{item.totalText}}</text>
+          <text class="debt-remain">{{item.remainMonthsText}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- ========== Tab 4: 财务健康 ========== -->
+  <scroll-view wx:if="{{activeTab === 'health'}}" class="tab-content" scroll-y>
+    <view class="section">
+      <text class="section-title">健康指标</text>
+      <view wx:if="{{healthMetrics.length === 0}}" class="empty-hint">暂无数据，请先添加资产和收入</view>
+      <view wx:for="{{healthMetrics}}" wx:key="name" class="health-card">
+        <view class="health-left">
+          <view class="ring" style="border-color: #e0e0e0; border-top-color: {{item.ringColor}}; transform: rotate(-90deg)">
+            <text class="ring-value">{{item.valueText}}</text>
+          </view>
+        </view>
+        <view class="health-right">
+          <text class="health-name">{{item.name}}</text>
+          <text class="health-desc">{{item.desc}}</text>
+          <view class="health-status {{item.status}}">
+            <text class="status-text">{{item.advice}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
