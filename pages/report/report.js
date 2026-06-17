@@ -2,478 +2,365 @@ const StorageManager = require('../../utils/storage.js')
 
 Page({
   data: {
-    // 主题相关
     isDarkTheme: false,
-    summary: {
-      totalAssets: 0,
-      totalLiabilities: 0,
-      netWorth: 0,
-      monthlyIncome: 0,
-      monthlyExpenses: 0,
-      monthlyCashFlow: 0
-    },
-    text: {
-      totalAssets: '¥0.00',
-      totalLiabilities: '¥0.00',
-      netWorth: '¥0.00',
-      monthlyIncome: '¥0.00',
-      monthlyExpenses: '¥0.00',
-      monthlyCashFlow: '+¥0.00'
-    },
-    // 现金流（基础版）文本
-    textCashflow: {
-      operatingCashFlow: '+¥0.00',
-      investingCashFlow: '+¥0.00',
-      financingCashFlow: '-¥0.00',
-      netCashFlow: '+¥0.00'
-    },
-    // 财务比率（基础版）文本
-    textRatios: {
-      currentRatio: '0.00',
-      debtToAssetRatio: '0.0%',
-      returnOnAssets: '0.0%',
-      assetTurnover: '0.00',
-      incomeStability: '0.0%'
-    },
-    // 趋势（基础版）
-    trendNetWorth: [],
-    trendCashFlow: [],
-    breakdown: {
-      assets: [],
-      liabilities: []
-    },
-    // 利润表（基础版）文本
-    textIncome: {
-      workIncome: '¥0.00',
-      investmentIncome: '¥0.00',
-      operatingIncome: '¥0.00',
-      totalIncome: '¥0.00',
-      operatingExpenses: '¥0.00',
-      financialExpenses: '¥0.00',
-      depreciationExpenses: '¥0.00',
-      totalExpenses: '¥0.00',
-      netIncome: '+¥0.00'
-    },
-    activeReport: 'overview',
-    periodType: 'monthly'
+    activeTab: 'daily-cost',
+
+    // Tab 1: 每日成本
+    dailyCostTotal: '0.00',
+    dailyCostTrend: [],
+    topCostItems: [],
+    costPieStyle: '',
+    costPieLegend: [],
+
+    // Tab 2: 资产构成
+    assetPieStyle: '',
+    assetPieLegend: [],
+    topAssets: [],
+    assetStatusItems: [],
+
+    // Tab 3: 负债管理
+    debtTotal: '0.00',
+    debtMonthlyPayment: '0.00',
+    debtTotalInterest: '0.00',
+    debtPieStyle: '',
+    debtPieLegend: [],
+    debtItems: [],
+
+    // Tab 4: 财务健康
+    healthMetrics: []
   },
 
   onLoad() {
-    // 初始化主题
     const app = getApp()
-    const isDarkTheme = app.globalData ? app.globalData.isDarkTheme : false
-    this.setData({ isDarkTheme })
-    this.setTheme(isDarkTheme)
+    this.setData({ isDarkTheme: app.globalData.isDarkTheme || false })
+    this.setTheme(this.data.isDarkTheme)
     this.generate()
   },
+
   onShow() {
-    // 同步主题状态
     const app = getApp()
-    if (app.globalData) {
-      const isDarkTheme = app.globalData.isDarkTheme
-      this.setData({ isDarkTheme })
-      this.setTheme(isDarkTheme)
+    if (app.globalData.isDarkTheme !== undefined) {
+      this.setData({ isDarkTheme: app.globalData.isDarkTheme })
+      this.setTheme(app.globalData.isDarkTheme)
     }
     this.generate()
   },
 
-  // 设置页面主题
   setTheme(isDark) {
     try {
       wx.setNavigationBarColor({
         frontColor: isDark ? '#ffffff' : '#000000',
         backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-        animation: {
-          duration: 100,
-          timingFunc: 'easeInOut'
-        }
+        animation: { duration: 100, timingFunc: 'easeInOut' }
       })
       if (wx.setBackgroundColor) {
-        const bgColor = isDark ? '#1e1e1e' : '#ffffff'
-        wx.setBackgroundColor({
-          backgroundColor: bgColor,
-          backgroundColorTop: bgColor,
-          backgroundColorBottom: bgColor
-        })
-        setTimeout(() => {
-          wx.setBackgroundColor({
-            backgroundColor: bgColor,
-            backgroundColorTop: bgColor,
-            backgroundColorBottom: bgColor
-          })
-        }, 50)
+        const bg = isDark ? '#1e1e1e' : '#ffffff'
+        wx.setBackgroundColor({ backgroundColor: bg, backgroundColorTop: bg, backgroundColorBottom: bg })
       }
-      this.setData({
-        isDarkTheme: isDark
-      })
-    } catch (error) {
-      console.error('设置页面主题失败:', error)
-    }
+      this.setData({ isDarkTheme: isDark })
+    } catch (e) {}
   },
 
-  // 生成极简财务报告（仅预计算字符串，杜绝 NaN 与对象值）
+  switchTab(e) {
+    this.setData({ activeTab: e.currentTarget.dataset.tab })
+  },
+
+  // ==================== 主计算 ====================
+
   generate() {
-    const assets = (StorageManager.getAssets && StorageManager.getAssets()) || wx.getStorageSync('assets_data') || []
-    const liabilities = (StorageManager.getLiabilities && StorageManager.getLiabilities()) || wx.getStorageSync('liabilities_data') || []
+    const assets = StorageManager.getAssets()
+    const liabilities = StorageManager.getLiabilities()
 
-    let currentAssetsSum = 0, financialAssetsSum = 0, physicalAssetsSum = 0, workIncomeValue = 0, otherAssetsSum = 0
-    let currentLiabilitiesSum = 0, longTermLiabilitiesSum = 0, otherLiabilitiesSum = 0
+    this.calcDailyCost(assets, liabilities)
+    this.calcAssets(assets)
+    this.calcDebts(liabilities)
+    this.calcHealth(assets, liabilities)
 
-    let totalAssets = 0
-    assets.forEach(a => {
-      const v = this.firstNumber(a.currentValue, a.originalValue, a.initialValue, 0)
-      switch (a.categoryL1) {
-        case 'current_assets': 
-          currentAssetsSum += v
-          totalAssets += v
-          break
-        case 'financial_assets': 
-          financialAssetsSum += v
-          totalAssets += v
-          break
-        case 'physical_assets': 
-          physicalAssetsSum += v
-          totalAssets += v
-          break
-        case 'work_income': 
-          workIncomeValue += v
-          // 不计入总资产
-          break
-        default: 
-          otherAssetsSum += v
-          totalAssets += v
-      }
-    })
-
-    let totalLiabilities = 0
-    liabilities.forEach(l => {
-      const amt = this.firstNumber(l.currentAmount, l.originalAmount, l.initialAmount, 0)
-      totalLiabilities += amt
-      switch (l.categoryL1) {
-        case 'current_liabilities': currentLiabilitiesSum += amt; break
-        case 'long_term_liabilities': longTermLiabilitiesSum += amt; break
-        default: otherLiabilitiesSum += amt
-      }
-    })
-
-    const netWorth = totalAssets - totalLiabilities
-
-    // 收入拆分（基础版）
-    let workIncome = 0, investmentIncome = 0, operatingIncome = 0
-    assets.forEach(a => {
-      const mi = this.firstNumber(a.actualMonthlyIncome, a.monthlyIncome, 0)
-      switch (a.categoryL1) {
-        case 'work_income': workIncome += mi; break
-        case 'financial_assets': investmentIncome += mi; break
-        case 'physical_assets':
-          if (a.categoryL2 === 'appreciating_assets') operatingIncome += mi
-          break
-        default: break
-      }
-    })
-    const totalIncomeNum = this.roundToPrecision(workIncome + investmentIncome + operatingIncome)
-
-    // 费用拆分（基础版）
-    let operatingExpenses = 0
-    assets.forEach(a => { operatingExpenses += this.firstNumber(a.monthlyOperatingCost, 0) })
-
-    let financialExpenses = 0
-    liabilities.forEach(l => {
-      const principal = this.firstNumber(l.currentAmount, l.originalAmount, l.initialAmount, 0)
-      const rate = this.firstNumber(l.annualRate, 0)
-      const interest = this.roundToPrecision(principal * (rate / 100) / 12)
-      financialExpenses += interest
-    })
-
-    let depreciationExpenses = 0
-    assets.forEach(a => {
-      if (a.categoryL1 === 'physical_assets' && a.categoryL2 === 'consumer_assets') {
-        depreciationExpenses += this.computeMonthlyDepreciation(a)
-      }
-    })
-    const totalExpensesNum = this.roundToPrecision(operatingExpenses + financialExpenses + depreciationExpenses)
-
-    // 总览月收入/支出
-    const monthlyIncome = totalIncomeNum
-    const monthlyExpenses = totalExpensesNum
-    const monthlyCashFlow = this.roundToPrecision(monthlyIncome - monthlyExpenses)
-
-    // 现金流（基础版）
-    // 经营活动现金流：净收入 + 非现金费用（加回折旧）
-    const operatingCashFlowNum = this.roundToPrecision(monthlyCashFlow + depreciationExpenses)
-    // 投资活动现金流：金融资产产生的现金收益（这里用 investmentIncome 简化）
-    const investingCashFlowNum = this.roundToPrecision(investmentIncome)
-    // 筹资活动现金流：负债月还款总额为现金流出
-    let totalMonthlyPayment = 0
-    liabilities.forEach(l => { totalMonthlyPayment += this.firstNumber(l.monthlyPayment, 0) })
-    const financingCashFlowNum = this.roundToPrecision(-totalMonthlyPayment)
-    const netCashFlowNum = this.roundToPrecision(operatingCashFlowNum + investingCashFlowNum + financingCashFlowNum)
-
-    // 计算占比（排除工作收入）
-    const assetsBreakdownTotal = currentAssetsSum + financialAssetsSum + physicalAssetsSum + otherAssetsSum
-    const liabilitiesBreakdownTotal = currentLiabilitiesSum + longTermLiabilitiesSum + otherLiabilitiesSum
-
-    // 财务比率（基础版）
-    const currentRatioNum = currentLiabilitiesSum > 0 ? (currentAssetsSum / currentLiabilitiesSum) : 0
-    const debtToAssetRatioNum = totalAssets > 0 ? (totalLiabilities / totalAssets) : 0
-    const returnOnAssetsNum = totalAssets > 0 ? ((monthlyCashFlow * 12) / totalAssets) : 0
-    const assetTurnoverNum = totalAssets > 0 ? ((totalIncomeNum * 12) / totalAssets) : 0
-    const incomeStabilityNum = totalIncomeNum > 0 ? (workIncome / totalIncomeNum) : 0
-
-    // 趋势（基础版，模拟近6个月围绕当前值的变化）
     // 保存当月快照
     const now = new Date()
-    const currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
-    StorageManager.saveSnapshot({
-      month: currentMonthKey,
-      netWorth: netWorth,
-      monthlyCashFlow: monthlyCashFlow,
-      totalIncome: totalIncomeNum,
-      totalExpenses: totalExpensesNum
+    const monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
+    StorageManager.saveSnapshot({ month: monthKey, netWorth: this._netWorth || 0, monthlyCashFlow: this._cashFlow || 0, dailyCost: this._dailyCostTotal || 0 })
+  },
+
+  // ==================== Tab 1: 每日成本 ====================
+
+  calcDailyCost(assets, liabilities) {
+    let totalDepreciation = 0, totalOperating = 0, totalInterest = 0
+    const itemCosts = []
+
+    assets.forEach(a => {
+      if (a.categoryL1 === 'work_income') return
+      const orig = this.num(a.originalValue, a.initialValue)
+      const cur = this.num(a.currentValue)
+      const val = cur !== null ? cur : orig
+      if (orig <= 0) return
+
+      const createDate = a.createDate || a.createTime
+      if (!createDate) return
+      const days = Math.max(1, Math.floor((Date.now() - new Date(createDate).getTime()) / 86400000))
+
+      const dep = Math.max(0, orig - val) / days
+      const opCost = this.num(a.monthlyOperatingCost) / 30
+      const daily = dep + opCost
+
+      totalDepreciation += dep
+      totalOperating += opCost
+
+      if (daily > 0) {
+        itemCosts.push({ name: a.name || '未命名', daily: daily, dep: dep, op: opCost })
+      }
     })
 
-    const months = this.lastSixMonthsLabels()
-    const netWorthSeries = this.makeTrendSeries('netWorth')
-    const cashFlowSeries = this.makeTrendSeries('monthlyCashFlow')
-    const trendNetWorth = this.buildTrendViewModel(months, netWorthSeries)
-    const trendCashFlow = this.buildTrendViewModel(months, cashFlowSeries)
+    liabilities.forEach(l => {
+      const rate = this.num(l.annualRate)
+      const cur = this.num(l.currentAmount, l.originalAmount, l.initialAmount)
+      if (rate > 0 && cur > 0) {
+        totalInterest += cur * (rate / 100) / 365
+      }
+    })
 
-    // 按周期缩放（仅影响现金流相关数据）
-    const scale = this.getPeriodScale(this.data.periodType)
-    const periodIncome = monthlyIncome * scale
-    const periodExpenses = monthlyExpenses * scale
-    const periodCashFlow = monthlyCashFlow * scale
-    const periodOperatingCF = (monthlyCashFlow + depreciationExpenses) * scale
-    const periodInvestingCF = investmentIncome * scale
-    const periodFinancingCF = (-totalMonthlyPayment) * scale
-    const periodNetCF = periodOperatingCF + periodInvestingCF + periodFinancingCF
-    const periodLabel = this.getPeriodLabel(this.data.periodType)
+    const grandTotal = totalDepreciation + totalOperating + totalInterest
 
+    // TOP5
+    itemCosts.sort((a, b) => b.daily - a.daily)
+    const top5 = itemCosts.slice(0, 5)
+    const maxCost = top5.length > 0 ? top5[0].daily : 1
+    const topCostItems = top5.map(item => ({
+      name: item.name,
+      costText: '¥' + item.daily.toFixed(2),
+      barPercent: Math.round((item.daily / maxCost) * 100)
+    }))
+
+    // 成本构成饼图
+    const total = totalDepreciation + totalOperating + totalInterest
+    const pieData = []
+    if (totalDepreciation > 0) pieData.push({ label: '折旧损失', value: totalDepreciation, color: '#667eea' })
+    if (totalOperating > 0) pieData.push({ label: '运营费用', value: totalOperating, color: '#4caf50' })
+    if (totalInterest > 0) pieData.push({ label: '贷款利息', value: totalInterest, color: '#ff9800' })
+    const { style: costPieStyle, legend: costPieLegend } = this.buildPie(pieData, total)
+
+    // 趋势（从快照读取）
+    const snapshots = StorageManager.getRecentSnapshots(6)
+    const months = this.lastSixMonths()
+    const dailyCostTrend = months.map((m, i) => {
+      const snap = snapshots.find(s => s.month === m.key)
+      let val = (m.key === months[months.length - 1].key) ? grandTotal : (snap && snap.dailyCost ? snap.dailyCost : 0)
+      return { month: m.label, valueText: '¥' + val.toFixed(0), barPercent: 0 }
+    })
+    const maxTrend = Math.max(1, ...dailyCostTrend.map(t => parseFloat(t.valueText.replace('¥', '')) || 0))
+    dailyCostTrend.forEach(t => { t.barPercent = Math.round(((parseFloat(t.valueText.replace('¥', '')) || 0) / maxTrend) * 100) })
+
+    this._dailyCostTotal = grandTotal
     this.setData({
-      summary: { totalAssets, totalLiabilities, netWorth, monthlyIncome, monthlyExpenses, monthlyCashFlow },
-      text: {
-        totalAssets: this.signCurrency(totalAssets),
-        totalLiabilities: this.signCurrency(totalLiabilities),
-        netWorth: this.signCurrency(netWorth),
-        monthlyIncome: this.signCurrency(periodIncome),
-        monthlyExpenses: this.signCurrency(periodExpenses),
-        monthlyCashFlow: (periodCashFlow >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodCashFlow)
-      },
-      textIncome: {
-        workIncome: '¥' + this.absCurrency(workIncome * scale),
-        investmentIncome: '¥' + this.absCurrency(investmentIncome * scale),
-        operatingIncome: '¥' + this.absCurrency(operatingIncome * scale),
-        totalIncome: '¥' + this.absCurrency(totalIncomeNum * scale),
-        operatingExpenses: '¥' + this.absCurrency(operatingExpenses * scale),
-        financialExpenses: '¥' + this.absCurrency(financialExpenses * scale),
-        depreciationExpenses: '¥' + this.absCurrency(depreciationExpenses * scale),
-        totalExpenses: '¥' + this.absCurrency(totalExpensesNum * scale),
-        netIncome: (periodCashFlow >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodCashFlow)
-      },
-      textCashflow: {
-        operatingCashFlow: (periodOperatingCF >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodOperatingCF),
-        investingCashFlow: (periodInvestingCF >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodInvestingCF),
-        financingCashFlow: (periodFinancingCF >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodFinancingCF),
-        netCashFlow: (periodNetCF >= 0 ? '+' : '-') + '¥' + this.absCurrency(periodNetCF)
-      },
-      textRatios: {
-        currentRatio: this.ratioStr(currentRatioNum, 2),
-        debtToAssetRatio: this.percentStr(debtToAssetRatioNum),
-        returnOnAssets: this.percentStr(returnOnAssetsNum),
-        assetTurnover: this.ratioStr(assetTurnoverNum, 2),
-        incomeStability: this.percentStr(incomeStabilityNum)
-      },
-      breakdown: {
-        assets: [
-          { name: '流动资产', valueText: '¥' + this.absCurrency(currentAssetsSum), percentageText: this.percentText(currentAssetsSum, assetsBreakdownTotal) },
-          { name: '金融资产', valueText: '¥' + this.absCurrency(financialAssetsSum), percentageText: this.percentText(financialAssetsSum, assetsBreakdownTotal) },
-          { name: '实物资产', valueText: '¥' + this.absCurrency(physicalAssetsSum), percentageText: this.percentText(physicalAssetsSum, assetsBreakdownTotal) },
-          { name: '其他资产', valueText: '¥' + this.absCurrency(otherAssetsSum), percentageText: this.percentText(otherAssetsSum, assetsBreakdownTotal) }
-        ].filter(item => parseFloat(item.valueText.replace('¥', '').replace(',', '')) > 0),
-        liabilities: [
-          { name: '流动负债', valueText: '¥' + this.absCurrency(currentLiabilitiesSum), percentageText: this.percentText(currentLiabilitiesSum, liabilitiesBreakdownTotal) },
-          { name: '长期负债', valueText: '¥' + this.absCurrency(longTermLiabilitiesSum), percentageText: this.percentText(longTermLiabilitiesSum, liabilitiesBreakdownTotal) },
-          { name: '其他负债', valueText: '¥' + this.absCurrency(otherLiabilitiesSum), percentageText: this.percentText(otherLiabilitiesSum, liabilitiesBreakdownTotal) }
-        ]
-      },
-      trendNetWorth,
-      trendCashFlow,
-      periodLabel
+      dailyCostTotal: grandTotal.toFixed(2),
+      dailyCostTrend, topCostItems, costPieStyle, costPieLegend
     })
   },
 
-  // 取第一个有效数字
-  firstNumber(...candidates) {
+  // ==================== Tab 2: 资产构成 ====================
+
+  calcAssets(assets) {
+    const groups = {}
+    const colors = { current_assets: '#667eea', financial_assets: '#4caf50', physical_assets: '#ff9800', other_assets: '#9e9e9e' }
+    const labels = { current_assets: '现金类', financial_assets: '金融类', physical_assets: '实物类', other_assets: '其他' }
+    let total = 0
+
+    // 旧分类名 -> 新分类名映射
+    const legacyMap = {
+      'fixed_assets': 'physical_assets',
+      'cashflow_in': 'current_assets',
+      'appreciation': 'financial_assets',
+      'business': 'physical_assets',
+      'consumer_asset': 'physical_assets',
+      'other_asset': 'other_assets'
+    }
+
+    assets.forEach(a => {
+      if (a.categoryL1 === 'work_income') return
+      const val = this.num(a.currentValue, a.originalValue, a.initialValue)
+      if (val <= 0) return
+      const key = legacyMap[a.categoryL1] || a.categoryL1 || 'other_assets'
+      groups[key] = (groups[key] || 0) + val
+      total += val
+    })
+
+    const pieData = Object.keys(groups).map(key => ({
+      label: labels[key] || key, value: groups[key], color: colors[key] || '#9e9e9e'
+    }))
+    const { style: assetPieStyle, legend: assetPieLegend } = this.buildPie(pieData, total)
+
+    // TOP5 资产
+    const sorted = assets
+      .filter(a => a.categoryL1 !== 'work_income')
+      .map(a => ({ name: a.name || '未命名', value: this.num(a.currentValue, a.originalValue, a.initialValue) }))
+      .filter(a => a.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
+    const maxVal = sorted.length > 0 ? sorted[0].value : 1
+    const topAssets = sorted.map(a => ({
+      name: a.name,
+      valueText: '¥' + a.value.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+      barPercent: Math.round((a.value / maxVal) * 100)
+    }))
+
+    // 资产状态
+    const statusMap = {}
+    const statusLabels = { active: '使用中', dusty: '吃灰中', rented: '出租中', damaged: '已损坏', sold: '已卖出', lost: '已丢失', gifted: '已送人', processed: '已处理' }
+    const statusColors = { active: '#4caf50', dusty: '#ff9800', rented: '#2196f3', damaged: '#f44336', sold: '#9e9e9e', lost: '#9e9e9e', gifted: '#9e9e9e', processed: '#9e9e9e' }
+    assets.forEach(a => {
+      if (a.categoryL1 === 'work_income') return
+      const s = a.status || 'active'
+      statusMap[s] = (statusMap[s] || 0) + 1
+    })
+    const assetStatusItems = Object.keys(statusMap).map(s => ({
+      name: statusLabels[s] || s, count: statusMap[s], color: statusColors[s] || '#9e9e9e'
+    }))
+
+    this.setData({ assetPieStyle, assetPieLegend, topAssets, assetStatusItems })
+  },
+
+  // ==================== Tab 3: 负债管理 ====================
+
+  calcDebts(liabilities) {
+    let totalDebt = 0, totalMonthly = 0, totalInterest = 0
+    const groups = {}
+    const colors = { current_liabilities: '#f44336', long_term_liabilities: '#667eea', other_liabilities: '#ff9800' }
+    const labels = { current_liabilities: '流动负债', long_term_liabilities: '长期负债', other_liabilities: '其他负债' }
+
+    const debtLegacyMap = {'long_term_debt':'long_term_liabilities','short_term_debt':'current_liabilities','medium_term_debt':'long_term_liabilities','credit_debt':'current_liabilities','consumer_debt':'current_liabilities','investment_debt':'long_term_liabilities','other_debt':'other_liabilities'}
+
+    liabilities.forEach(l => {
+      const cur = this.num(l.currentAmount, l.originalAmount, l.initialAmount)
+      const orig = this.num(l.originalAmount, l.initialAmount)
+      const mp = this.num(l.monthlyPayment)
+      totalDebt += cur
+      totalMonthly += mp
+
+      const rate = this.num(l.annualRate)
+      if (rate > 0 && cur > 0) totalInterest += cur * (rate / 100) / 12
+
+      const key = debtLegacyMap[l.categoryL1] || l.categoryL1 || 'other_liabilities'
+      groups[key] = (groups[key] || 0) + cur
+    })
+
+    // 负债饼图
+    const pieData = Object.keys(groups).map(key => ({
+      label: labels[key] || key, value: groups[key], color: colors[key] || '#9e9e9e'
+    }))
+    const { style: debtPieStyle, legend: debtPieLegend } = this.buildPie(pieData, totalDebt)
+
+    // 每笔负债
+    const debtItems = liabilities.map(l => {
+      const cur = this.num(l.currentAmount, l.originalAmount, l.initialAmount)
+      const orig = this.num(l.originalAmount, l.initialAmount)
+      const paid = Math.max(0, orig - cur)
+      const pct = orig > 0 ? Math.round((paid / orig) * 100) : 0
+      const mp = this.num(l.monthlyPayment)
+      const remainMonths = mp > 0 ? Math.ceil(cur / mp) : 0
+      return {
+        name: l.name || '未命名',
+        totalText: '¥' + orig.toLocaleString('zh-CN'),
+        paidText: '¥' + paid.toLocaleString('zh-CN'),
+        progressPercent: pct,
+        remainText: '¥' + cur.toLocaleString('zh-CN'),
+        remainMonthsText: remainMonths > 0 ? '约' + remainMonths + '个月还清' : ''
+      }
+    }).sort((a, b) => b.progressPercent - a.progressPercent)
+
+    this.setData({
+      debtTotal: totalDebt.toFixed(2),
+      debtMonthlyPayment: totalMonthly.toFixed(2),
+      debtTotalInterest: totalInterest.toFixed(2),
+      debtPieStyle, debtPieLegend, debtItems
+    })
+  },
+
+  // ==================== Tab 4: 财务健康 ====================
+
+  calcHealth(assets, liabilities) {
+    let totalAssets = 0, cashAssets = 0, totalLiabilities = 0
+    let monthlyIncome = 0, monthlyExpense = 0, passiveIncome = 0
+
+    assets.forEach(a => {
+      const val = this.num(a.currentValue, a.originalValue, a.initialValue)
+      if (a.categoryL1 === 'work_income') {
+        monthlyIncome += this.num(a.monthlyIncome, a.actualMonthlyIncome)
+        return
+      }
+      totalAssets += val
+      if (a.categoryL1 === 'current_assets') cashAssets += val
+      passiveIncome += this.num(a.monthlyIncome)
+      monthlyExpense += this.num(a.monthlyOperatingCost)
+    })
+
+    liabilities.forEach(l => {
+      totalLiabilities += this.num(l.currentAmount, l.originalAmount, l.initialAmount)
+      monthlyExpense += this.num(l.monthlyPayment)
+    })
+
+    this._netWorth = totalAssets - totalLiabilities
+    this._cashFlow = monthlyIncome + passiveIncome - monthlyExpense
+
+    const savingsRate = monthlyIncome > 0 ? ((monthlyIncome + passiveIncome - monthlyExpense) / (monthlyIncome + passiveIncome)) * 100 : 0
+    const debtSafety = totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : 0
+    const liquidity = totalAssets > 0 ? (cashAssets / totalAssets) * 100 : 0
+    const monthlyPassive = passiveIncome
+    const freedom = monthlyExpense > 0 ? (monthlyPassive / monthlyExpense) * 100 : 0
+
+    const healthMetrics = [
+      this.buildHealthMetric('储蓄率', savingsRate, '%', 30, 10, '月收入中能存下的比例'),
+      this.buildHealthMetric('负债安全度', 100 - debtSafety, '%', 50, 30, '负债占资产比例越低越安全'),
+      this.buildHealthMetric('资产流动性', liquidity, '%', 20, 10, '现金类资产占比，越高越灵活'),
+      this.buildHealthMetric('财务自由度', freedom, '%', 100, 50, '被动收入占支出比例')
+    ]
+
+    this.setData({ healthMetrics })
+  },
+
+  buildHealthMetric(name, value, unit, greenThreshold, yellowThreshold, desc) {
+    const v = Math.max(0, Math.min(100, Math.round(value)))
+    let status, color, advice
+    if (value >= greenThreshold) {
+      status = 'good'; color = '#4caf50'; advice = '状态良好，继续保持'
+    } else if (value >= yellowThreshold) {
+      status = 'warn'; color = '#ff9800'; advice = '有改善空间，建议关注'
+    } else {
+      status = 'bad'; color = '#f44336'; advice = '需要改善，建议调整'
+    }
+    return { name, valueText: v + unit, status, color, advice, desc, ringPercent: v, ringColor: color }
+  },
+
+  // ==================== 工具函数 ====================
+
+  num(...candidates) {
     for (let i = 0; i < candidates.length; i++) {
       const n = Number(candidates[i])
-      if (Number.isFinite(n)) return n
+      if (Number.isFinite(n) && n !== 0) return n
     }
     return 0
   },
 
-  // 数字精度处理函数，避免浮点数精度问题
-  roundToPrecision(num, precision = 2) {
-    const factor = Math.pow(10, precision)
-    return Math.round(Number(num) * factor) / factor
+  buildPie(items, total) {
+    if (total <= 0 || items.length === 0) return { style: '', legend: [] }
+    let acc = 0
+    const stops = []
+    const legend = []
+    items.forEach(item => {
+      const pct = (item.value / total) * 100
+      stops.push(item.color + ' ' + acc.toFixed(1) + '% ' + (acc + pct).toFixed(1) + '%')
+      legend.push({ label: item.label, percent: pct.toFixed(1) + '%', color: item.color, valueText: '¥' + item.value.toLocaleString('zh-CN', { maximumFractionDigits: 0 }) })
+      acc += pct
+    })
+    return { style: 'background:conic-gradient(' + stops.join(',') + ')', legend }
   },
 
-  // 金额文本
-  signCurrency(n) {
-    const v = Number(n) || 0
-    const sign = v < 0 ? '-' : ''
-    return sign + '¥' + this.absCurrency(v)
-  },
-
-  absCurrency(n) {
-    const v = Math.abs(Number(n) || 0)
-    // 先四舍五入到2位小数，避免浮点数精度问题
-    const rounded = Math.round(v * 100) / 100
-    return rounded.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  },
-
-  // 百分比文本（基于子项与总额）
-  percentText(part, total) {
-    const p = Number(part)
-    const t = Number(total)
-    if (!Number.isFinite(p) || !Number.isFinite(t) || t <= 0) return '0.0%'
-    return (Math.round((p / t) * 1000) / 10).toFixed(1) + '%'
-  },
-
-  // 百分比字符串（基于小数，如 0.253 → 25.3%）
-  percentStr(value) {
-    const v = Number(value)
-    if (!Number.isFinite(v)) return '0.0%'
-    return (Math.round(v * 1000) / 10).toFixed(1) + '%'
-  },
-
-  // 比率字符串（保留 decimals 位小数）
-  ratioStr(value, decimals = 2) {
-    const v = Number(value)
-    if (!Number.isFinite(v)) return (0).toFixed(decimals)
-    // 先四舍五入到指定小数位，避免浮点数精度问题
-    const factor = Math.pow(10, decimals)
-    const rounded = Math.round(v * factor) / factor
-    return rounded.toFixed(decimals)
-  },
-
-  // 周期缩放因子
-  getPeriodScale(type) {
-    switch (type) {
-      case 'quarterly': return 3
-      case 'yearly': return 12
-      case 'monthly':
-      default: return 1
-    }
-  },
-
-  // 周期标签
-  getPeriodLabel(type) {
-    switch (type) {
-      case 'quarterly': return '季'
-      case 'yearly': return '年'
-      case 'monthly':
-      default: return '月'
-    }
-  },
-
-
-
-  // 生成最近6个月标签
-  lastSixMonthsLabels() {
-    const labels = []
+  lastSixMonths() {
+    const result = []
     const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      labels.push((d.getMonth() + 1) + '月')
+      result.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: (d.getMonth() + 1) + '月' })
     }
-    return labels
-  },
-
-  // 从历史快照获取最近6个月的趋势数据
-  makeTrendSeries(snapshotKey) {
-    const snapshots = StorageManager.getSnapshots()
-    const series = []
-    const now = new Date()
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
-      const snap = snapshots.find(s => s.month === monthKey)
-      series.push(snap ? (snap[snapshotKey] || 0) : 0)
-    }
-    return series
-  },
-
-  // 将数列转为可视模型（预计算高度、文本、类名）
-  buildTrendViewModel(labels, values) {
-    const absValues = values.map(v => Math.abs(Number(v) || 0))
-    const maxAbs = Math.max(1, ...absValues)
-    const maxBar = 200 // rpx
-    return labels.map((label, idx) => {
-      const v = Number(values[idx]) || 0
-      const h = Math.max(10, Math.round((Math.abs(v) / maxAbs) * maxBar)) + 'rpx'
-      return {
-        month: label,
-        valueText: (v >= 0 ? '' : '-') + '¥' + this.absCurrency(v),
-        barHeight: h,
-        barClass: v >= 0 ? 'positive' : 'negative'
-      }
-    })
-  },
-
-  // 简化月折旧计算（百分比或小数折旧率皆可）
-  computeMonthlyDepreciation(asset) {
-    const original = this.firstNumber(asset.originalValue, asset.initialValue, 0)
-    let rate = this.firstNumber(asset.depreciationRate, 10) // 默认10%
-    // 支持 0.1 或 10 两种表达
-    rate = rate > 1 ? rate / 100 : rate
-    return this.roundToPrecision(original * rate / 12)
-  },
-
-  // 构建折旧明细（简版）
-  buildDepreciationList(assets) {
-    const list = []
-    assets.forEach(a => {
-      if (a && a.categoryL1 === 'physical_assets' && a.categoryL2 === 'consumer_assets') {
-        const original = this.firstNumber(a.originalValue, a.initialValue, a.currentValue, 0)
-        let rate = this.firstNumber(a.depreciationRate, 10)
-        rate = rate > 1 ? rate / 100 : rate
-        const months = this.computeUsageMonths(a)
-        const years = months / 12
-        const currentValueNum = this.roundToPrecision(original * Math.pow(1 - rate, years))
-        const monthlyDep = this.roundToPrecision(original * rate / 12)
-        const totalDep = this.roundToPrecision(original - currentValueNum)
-
-        list.push({
-          name: a.name || '消费性资产',
-          originalText: '¥' + this.absCurrency(original),
-          currentText: '¥' + this.absCurrency(currentValueNum),
-          totalDepreciationText: '¥' + this.absCurrency(totalDep),
-          monthlyDepreciationText: '¥' + this.absCurrency(monthlyDep),
-          rateText: '年折旧率 ' + (Math.round(rate * 1000) / 10).toFixed(1) + '%',
-          usageMonthsText: String(months) + '个月'
-        })
-      }
-    })
-    return list
-  },
-
-  // 计算使用月数（基于 purchaseDate/createDate/createTime）
-  computeUsageMonths(item) {
-    let dateStr = ''
-    if (item.purchaseDate) dateStr = item.purchaseDate
-    else if (item.createDate) dateStr = item.createDate
-    else if (item.createTime) dateStr = String(item.createTime).slice(0, 10)
-    if (!dateStr) return 0
-    const start = new Date(dateStr)
-    if (isNaN(start.getTime())) return 0
-    const now = new Date()
-    const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
-    return Math.max(0, months)
-  },
-
-  // 导航切换（保留 UI 行为）
-  switchReport(e) { this.setData({ activeReport: e.currentTarget.dataset.type }) },
-  switchPeriod(e) { this.setData({ periodType: e.currentTarget.dataset.period }); this.generate() }
+    return result
+  }
 })
-
-
