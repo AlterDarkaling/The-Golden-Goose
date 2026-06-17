@@ -1,4 +1,4 @@
-﻿# 缺陷清单 — 大鹅爱记账
+# 缺陷清单 — 大鹅爱记账
 
 > 生成时间: 2026-06-16
 > 规则: 每次只处理一处缺陷，完成后勾选 `[x]`
@@ -39,7 +39,7 @@
 
 ## P2 中 — 影响用户体验
 
-- [ ] **#8 report.js 趋势图使用模拟数据**
+- [x] **#8 report.js 趋势图使用模拟数据**
   文件: `pages/report/report.js`
   `makeTrendSeries()` 仅基于当前值做 +-5% 模拟，无真实历史数据。
 
@@ -81,7 +81,7 @@
 | 5 | P1 | 已修复 | detail.js getCategoryName 已用 ASSET_CATEGORIES/LIABILITY_CATEGORIES (与 #2 合并修复) |
 | 6 | P1 | 已修复 | i18n/base.json 应用名改为 大鹅爱记账 |
 | 7 | P1 | 已修复 | setInterval 前先 clearInterval, 存储 timer ID 到 this._themePollingTimer |
-| 8 | P2 | 待处理 | |
+| 8 | P2 | 已修复 | 新增快照存储, 趋势图改为读取最近6个月真实数据 |
 | 9 | P2 | 已修复 | 统一为标准千分位格式 |
 | 10 | P2 | 已修复 | manifest.json name 改为 大鹅爱记账 |
 | 11 | P2 | 已修复 | 新增 .gitignore 忽略 .idea/ 文档/ generate_docx.py 等 |
