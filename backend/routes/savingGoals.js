@@ -6,6 +6,7 @@ const express = require('express')
 const router = express.Router()
 const savingGoalController = require('../controllers/savingGoalController')
 const { authenticateToken } = require('../middleware/auth')
+const validateEntity = require('../middleware/validator')
 
 // 所有路由都需要认证
 router.use(authenticateToken)
@@ -17,10 +18,10 @@ router.get('/', savingGoalController.getSavingGoals)
 router.get('/:id', savingGoalController.getSavingGoalById)
 
 // 创建储蓄目标
-router.post('/', savingGoalController.createSavingGoal)
+router.post('/', validateEntity('savingGoal'), savingGoalController.createSavingGoal)
 
 // 更新储蓄目标
-router.put('/:id', savingGoalController.updateSavingGoal)
+router.put('/:id', validateEntity('savingGoal', { partial: true }), savingGoalController.updateSavingGoal)
 
 // 删除储蓄目标
 router.delete('/:id', savingGoalController.deleteSavingGoal)
