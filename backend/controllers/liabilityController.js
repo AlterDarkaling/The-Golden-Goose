@@ -67,7 +67,7 @@ async function syncLiabilityTiming(liability) {
     await liability.update(patch)
   }
 
-  return Object.assign(plain, patch)
+  return Object.assign({}, plain, patch)
 }
 
 /**
@@ -296,8 +296,11 @@ exports.updateLiability = async (req, res, next) => {
       })
     }
 
-    // 期数/利率/本金/还款方式任一变动都要重建还款计划，并据此刷新总利息与总还款额
-    const merged = Object.assign(liability.get({ plain: true }), updateData)
+    // 期数/利率/本金/还款方式任一变动都要重建还款计划，并据此刷新总利息与总还款额。
+    // 注意：get({plain:true}) 返回的是实例内部 dataValues 的引用，
+    // 必须用新的 {} 作合并目标，否则会把新值直接塞进实例而不标记 changed，
+    // 导致后续 update() 认为字段没变、从 SET 子句中漏掉，造成静默写入丢失。
+    const merged = Object.assign({}, liability.get({ plain: true }), updateData)
     if (LoanCalculator.isAmortizing(merged)) {
       const schedule = LoanCalculator.scheduleOf(merged, repaymentMethod || undefined)
 
