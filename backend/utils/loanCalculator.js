@@ -270,6 +270,9 @@ class LoanCalculator {
   static advanceToNow(liability) {
     if (!LoanCalculator.isAmortizing(liability)) return {}
 
+    // 人工标记为已还清/已提前还款的属于终态：保留用户填写的余额与状态，不再按时间推算
+    if (liability.status === 'paid_off' || liability.status === 'prepaid') return {}
+
     const months = Number(liability.months) || 0
     const schedule = LoanCalculator.scheduleOf(liability)
     const items = schedule.schedule || []
@@ -291,7 +294,6 @@ class LoanCalculator {
     if (!(Number(liability.total_amount) > 0)) patch.total_amount = schedule.totalAmount
     if (liability.loan_schedule !== schedule) patch.loan_schedule = schedule
     if (finished && liability.status !== 'paid_off') patch.status = 'paid_off'
-    if (!finished && liability.status === 'paid_off') patch.status = 'normal'
 
     return patch
   }
