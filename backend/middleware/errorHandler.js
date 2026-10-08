@@ -36,13 +36,10 @@ module.exports = (err, req, res, next) => {
   }
 
   if (err.name === 'SequelizeDatabaseError') {
+    // SQL 语句与库表结构只写进服务端日志，不返回客户端
     return res.status(500).json({
       success: false,
-      message: '数据库操作失败',
-      ...(process.env.NODE_ENV === 'development' && { 
-        error: err.message,
-        sql: err.sql 
-      })
+      message: '数据库操作失败'
     })
   }
 
@@ -61,17 +58,13 @@ module.exports = (err, req, res, next) => {
     })
   }
 
-  // 默认错误
+  // 默认错误：stack 与原始 error 对象已记入上面的服务端日志，响应体只保留可读信息
   const statusCode = err.statusCode || 500
   const message = err.message || '服务器内部错误'
 
   res.status(statusCode).json({
     success: false,
-    message: message,
-    ...(process.env.NODE_ENV === 'development' && { 
-      stack: err.stack,
-      details: err 
-    })
+    message: message
   })
 }
 

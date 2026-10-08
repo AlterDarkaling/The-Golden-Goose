@@ -10,32 +10,6 @@ const { User } = require('../models')
  */
 exports.authenticateToken = async (req, res, next) => {
   try {
-    // 开发环境：允许无Token访问（方便测试）
-    if (process.env.NODE_ENV === 'development') {
-      // 从请求头获取token
-      const authHeader = req.headers['authorization']
-      const token = authHeader && authHeader.split(' ')[1]
-      
-      if (!token) {
-        // 开发环境：创建或使用默认测试用户
-        let testUser = await User.findOne({ where: { openid: 'dev_test_user' } })
-        
-        if (!testUser) {
-          testUser = await User.create({
-            openid: 'dev_test_user',
-            nickname: '开发测试用户',
-            wechat_avatar: '',
-            status: 'active'
-          })
-          console.log('✅ 创建开发测试用户，ID:', testUser.id)
-        }
-        
-        req.user = testUser
-        req.userId = testUser.id
-        return next()
-      }
-    }
-    
     // 生产环境或有Token时：正常验证
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]

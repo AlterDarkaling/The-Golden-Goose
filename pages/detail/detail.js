@@ -1,3 +1,6 @@
+const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')
+
 Page({
   data: {
     type: 'asset',
@@ -90,40 +93,30 @@ Page({
   },
 
   onShow() {
-    // 页面显示时重新加载数据，确保从编辑页面返回后数据是最新的
+    // 页面显示时重新从云端加载，确保从编辑页返回后数据是最新的
     if (this.data.itemId) {
-      // 获取最新数据并比较是否有变化
-      const dataKey = this.data.type === 'asset' ? 'assets_data' : 'liabilities_data'
-      const items = wx.getStorageSync(dataKey) || []
-      const latestItem = items.find(item => item.id === this.data.itemId)
-      
-      // 如果数据存在且与当前显示的数据不同，则重新加载
-      if (latestItem && (!this.data.itemData || 
-          latestItem.currentValue !== this.data.itemData.currentValue ||
-          latestItem.originalValue !== this.data.itemData.originalValue ||
-          latestItem.name !== this.data.itemData.name)) {
-        this.loadItemData()
-      } else if (!latestItem) {
-        // 如果数据被删除了，返回上一页
-        wx.showToast({
-          title: '数据已被删除',
-          icon: 'none'
-        })
-        setTimeout(() => {
-          wx.navigateBack()
-        }, 1500)
-      }
+      this.loadItemData()
     }
   },
 
-  loadItemData() {
+  // 按 id 取记录：URL 参数是字符串而后端 id 是数字，统一转字符串比较
+  async fetchItemFromCloud() {
+    const itemId = String(this.data.itemId)
+    const items = this.data.type === 'asset'
+      ? await SmartStorage.getAssets()
+      : await SmartStorage.getLiabilities()
+
+    return items.find(item => String(item.id) === itemId)
+  },
+
+  async loadItemData() {
     let item
-    if (this.data.type === 'asset') {
-      const assets = wx.getStorageSync('assets_data') || []
-      item = assets.find(a => a.id === this.data.itemId)
-    } else {
-      const liabilities = wx.getStorageSync('liabilities_data') || []
-      item = liabilities.find(l => l.id === this.data.itemId)
+    try {
+      item = await this.fetchItemFromCloud()
+    } catch (error) {
+      console.error('加载详情失败:', error)
+      wx.showToast({ title: '加载失败', icon: 'none' })
+      return
     }
 
     if (item) {
@@ -152,13 +145,15 @@ Page({
         ...item,
         costPriceText: this.formatNumber(item.costPrice || 0),
         currentPriceText: this.formatNumber(item.currentPrice || 0),
-        loanDateText: this.formatDate(item.loanDate),
+        loanDateText: this.formatDate(item.startDate || item.createDate || item.createTime),
         salaryStructureText: this.getSalaryStructureText(item.salaryStructure)
       }
       
       this.setData({
         itemData: formattedItemData,
-        displayAmount: this.formatNumber(this.data.type === 'asset' ? (item.currentValue || item.originalValue || item.initialValue) : (item.currentAmount || item.originalAmount || item.initialAmount)),
+        displayAmount: this.formatNumber(this.data.type === 'asset'
+          ? StorageManager.firstNumber(item.currentValue, item.originalValue, item.initialValue)
+          : StorageManager.firstNumber(item.currentAmount, item.initialAmount, item.originalAmount)),
         valueAnalysis: valueAnalysis,
         incomeAnalysis: item.categoryL1 === 'work_income' ? this.calculateIncomeAnalysis(item, valueAnalysis) : {},
         otherCosts: formattedOtherCosts,
@@ -195,8 +190,8 @@ Page({
 
     if (this.data.type === 'asset') {
       // 资产价值变化计算
-      const originalValue = item.originalValue || item.initialValue || 0
-      const currentValue = item.currentValue || originalValue
+      const originalValue = StorageManager.firstNumber(item.originalValue, item.initialValue)
+      const currentValue = StorageManager.firstNumber(item.currentValue, originalValue)
       if (originalValue > 0 && currentValue !== originalValue) {
         result.valueChange = currentValue - originalValue
         result.changePercent = ((result.valueChange / originalValue) * 100).toFixed(2)
@@ -220,9 +215,9 @@ Page({
       }
 
     } else {
-      // 负债计算
-      const originalAmount = item.originalAmount || item.initialAmount || 0
-      const currentAmount = item.currentAmount || originalAmount
+      // 负债计算：本金基准优先取后端补齐的 initialAmount
+      const originalAmount = StorageManager.firstNumber(item.initialAmount, item.originalAmount)
+      const currentAmount = StorageManager.firstNumber(item.currentAmount, originalAmount)
       if (originalAmount > 0) {
         result.paidAmount = originalAmount - currentAmount
         result.payoffProgress = ((result.paidAmount / originalAmount) * 100).toFixed(2)
@@ -232,7 +227,8 @@ Page({
       if (item.categoryL1 === 'long_term_liabilities') {
         result.showSpecialInfo = true
         result.specialInfoTitle = '贷款详情'
-        result.paymentTypeText = this.getPaymentTypeText(item.paymentType)
+        result.paymentTypeText = this.getPaymentTypeText(
+          (item.loanSchedule && item.loanSchedule.type) || item.paymentType)
         result.remainingMonths = this.calculateRemainingMonths(item)
       }
     }
@@ -240,42 +236,58 @@ Page({
     return result
   },
 
+  // 月折旧额：后端已算好并回写，页面直接取用
   calculateMonthlyDepreciation(item) {
-    if (!item.depreciationRate || item.depreciationRate <= 0) return 0
-    const originalValue = item.originalValue || item.initialValue || 0
-    return (originalValue * item.depreciationRate / 100) / 12
+    const fromBackend = StorageManager.firstNumber(item.monthlyDepreciation)
+    if (fromBackend > 0) return fromBackend
+
+    const originalValue = StorageManager.firstNumber(item.originalValue, item.initialValue)
+    const rate = StorageManager.firstNumber(item.depreciationRate)
+    return rate > 0 ? (originalValue * rate) / 12 : 0
   },
 
   calculateDepreciationInfo(item) {
-    if (!item.depreciationRate || item.depreciationRate <= 0) return null
-    
-    const originalValue = item.originalValue || item.initialValue || 0
-    const createDate = new Date(item.createDate || item.createTime)
-    const now = new Date()
-    const monthsUsed = Math.max(0, (now - createDate) / (1000 * 60 * 60 * 24 * 30))
-    
-    const monthlyDepreciation = (originalValue * item.depreciationRate / 100) / 12
-    const totalDepreciation = Math.min(monthlyDepreciation * monthsUsed, originalValue)
-    const depreciationPercent = ((totalDepreciation / originalValue) * 100).toFixed(1)
-    
+    const originalValue = StorageManager.firstNumber(item.originalValue, item.initialValue)
+    if (originalValue <= 0) return null
+
+    const totalDepreciation = StorageManager.firstNumber(
+      item.totalDepreciation,
+      Math.max(0, originalValue - StorageManager.firstNumber(item.currentValue, originalValue))
+    )
+    const monthlyDepreciation = this.calculateMonthlyDepreciation(item)
+
+    if (totalDepreciation <= 0 && monthlyDepreciation <= 0) return null
+
     return {
       totalDepreciation,
       monthlyDepreciation,
-      depreciationPercent,
+      depreciationPercent: ((totalDepreciation / originalValue) * 100).toFixed(1),
       // 预格式化文本
       totalDepreciationText: this.formatNumber(totalDepreciation),
       monthlyDepreciationText: this.formatNumber(monthlyDepreciation)
     }
   },
 
+  // 剩余期数：优先用还款计划（已还期数 = 计划总长 - 剩余条数），否则按起息日推算
   calculateRemainingMonths(item) {
-    if (!item.months || !item.loanDate) return 0
-    
-    const loanDate = new Date(item.loanDate)
+    const months = StorageManager.firstNumber(item.months)
+    if (months <= 0) return 0
+
+    const schedule = (item.loanSchedule && item.loanSchedule.schedule) || []
+    if (schedule.length > 0) {
+      const remaining = schedule.filter(row => Number(row.remainingPrincipal) > 0.005).length
+      return Math.min(months, remaining)
+    }
+
+    const startDate = item.startDate || item.createDate || item.createTime
+    if (!startDate) return months
+
+    const start = new Date(startDate)
+    if (Number.isNaN(start.getTime())) return months
+
     const now = new Date()
-    const monthsPassed = Math.max(0, (now - loanDate) / (1000 * 60 * 60 * 24 * 30))
-    
-    return Math.max(0, item.months - Math.floor(monthsPassed))
+    const passed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+    return Math.max(0, months - Math.max(0, passed))
   },
 
   getPaymentTypeText(paymentType) {
@@ -400,31 +412,33 @@ Page({
     wx.showModal({
       title: '确认删除',
       content: `确定要删除这个${this.data.type === 'asset' ? '资产' : '负债'}吗？`,
-      success: (res) => {
-        if (res.confirm) {
-          const StorageManager = require('../../utils/storage.js')
-          let success = false
-          
+      success: async (res) => {
+        if (!res.confirm) return
+
+        wx.showLoading({ title: '删除中...' })
+        try {
+          // 业务数据在云端：只删本地缓存会让记录在下次进入首页时原样复活
           if (this.data.type === 'asset') {
-            success = StorageManager.deleteAsset(this.data.itemId)
+            await SmartStorage.deleteAsset(this.data.itemId)
           } else {
-            success = StorageManager.deleteLiability(this.data.itemId)
+            await SmartStorage.deleteLiability(this.data.itemId)
           }
 
-          if (success) {
-            wx.showToast({
-              title: '删除成功',
-              icon: 'success'
-            })
-            setTimeout(() => {
-              wx.navigateBack()
-            }, 1500)
-          } else {
-            wx.showToast({
-              title: '删除失败，请重试',
-              icon: 'none'
-            })
-          }
+          wx.hideLoading()
+          wx.showToast({
+            title: '删除成功',
+            icon: 'success'
+          })
+          setTimeout(() => {
+            wx.navigateBack()
+          }, 1200)
+        } catch (error) {
+          console.error('删除失败:', error)
+          wx.hideLoading()
+          wx.showToast({
+            title: '删除失败，请重试',
+            icon: 'none'
+          })
         }
       }
     })
@@ -440,42 +454,23 @@ Page({
         return this.calculateWorkIncomeAnalysis(item)
       }
       
-      // 其他资产处理
-      const originalValue = item.originalValue || item.initialValue || 0
-      let currentValue = item.currentValue || 0
+      // 其他资产处理：现值/累计折旧一律取后端算出的字段，
+      // 页面不再用折旧率自行推演（否则与首页、报表口径不一致，且折旧率已是小数而非百分数）
+      const originalValue = StorageManager.firstNumber(item.originalValue, item.initialValue)
+      let currentValue = StorageManager.firstNumber(item.currentValue, originalValue)
       const daysUsed = this.getDaysUsed(item.createDate || item.createTime)
-      
-      // 计算累计折旧
-      let accumulatedDepreciation = 0
-      
-      // 对于消费型资产，优先使用用户设置的当前市值
-      if (item.categoryL2 === 'consumer_assets') {
-        if (currentValue > 0) {
-          // 用户手动设置了当前市值，直接使用
-          accumulatedDepreciation = Math.max(0, originalValue - currentValue)
-        } else if (item.depreciationRate && daysUsed > 0) {
-          // 用户未设置当前市值，使用折旧率计算
-          const monthlyRate = item.depreciationRate / 100 / 12
-          const monthsUsed = daysUsed / 30
-          const deprecatedValue = originalValue * (1 - Math.pow(1 - monthlyRate, monthsUsed))
-          accumulatedDepreciation = Math.min(deprecatedValue, originalValue * 0.95) // 最多折旧95%
-          currentValue = originalValue - accumulatedDepreciation
-        } else {
-          // 既没有当前市值也没有折旧率，使用原值
-          currentValue = originalValue
-        }
-      } else {
-        // 非消费型资产，使用原有逻辑
-        if (!currentValue) currentValue = originalValue
-        if (item.depreciationRate && daysUsed > 0) {
-          const monthlyRate = item.depreciationRate / 100 / 12
-          const monthsUsed = daysUsed / 30
-          const deprecatedValue = originalValue * (1 - Math.pow(1 - monthlyRate, monthsUsed))
-          accumulatedDepreciation = Math.min(deprecatedValue, originalValue * 0.95) // 最多折旧95%
-        } else {
-          // 如果没有设置折旧率，按购买价格和当前市值计算
-          accumulatedDepreciation = Math.max(0, originalValue - currentValue)
-        }
+
+      let accumulatedDepreciation = StorageManager.firstNumber(
+        item.totalDepreciation,
+        Math.max(0, originalValue - currentValue)
+      )
+
+      if (item.categoryL2 === 'consumer_assets' && accumulatedDepreciation > originalValue) {
+        accumulatedDepreciation = Math.max(0, originalValue - currentValue)
+      }
+
+      if (!currentValue && item.categoryL2 !== 'consumer_assets') {
+        currentValue = originalValue
       }
       
       // 计算运营成本
@@ -514,26 +509,18 @@ Page({
       result.valueChangeText = this.formatNumber(Math.abs(valueChange))
       result.depreciationPercentText = depreciationPercent.toFixed(1)
     } else {
-      const originalAmount = item.originalAmount || 0
-      const currentAmount = item.currentAmount || originalAmount
-      const paidAmount = originalAmount - currentAmount
+      const originalAmount = StorageManager.firstNumber(item.initialAmount, item.originalAmount)
+      const currentAmount = StorageManager.firstNumber(item.currentAmount, originalAmount)
+      const paidAmount = Math.max(0, originalAmount - currentAmount)
       
       result.originalAmount = originalAmount       // 借款金额
-      result.totalInterest = 0                    // 总利息
+      // 总利息/总还款额/剩余期数以后端还款计划为准，页面不再用单利近似
+      result.totalInterest = StorageManager.firstNumber(item.totalInterest)
+      result.totalAmount = StorageManager.firstNumber(item.totalAmount)
       result.paidAmount = paidAmount              // 已还本金
       result.remainingAmount = currentAmount      // 剩余本金
-      result.completionRate = originalAmount > 0 ? ((paidAmount / originalAmount) * 100).toFixed(1) : 0  // 完成度
-      result.remainingMonths = 0                  // 剩余期数
-      
-      // 计算总利息
-      if (item.annualRate && item.months) {
-        result.totalInterest = (originalAmount * item.annualRate / 100 * item.months / 12)
-      }
-      
-      // 计算剩余期数
-      if (item.monthlyPayment && item.monthlyPayment > 0 && currentAmount > 0) {
-        result.remainingMonths = Math.ceil(currentAmount / item.monthlyPayment)
-      }
+      result.completionRate = originalAmount > 0 ? ((paidAmount / originalAmount) * 100).toFixed(1) : '0.0'
+      result.remainingMonths = this.calculateRemainingMonths(item)
       
       // 格式化文本（直接在WXML中使用）
       result.originalAmountText = this.formatNumber(originalAmount)
@@ -889,23 +876,12 @@ Page({
       milestones: []
     }
 
-    const originalValue = item.originalValue || item.initialValue || 0
-    const depreciationRate = (item.depreciationRate || 20) / 100 // 年折旧率
-    let currentValue = item.currentValue || 0
-    
-    // 对于消费型资产，如果用户没有设置当前市值，使用折旧计算
-    if (item.categoryL2 === 'consumer_assets' && currentValue === 0) {
-      const currentMonthsUsed = this.getDaysUsed(item.createDate || item.createTime) / 30
-      if (depreciationRate > 0 && currentMonthsUsed > 0) {
-        const monthlyRate = depreciationRate / 12
-        const deprecatedValue = originalValue * Math.pow(1 - monthlyRate, currentMonthsUsed)
-        currentValue = Math.max(deprecatedValue, originalValue * 0.05) // 最低保留5%残值
-      } else {
-        currentValue = originalValue
-      }
-    } else if (currentValue === 0) {
-      currentValue = originalValue
-    }
+    const originalValue = StorageManager.firstNumber(item.originalValue, item.initialValue)
+    // 后端已把年折旧率归一为小数（0.4 = 40%），这里兼容历史百分数写法
+    const rawRate = StorageManager.firstNumber(item.depreciationRate)
+    const depreciationRate = rawRate > 1 ? rawRate / 100 : rawRate
+    // 现值直接取后端算出的结果，页面不再按 20% 默认率与 5% 残值自行推演
+    const currentValue = StorageManager.firstNumber(item.currentValue, originalValue)
     const purchaseTime = new Date(item.createDate || item.createTime)
     const now = new Date()
 

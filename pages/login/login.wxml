@@ -30,12 +30,19 @@
       </view>
     </view>
 
-    <!-- 进入程序按钮 -->
+    <!-- 演示身份选择：后端按昵称签发 JWT，两个身份的云端数据互不可见 -->
     <view class="enter-section">
-      <button class="enter-btn" bindtap="handleEnterApp">
-        开始使用
-      </button>
-      <view class="enter-tip">数据存储在本地，安全可靠</view>
+      <view class="identity-list">
+        <view class="identity-item" wx:for="{{demoIdentities}}" wx:key="nickname"
+              data-nickname="{{item.nickname}}" bindtap="handleEnterApp">
+          <view class="identity-main">
+            <text class="identity-name">{{item.nickname}}</text>
+            <text class="identity-desc">{{item.desc}}</text>
+          </view>
+          <text class="identity-action">{{logging ? '登录中…' : '进入 →'}}</text>
+        </view>
+      </view>
+      <view class="enter-tip">数据存于本地后端，不同登录身份之间完全隔离</view>
     </view>
   </view>
 </view>

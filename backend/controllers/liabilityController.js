@@ -5,6 +5,71 @@
 const { Liability } = require('../models')
 const LoanCalculator = require('../utils/loanCalculator')
 
+const LIABILITY_FIELDS = [
+  'name', 'category_l1', 'category_l2', 'category_l3',
+  'initial_amount', 'current_amount', 'original_amount',
+  'type', 'monthly_payment', 'annual_rate', 'months',
+  'total_interest', 'total_amount', 'loan_schedule',
+  'related_asset_id', 'status', 'create_date', 'start_date',
+  'notes', 'is_sample'
+]
+
+/**
+ * 字段是否显式给出：0 是有效值，不能用 || 判断
+ */
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj || {}, key)
+}
+
+/**
+ * 只保留模型中存在的字段，空字符串按未填写处理
+ */
+function pickLiabilityFields(data) {
+  const filtered = {}
+  LIABILITY_FIELDS.forEach(field => {
+    if (hasOwn(data, field)) {
+      filtered[field] = data[field] === '' ? null : data[field]
+    }
+  })
+  return filtered
+}
+
+/**
+ * 补齐本金基准并生成还款计划：
+ * 页面只填 originalAmount/currentAmount 时 initial_amount 会缺省为 0，摊还无从起步
+ */
+function applyLoanTerms(data, repaymentMethod) {
+  const principal = LoanCalculator.principalOf(data)
+  if (principal <= 0) return
+
+  if (!(Number(data.initial_amount) > 0)) data.initial_amount = principal
+  // 显式提交 0（已还清的负债）是有效值，只有缺字段才按本金兜底
+  if (!hasOwn(data, 'current_amount') || data.current_amount === null) data.current_amount = principal
+
+  if (!LoanCalculator.isAmortizing(data)) return
+
+  const schedule = LoanCalculator.buildSchedule(data, repaymentMethod)
+
+  if (!(Number(data.monthly_payment) > 0)) data.monthly_payment = schedule.monthlyPayment
+  data.total_interest = schedule.totalInterest
+  data.total_amount = schedule.totalAmount
+  data.loan_schedule = schedule
+}
+
+/**
+ * 按已过还款期数推进剩余本金与状态，有变化才写库
+ */
+async function syncLiabilityTiming(liability) {
+  const plain = liability.get({ plain: true })
+  const patch = LoanCalculator.advanceToNow(plain)
+
+  if (Object.keys(patch).length > 0) {
+    await liability.update(patch)
+  }
+
+  return Object.assign(plain, patch)
+}
+
 /**
  * 字段名映射：前端驼峰命名 → 后端下划线命名
  */
@@ -114,8 +179,14 @@ exports.getLiabilities = async (req, res, next) => {
       order: [['created_at', 'DESC']]
     })
 
+    // 剩余本金按已过还款期数推进（贷款余额随时间变化的核心）
+    const syncedLiabilities = []
+    for (const liability of liabilities) {
+      syncedLiabilities.push(await syncLiabilityTiming(liability))
+    }
+
     // 转换为前端格式
-    const frontendLiabilities = liabilities.map(l => mapBackendFields(l.toJSON()))
+    const frontendLiabilities = syncedLiabilities.map(l => mapBackendFields(l))
 
     res.json({
       success: true,
@@ -146,8 +217,8 @@ exports.getLiabilityById = async (req, res, next) => {
       })
     }
 
-    // 转换为前端格式
-    const frontendLiability = mapBackendFields(liability.toJSON())
+    // 转换为前端格式（同样按时间推进剩余本金）
+    const frontendLiability = mapBackendFields(await syncLiabilityTiming(liability))
 
     res.json({
       success: true,
@@ -165,58 +236,26 @@ exports.createLiability = async (req, res, next) => {
   try {
     const userId = req.userId
     let liabilityData = req.body
-    
-    console.log('📥 收到创建负债请求，原始数据:', JSON.stringify(liabilityData, null, 2))
+    const repaymentMethod = ['equal_payment', 'equal_principal'].includes(req.body.paymentType)
+      ? req.body.paymentType
+      : null
     
     // 字段名映射
     liabilityData = mapFrontendFields(liabilityData)
     
-    console.log('📥 映射后的数据:', JSON.stringify(liabilityData, null, 2))
-    
     // 只保留数据库模型中存在的字段
-    const allowedFields = [
-      'name', 'category_l1', 'category_l2', 'category_l3',
-      'initial_amount', 'current_amount', 'original_amount',
-      'type', 'monthly_payment', 'annual_rate', 'months',
-      'total_interest', 'total_amount', 'loan_schedule',
-      'related_asset_id', 'status', 'create_date', 'start_date',
-      'notes', 'is_sample'
-    ]
-    
-    const filteredData = {}
-    allowedFields.forEach(field => {
-      if (liabilityData.hasOwnProperty(field)) {
-        // 将空字符串转为 null
-        filteredData[field] = liabilityData[field] === '' ? null : liabilityData[field]
-      }
-    })
-    
-    console.log('📥 过滤后的数据:', JSON.stringify(filteredData, null, 2))
+    const filteredData = pickLiabilityFields(liabilityData)
 
-    // 如果是贷款类型，计算还款计划
-    if (filteredData.type === 'loan' && filteredData.annual_rate && filteredData.months) {
-      const loanInfo = LoanCalculator.calculateEqualPayment(
-        filteredData.initial_amount,
-        filteredData.annual_rate,
-        filteredData.months
-      )
-      
-      Object.assign(filteredData, {
-        monthly_payment: loanInfo.monthlyPayment,
-        total_interest: loanInfo.totalInterest,
-        total_amount: loanInfo.totalAmount,
-        loan_schedule: loanInfo.schedule,
-        current_amount: filteredData.initial_amount
-      })
-    }
+    // 补齐本金并生成还款计划（分期负债按年利率与期数摊还）
+    applyLoanTerms(filteredData, repaymentMethod)
 
     const liability = await Liability.create({
       ...filteredData,
       user_id: userId
     })
 
-    // 转换为前端格式
-    const frontendLiability = mapBackendFields(liability.toJSON())
+    // 转换为前端格式（起息日在过去的负债，创建响应即反映当前剩余本金）
+    const frontendLiability = mapBackendFields(await syncLiabilityTiming(liability))
 
     res.status(201).json({
       success: true,
@@ -236,27 +275,15 @@ exports.updateLiability = async (req, res, next) => {
     const userId = req.userId
     const liabilityId = req.params.id
     let updateData = req.body
+    const repaymentMethod = ['equal_payment', 'equal_principal'].includes(req.body.paymentType)
+      ? req.body.paymentType
+      : null
     
     // 字段名映射
     updateData = mapFrontendFields(updateData)
     
     // 只保留数据库模型中存在的字段
-    const allowedFields = [
-      'name', 'category_l1', 'category_l2', 'category_l3',
-      'initial_amount', 'current_amount', 'original_amount',
-      'type', 'monthly_payment', 'annual_rate', 'months',
-      'total_interest', 'total_amount', 'loan_schedule',
-      'related_asset_id', 'status', 'create_date', 'start_date',
-      'notes', 'is_sample'
-    ]
-    
-    const filteredData = {}
-    allowedFields.forEach(field => {
-      if (updateData.hasOwnProperty(field)) {
-        // 将空字符串转为 null
-        filteredData[field] = updateData[field] === '' ? null : updateData[field]
-      }
-    })
+    updateData = pickLiabilityFields(updateData)
 
     const liability = await Liability.findOne({
       where: { id: liabilityId, user_id: userId }
@@ -269,26 +296,27 @@ exports.updateLiability = async (req, res, next) => {
       })
     }
 
-    // 如果更新了贷款信息，重新计算
-    if (filteredData.type === 'loan' && (filteredData.annual_rate || filteredData.months)) {
-      const loanInfo = LoanCalculator.calculateEqualPayment(
-        filteredData.initial_amount || liability.initial_amount,
-        filteredData.annual_rate || liability.annual_rate,
-        filteredData.months || liability.months
-      )
-      
-      Object.assign(filteredData, {
-        monthly_payment: loanInfo.monthlyPayment,
-        total_interest: loanInfo.totalInterest,
-        total_amount: loanInfo.totalAmount,
-        loan_schedule: loanInfo.schedule
-      })
+    // 期数/利率/本金/还款方式任一变动都要重建还款计划，并据此刷新总利息与总还款额
+    const merged = Object.assign(liability.get({ plain: true }), updateData)
+    if (LoanCalculator.isAmortizing(merged)) {
+      const schedule = LoanCalculator.scheduleOf(merged, repaymentMethod || undefined)
+
+      updateData.loan_schedule = schedule
+      updateData.total_interest = schedule.totalInterest
+      updateData.total_amount = schedule.totalAmount
+
+      if (!(Number(updateData.monthly_payment) > 0)) {
+        updateData.monthly_payment = schedule.monthlyPayment
+      }
+      if (!(Number(updateData.initial_amount) > 0)) {
+        updateData.initial_amount = schedule.principal
+      }
     }
 
-    await liability.update(filteredData)
+    await liability.update(updateData)
 
     // 转换为前端格式
-    const frontendLiability = mapBackendFields(liability.toJSON())
+    const frontendLiability = mapBackendFields(await syncLiabilityTiming(liability))
 
     res.json({
       success: true,
@@ -345,10 +373,11 @@ exports.batchCreateLiabilities = async (req, res, next) => {
       })
     }
 
-    const processedLiabilities = liabilities.map(liabilityData => ({
-      ...liabilityData,
-      user_id: userId
-    }))
+    const processedLiabilities = liabilities.map(item => {
+      const liabilityData = pickLiabilityFields(mapFrontendFields(item))
+      applyLoanTerms(liabilityData, ['equal_payment', 'equal_principal'].includes(item.paymentType) ? item.paymentType : null)
+      return { ...liabilityData, user_id: userId }
+    })
 
     const createdLiabilities = await Liability.bulkCreate(processedLiabilities)
 

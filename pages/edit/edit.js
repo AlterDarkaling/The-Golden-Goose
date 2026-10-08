@@ -200,11 +200,6 @@ Page({
     currentStatusOptions: []
   },
 
-  // 计算属性：根据类型获取状态选项
-  getCurrentStatusOptions() {
-    return this.data.formData.type === 'asset' ? this.data.assetStatusOptions : this.data.liabilityStatusOptions
-  },
-
   // 设置主题
   setTheme(isDark) {
     try {
@@ -541,18 +536,25 @@ Page({
     })
   },
 
-  loadEditData() {
+  async loadEditData() {
     const { editId, type } = this.data
-    const dataKey = type === 'asset' ? 'assets_data' : 'liabilities_data'
-    
+
     try {
-      const items = wx.getStorageSync(dataKey) || []
-      const item = items.find(item => item.id === editId)
-      
+      // 编辑必须以云端记录为准：本地缓存既不随身份变化，也可能根本不存在该记录
+      const items = type === 'asset'
+        ? await SmartStorage.getAssets()
+        : await SmartStorage.getLiabilities()
+
+      const item = items.find(entry => String(entry.id) === String(editId))
+
       if (item) {
+        // 后端把年折旧率归一成了小数（0.4），表单按百分数展示（40）
+        const rate = StorageManager.firstNumber(item.depreciationRate, item.customDepreciationRate)
+
         this.setData({
           formData: {
             ...item,
+            depreciationRate: rate > 0 && rate <= 1 ? Math.round(rate * 1000) / 10 : (rate || ''),
             createDate: item.createDate || item.createTime?.split('T')[0] || this.data.formData.createDate,
             salaryHistory: item.salaryHistory || [] // 确保薪资历史数据被加载
           }
@@ -560,6 +562,11 @@ Page({
         
         // 设置分类索引
         this.setCategoryFromData(item.categoryL1, item.categoryL2)
+
+        // 编辑模式下同样要判定消费型资产，否则保存时会把 isDepreciable 写成 false、折旧标记丢失
+        this.setData({
+          isConsumerAsset: item.categoryL1 === 'physical_assets' && item.categoryL2 === 'consumer_assets'
+        })
         
         // 设置状态索引
         const statusIndex = this.data.currentStatusOptions.findIndex(option => option.value === item.status)
@@ -1013,7 +1020,7 @@ Page({
   },
 
   onStatusChange(e) {
-    const status = this.data.currentStatusOptions[e.detail.value]?.value || (this.data.formData.type === 'asset' ? 'active' : 'normal')
+    const status = this.data.currentStatusOptions[e.detail.value]?.value || (this.data.type === 'asset' ? 'active' : 'normal')
     this.setData({
       statusIndex: e.detail.value,
       'formData.status': status
@@ -1062,6 +1069,18 @@ Page({
   },
 
   // 表单验证
+  // 数值是否已填写：0 是合法输入（余额花光、免息、到期一次还本），只有空值/非数字算未填
+  isFilledNumber(value) {
+    if (value === 0 || value === '0') return true
+    if (value === '' || value === null || value === undefined) return false
+    return Number.isFinite(Number(value))
+  },
+
+  // 本金/成本类字段必须为正数
+  isPositiveNumber(value) {
+    return this.isFilledNumber(value) && Number(value) > 0
+  },
+
   validateForm() {
     const { formData, type } = this.data
     
@@ -1094,54 +1113,54 @@ Page({
       const l2 = formData.categoryL2
       
       // 统一获取原值（兼容旧字段）
-      const originalValue = formData.originalValue || formData.initialValue
+      const originalValue = StorageManager.firstNumber(formData.originalValue, formData.initialValue)
       
-      // 流动资产 - 现金：需要账户余额
+      // 流动资产 - 现金：需要账户余额（0 表示已花光，合法）
       if (l1 === 'current_assets' && l2 === 'cash_assets') {
-        if (!formData.currentValue) {
+        if (!this.isFilledNumber(formData.currentValue)) {
           wx.showToast({ title: '请输入账户余额', icon: 'error' })
           return false
         }
       }
       // 流动资产 - 短期理财：需要原值与年化收益率
       else if (l1 === 'current_assets' && l2 === 'short_term_investment') {
-        if (!originalValue) {
+        if (!this.isPositiveNumber(originalValue)) {
           wx.showToast({ title: '请输入购买成本', icon: 'error' })
           return false
         }
-        if (!formData.annualRate) {
+        if (!this.isFilledNumber(formData.annualRate)) {
           wx.showToast({ title: '请输入年化收益率', icon: 'error' })
           return false
         }
       }
       // 金融资产 - 股票/基金：原始成本 + 当前价格
       else if (l1 === 'financial_assets' && l2 === 'equity_fund') {
-        if (!originalValue || !formData.currentPrice) {
+        if (!this.isPositiveNumber(originalValue) || !this.isFilledNumber(formData.currentPrice)) {
           wx.showToast({ title: '请填写原始成本和当前价格', icon: 'error' })
           return false
         }
       }
       // 金融资产 - 固定收益：原始成本 + 年化收益率
       else if (l1 === 'financial_assets' && l2 === 'fixed_income') {
-        if (!originalValue || !formData.annualReturn) {
+        if (!this.isPositiveNumber(originalValue) || !this.isFilledNumber(formData.annualReturn)) {
           wx.showToast({ title: '请填写原始成本和年化收益率', icon: 'error' })
           return false
         }
       }
       // 其他资产 - 无形资产：需要原值与有效期
       else if (l1 === 'other_assets' && l2 === 'intangible_assets') {
-        if (!originalValue) {
+        if (!this.isPositiveNumber(originalValue)) {
           wx.showToast({ title: '请输入取得成本', icon: 'error' })
           return false
         }
-        if (!formData.usefulLife) {
+        if (!this.isPositiveNumber(formData.usefulLife)) {
           wx.showToast({ title: '请输入有效期(年)', icon: 'error' })
           return false
         }
       }
       // 其他资产 - 预付资产：需要原值与服务周期
       else if (l1 === 'other_assets' && l2 === 'prepaid_assets') {
-        if (!originalValue) {
+        if (!this.isPositiveNumber(originalValue)) {
           wx.showToast({ title: '请输入预付金额', icon: 'error' })
           return false
         }
@@ -1156,7 +1175,7 @@ Page({
           wx.showToast({ title: '请选择入职日期', icon: 'error' })
           return false
         }
-        if (!formData.monthlyIncome) {
+        if (!this.isFilledNumber(formData.monthlyIncome)) {
           wx.showToast({ title: '请输入当前月薪', icon: 'error' })
           return false
         }
@@ -1170,17 +1189,17 @@ Page({
       }
       // 增值型资产：需要原始价值 + 收入方式对应字段
       else if (l1 === 'physical_assets' && l2 === 'appreciating_assets') {
-        if (!originalValue) {
+        if (!this.isPositiveNumber(originalValue)) {
           wx.showToast({ title: '请输入原始价值', icon: 'error' })
           return false
         }
         if (formData.incomeType === 'monthly_income') {
-          if (!formData.monthlyIncome) {
+          if (!this.isFilledNumber(formData.monthlyIncome)) {
             wx.showToast({ title: '请输入月收入', icon: 'error' })
             return false
           }
         } else if (formData.incomeType === 'annual_return') {
-          if (!formData.annualReturn) {
+          if (!this.isFilledNumber(formData.annualReturn)) {
             wx.showToast({ title: '请输入年化收益率', icon: 'error' })
             return false
           }
@@ -1188,14 +1207,14 @@ Page({
       }
       // 其余资产（含消费型实物）：至少需要原始价值
       else {
-        if (!originalValue) {
+        if (!this.isPositiveNumber(originalValue)) {
           wx.showToast({ title: '请输入原始价值', icon: 'error' })
           return false
         }
       }
       // 不再强制校验月收入/年化收益率
     } else {
-      if (!formData.originalAmount) {
+      if (!this.isPositiveNumber(formData.originalAmount)) {
         wx.showToast({
           title: '请输入原始金额',
           icon: 'error'
@@ -1203,7 +1222,8 @@ Page({
         return false
       }
       
-      if (!formData.monthlyPayment) {
+      // 月还款额允许为 0（到期一次性还本）
+      if (!this.isFilledNumber(formData.monthlyPayment)) {
         wx.showToast({
           title: '请输入月还款额（现金流核心）',
           icon: 'error'
@@ -1213,8 +1233,8 @@ Page({
       
       // 根据负债类型进行特殊验证
       if (formData.categoryL1 === 'long_term_liabilities') {
-        // 长期负债：需要年利率
-        if (!formData.annualRate) {
+        // 长期负债：需要年利率（0 表示免息）
+        if (!this.isFilledNumber(formData.annualRate)) {
           wx.showToast({
             title: '请输入年利率',
             icon: 'error'
@@ -1224,8 +1244,8 @@ Page({
       } else if (formData.categoryL1 === 'current_liabilities') {
         // 流动负债的特殊验证
         if (formData.categoryL2 === 'short_term_loan') {
-          // 短期借款：需要日利率
-          if (!formData.dailyRate) {
+          // 短期借款：需要日利率（0 表示免息）
+          if (!this.isFilledNumber(formData.dailyRate)) {
             wx.showToast({
               title: '请输入日利率',
               icon: 'error'
@@ -1271,24 +1291,22 @@ Page({
       // 工作收入：计算历史实际收入作为价值
       const startDate = new Date(formData.startDate)
       const currentDate = new Date()
+      // 未填入职日期时按 0 个月计，避免 NaN 写进后端
+      const hasStartDate = !Number.isNaN(startDate.getTime())
       const yearsDiff = currentDate.getFullYear() - startDate.getFullYear()
       const monthsDiff = currentDate.getMonth() - startDate.getMonth()
-      const totalMonths = Math.max(0, yearsDiff * 12 + monthsDiff)
+      const totalMonths = hasStartDate ? Math.max(0, yearsDiff * 12 + monthsDiff) : 0
       
-      const currentSalary = parseFloat(formData.monthlyIncome) || 0
-      const initialSalary = parseFloat(formData.initialSalary) || currentSalary
+      const currentSalary = StorageManager.firstNumber(formData.monthlyIncome)
+      const initialSalary = StorageManager.firstNumber(formData.initialSalary, currentSalary)
       const averageSalary = (initialSalary + currentSalary) / 2
       
       finalOriginalValue = 0 // 工作收入没有初始投入成本
       finalCurrentValue = totalMonths * averageSalary // 历史累计收入
     } else {
-      // 其他资产按原逻辑处理
-      finalOriginalValue = parseFloat(formData.originalValue || formData.initialValue) || 0
-      finalCurrentValue = (formData.categoryL1 === 'current_assets' && formData.categoryL2 === 'cash_assets')
-        ? (parseFloat(formData.currentValue) || 0)
-        : (formData.categoryL1 === 'physical_assets' && formData.categoryL2 === 'consumer_assets')
-        ? (parseFloat(formData.currentValue) || 0) // 消费型资产：可以为0，表示使用折旧计算
-        : (parseFloat(formData.currentValue) || parseFloat(formData.originalValue || formData.initialValue) || 0)
+      // 其他资产：原值取原始价值（缺省用初始价值），现值以页面填写为准，未填写时等于原值
+      finalOriginalValue = StorageManager.firstNumber(formData.originalValue, formData.initialValue)
+      finalCurrentValue = StorageManager.firstNumber(formData.currentValue, finalOriginalValue)
     }
 
     const saveData = {
@@ -1302,16 +1320,20 @@ Page({
       currentValue: finalCurrentValue,
       monthlyIncome: actualMonthlyIncome,
       dailyIncome: actualMonthlyIncome / 30,
-      annualReturn: parseFloat(formData.annualReturn) || 0,
-      originalAmount: parseFloat(formData.originalAmount) || 0,
-      currentAmount: parseFloat(formData.currentAmount) || parseFloat(formData.originalAmount) || 0,
+      annualReturn: StorageManager.firstNumber(formData.annualReturn),
+      // 负债三金额：原始/初始/当前余额，0（已还清）必须原样提交
+      originalAmount: StorageManager.firstNumber(formData.originalAmount, formData.currentAmount),
+      initialAmount: StorageManager.firstNumber(formData.initialAmount, formData.originalAmount, formData.currentAmount),
+      currentAmount: StorageManager.firstNumber(formData.currentAmount, formData.originalAmount, formData.initialAmount),
       monthlyPayment: actualMonthlyPayment,
       dailyCost: this.calculateLiabilityDailyCost(formData, actualMonthlyPayment),
-      annualRate: parseFloat(formData.annualRate) || 0,
+      annualRate: StorageManager.firstNumber(formData.annualRate),
+      months: StorageManager.firstNumber(formData.months),
       // 消费性资产特有字段
       monthlyOperatingCost: monthlyOperatingCost,
-      depreciationRate: parseFloat(formData.depreciationRate) || 0,
+      depreciationRate: StorageManager.firstNumber(formData.depreciationRate),
       isConsumerAsset: isConsumerAsset,
+      isDepreciable: isConsumerAsset,
       // 工作收入特有字段
       startDate: formData.startDate || '',
       initialSalary: parseFloat(formData.initialSalary) || 0,

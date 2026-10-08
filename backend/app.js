@@ -53,7 +53,10 @@ if (process.env.NODE_ENV === 'development') {
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
   max: 100, // 限制100个请求
-  message: '请求过于频繁，请稍后再试'
+  message: '请求过于频繁，请稍后再试',
+  // 本地开发/演示环境不限流：每次进页面都要拉取列表，同一台机器共用一个计数，
+  // 答辩演示过程中很容易触发 429 导致 App 直接不可用
+  skip: () => process.env.NODE_ENV === 'development'
 })
 app.use('/api/', limiter)
 
@@ -95,9 +98,11 @@ async function startServer() {
     await db.authenticate()
     console.log('✅ 数据库连接成功')
 
-    // 同步数据库模型（开发环境）
+    // 同步数据库模型：仅创建缺失的表。
+    // 不要用 { alter: true }：它每次启动都会给 unique 列重新追加唯一索引，
+    // MySQL 单表索引上限 64，累积若干次启动后服务会直接起不来（ER_TOO_MANY_KEYS）
     if (process.env.NODE_ENV === 'development') {
-      await db.sync({ alter: true })
+      await db.sync()
       console.log('✅ 数据库模型同步完成')
     }
 

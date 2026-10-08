@@ -189,7 +189,7 @@ Page({
 
     let depreciationExpenses = 0
     assets.forEach(a => {
-      if (a.categoryL1 === 'physical_assets' && a.categoryL2 === 'consumer_assets') {
+      if (this.isDepreciableAsset(a)) {
         depreciationExpenses += this.computeMonthlyDepreciation(a)
       }
     })
@@ -408,28 +408,37 @@ Page({
     })
   },
 
-  // 简化月折旧计算（百分比或小数折旧率皆可）
+  // 月折旧额：后端已算出并回写，优先取用；缺失时按折旧率兜底（兼容百分数写法）
   computeMonthlyDepreciation(asset) {
+    const fromBackend = this.firstNumber(asset.monthlyDepreciation, 0)
+    if (fromBackend > 0) return fromBackend
+
     const original = this.firstNumber(asset.originalValue, asset.initialValue, 0)
-    let rate = this.firstNumber(asset.depreciationRate, 10) // 默认10%
-    // 支持 0.1 或 10 两种表达
+    let rate = this.firstNumber(asset.depreciationRate, asset.customDepreciationRate, 0.1)
     rate = rate > 1 ? rate / 100 : rate
     return this.roundToPrecision(original * rate / 12)
+  },
+
+  isDepreciableAsset(asset) {
+    if (!asset) return false
+    if (asset.isDepreciable) return true
+    return asset.categoryL1 === 'physical_assets' && asset.categoryL2 === 'consumer_assets'
   },
 
   // 构建折旧明细（简版）
   buildDepreciationList(assets) {
     const list = []
     assets.forEach(a => {
-      if (a && a.categoryL1 === 'physical_assets' && a.categoryL2 === 'consumer_assets') {
-        const original = this.firstNumber(a.originalValue, a.initialValue, a.currentValue, 0)
-        let rate = this.firstNumber(a.depreciationRate, 10)
+      if (this.isDepreciableAsset(a)) {
+        const original = this.firstNumber(a.initialValue, a.originalValue, a.currentValue, 0)
+        // 现值与累计折旧取后端结果，页面不再自行按年限推演
+        const currentValueNum = this.roundToPrecision(this.firstNumber(a.currentValue, original))
+        const monthlyDep = this.computeMonthlyDepreciation(a)
+        const totalDep = this.roundToPrecision(
+          this.firstNumber(a.totalDepreciation, Math.max(0, original - currentValueNum)))
+        let rate = this.firstNumber(a.depreciationRate, a.customDepreciationRate, 0.1)
         rate = rate > 1 ? rate / 100 : rate
         const months = this.computeUsageMonths(a)
-        const years = months / 12
-        const currentValueNum = this.roundToPrecision(original * Math.pow(1 - rate, years))
-        const monthlyDep = this.roundToPrecision(original * rate / 12)
-        const totalDep = this.roundToPrecision(original - currentValueNum)
 
         list.push({
           name: a.name || '消费性资产',

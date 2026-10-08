@@ -5,6 +5,25 @@
 const { SavingGoal } = require('../models')
 
 /**
+ * 完成状态由金额推出：存满即 completed，之后金额回落则退回 active。
+ * 用户主动取消（cancelled）的目标不擅自改回。
+ */
+function resolveGoalStatus(goal) {
+  const target = Number(goal.target_amount) || 0
+  const current = Number(goal.current_amount) || 0
+
+  if (goal.status === 'cancelled') return null
+  if (target > 0 && current >= target) return goal.status === 'completed' ? null : 'completed'
+  return goal.status === 'completed' ? 'active' : null
+}
+
+async function syncGoalStatus(goal) {
+  const status = resolveGoalStatus(goal)
+  if (status) await goal.update({ status })
+  return goal
+}
+
+/**
  * 字段名映射：前端驼峰命名 → 后端下划线命名
  */
 function mapFrontendFields(data) {
@@ -68,8 +87,11 @@ exports.getSavingGoals = async (req, res, next) => {
       order: [['created_at', 'DESC']]
     })
 
-    // 转换为前端格式
-    const frontendGoals = goals.map(goal => mapBackendFields(goal.toJSON()))
+    // 存满的目标在读取时刷新状态，与折旧/贷款余额同为"读时推进"
+    const frontendGoals = []
+    for (const goal of goals) {
+      frontendGoals.push(mapBackendFields((await syncGoalStatus(goal)).toJSON()))
+    }
 
     res.json({
       success: true,
@@ -101,7 +123,7 @@ exports.getSavingGoalById = async (req, res, next) => {
     }
 
     // 转换为前端格式
-    const frontendGoal = mapBackendFields(goal.toJSON())
+    const frontendGoal = mapBackendFields((await syncGoalStatus(goal)).toJSON())
 
     res.json({
       success: true,
@@ -119,13 +141,9 @@ exports.createSavingGoal = async (req, res, next) => {
   try {
     const userId = req.userId
     let goalData = req.body
-    
-    console.log('📥 收到创建储蓄目标请求，原始数据:', JSON.stringify(goalData, null, 2))
-    
+
     // 字段名映射
     goalData = mapFrontendFields(goalData)
-    
-    console.log('📥 映射后的数据:', JSON.stringify(goalData, null, 2))
     
     // 只保留数据库模型中存在的字段
     const allowedFields = [
@@ -141,16 +159,14 @@ exports.createSavingGoal = async (req, res, next) => {
         filteredData[field] = goalData[field] === '' ? null : goalData[field]
       }
     })
-    
-    console.log('📥 过滤后的数据:', JSON.stringify(filteredData, null, 2))
 
     const goal = await SavingGoal.create({
       ...filteredData,
       user_id: userId
     })
 
-    // 转换为前端格式
-    const frontendGoal = mapBackendFields(goal.toJSON())
+    // 转换为前端格式（创建时若已存满也会立刻标记完成）
+    const frontendGoal = mapBackendFields((await syncGoalStatus(goal)).toJSON())
 
     res.status(201).json({
       success: true,
@@ -171,8 +187,6 @@ exports.updateSavingGoal = async (req, res, next) => {
     const userId = req.userId
     const goalId = req.params.id
     let updateData = req.body
-    
-    console.log('📥 收到更新储蓄目标请求:', JSON.stringify(updateData, null, 2))
     
     // 字段名映射
     updateData = mapFrontendFields(updateData)
@@ -206,7 +220,7 @@ exports.updateSavingGoal = async (req, res, next) => {
     await goal.update(filteredData)
 
     // 转换为前端格式
-    const frontendGoal = mapBackendFields(goal.toJSON())
+    const frontendGoal = mapBackendFields((await syncGoalStatus(goal)).toJSON())
 
     res.json({
       success: true,

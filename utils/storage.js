@@ -5,6 +5,29 @@ const StorageManager = {
   liabilitiesKey: 'liabilities_data',
   settingsKey: 'app_settings',
 
+  // 数值工具：0 是合法金额，取值时不能用 `a || b`（会把已还清贷款、已折尽资产顶回原始金额）
+  firstNumber(...values) {
+    for (const value of values) {
+      const num = typeof value === 'number' ? value : parseFloat(value)
+      if (Number.isFinite(num)) return num
+    }
+    return 0
+  },
+
+  // 净资产 = 资产现值合计 - 负债余额合计；工作收入不计入资产，与首页口径一致
+  netWorthOf(assets, liabilities) {
+    const totalAssets = (assets || []).reduce((sum, asset) => {
+      if (asset.categoryL1 === 'work_income') return sum
+      return sum + this.firstNumber(asset.currentValue, asset.initialValue)
+    }, 0)
+
+    const totalLiabilities = (liabilities || []).reduce((sum, item) => {
+      return sum + this.firstNumber(item.currentAmount, item.initialAmount)
+    }, 0)
+
+    return totalAssets - totalLiabilities
+  },
+
   // 用户相关
   saveUser(userInfo) {
     try {

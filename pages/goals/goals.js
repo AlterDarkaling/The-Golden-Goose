@@ -231,7 +231,7 @@ Page({
   // 显示建议详情
   showAdviceDetail(e) {
     const { goalId } = e.currentTarget.dataset
-    const goal = this.data.goals.find(g => g.id === goalId)
+    const goal = this.data.goals.find(g => String(g.id) === String(goalId))
     
     if (!goal || !goal.analysis) return
 
@@ -342,7 +342,7 @@ Page({
   // 显示更新进度界面
   updateProgress(e) {
     const { goalId } = e.currentTarget.dataset
-    const goal = this.data.goals.find(g => g.id === goalId)
+    const goal = this.data.goals.find(g => String(g.id) === String(goalId))
     
     if (!goal) return
 
@@ -412,7 +412,7 @@ Page({
   async updateGoalAmount(goalId, newAmount) {
     try {
       const goals = await SmartStorage.getSavingGoals()
-      const goal = goals.find(g => g.id === goalId)
+      const goal = goals.find(g => String(g.id) === String(goalId))
       
       if (goal) {
         goal.currentAmount = newAmount
@@ -442,7 +442,7 @@ Page({
   // 删除目标
   deleteGoal(e) {
     const { goalId } = e.currentTarget.dataset
-    const goal = this.data.goals.find(g => g.id === goalId)
+    const goal = this.data.goals.find(g => String(g.id) === String(goalId))
     
     wx.showModal({
       title: '确认删除',
@@ -466,7 +466,7 @@ Page({
   // 查看目标详情
   viewGoalDetail(e) {
     const { goalId } = e.currentTarget.dataset
-    const goal = this.data.goals.find(g => g.id === goalId)
+    const goal = this.data.goals.find(g => String(g.id) === String(goalId))
     
     if (!goal) return
 

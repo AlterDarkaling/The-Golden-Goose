@@ -7,6 +7,45 @@ const DepreciationEngine = require('../utils/depreciation')
 const { Op } = require('sequelize')
 
 /**
+ * 字段是否存在于待写入数据中（显式传 0 与未传字段语义不同，不能用 || 判断）
+ */
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj || {}, key)
+}
+
+/**
+ * 只保留模型中存在的字段，空字符串按未填写处理
+ */
+function pickAssetFields(data) {
+  const allowedFields = [
+    'name', 'category_l1', 'category_l2', 'category_l3',
+    'initial_value', 'current_value', 'original_value',
+    'is_depreciable', 'depreciation_rate', 'custom_depreciation_rate',
+    'total_depreciation', 'monthly_depreciation', 'depreciation_ratio',
+    'last_depreciation_update', 'monthly_income', 'monthly_operating_cost',
+    'salary_structure', 'daily_work_hours', 'weekly_work_days',
+    'working_months_per_year', 'fixed_allowances', 'start_date', 'end_date',
+    'status', 'create_date', 'purchase_date', 'notes',
+    'purchase_method', 'related_loan_id', 'is_sample'
+  ]
+
+  const filtered = {}
+  allowedFields.forEach(field => {
+    if (hasOwn(data, field)) {
+      filtered[field] = data[field] === '' ? null : data[field]
+    }
+  })
+  return filtered
+}
+
+/**
+ * 折旧重算后的现值是否真的变了（DECIMAL 以字符串返回，需数值比较，否则每次读取都会写库）
+ */
+function currentValueChanged(before, after) {
+  return Number(before) !== Number(after)
+}
+
+/**
  * 字段名映射：前端驼峰命名 → 后端下划线命名
  */
 function mapFrontendFields(data) {
@@ -155,18 +194,19 @@ exports.getAssets = async (req, res, next) => {
     const assetsData = assets.map(asset => asset.toJSON())
     const updatedAssets = DepreciationEngine.batchUpdateDepreciation(assetsData)
 
-    // 批量更新数据库（只更新有折旧的资产）
+    // 折旧随时间推进后回写数据库（仅在现值确实变化时写，避免每次读取都写库）
     for (let i = 0; i < updatedAssets.length; i++) {
-      if (updatedAssets[i].current_value !== assetsData[i].current_value) {
+      if (currentValueChanged(assetsData[i].current_value, updatedAssets[i].current_value)) {
         await Asset.update(
           {
             current_value: updatedAssets[i].current_value,
             total_depreciation: updatedAssets[i].total_depreciation,
             monthly_depreciation: updatedAssets[i].monthly_depreciation,
             depreciation_ratio: updatedAssets[i].depreciation_ratio,
+            depreciation_rate: updatedAssets[i].depreciation_rate,
             last_depreciation_update: updatedAssets[i].last_depreciation_update
           },
-          { where: { id: updatedAssets[i].id } }
+          { where: { id: updatedAssets[i].id, user_id: userId } }
         )
       }
     }
@@ -207,12 +247,13 @@ exports.getAssetById = async (req, res, next) => {
     const assetData = asset.toJSON()
     const [updatedAsset] = DepreciationEngine.batchUpdateDepreciation([assetData])
 
-    if (updatedAsset.current_value !== assetData.current_value) {
+    if (currentValueChanged(assetData.current_value, updatedAsset.current_value)) {
       await asset.update({
         current_value: updatedAsset.current_value,
         total_depreciation: updatedAsset.total_depreciation,
         monthly_depreciation: updatedAsset.monthly_depreciation,
         depreciation_ratio: updatedAsset.depreciation_ratio,
+        depreciation_rate: updatedAsset.depreciation_rate,
         last_depreciation_update: new Date()
       })
     }
@@ -243,46 +284,22 @@ exports.createAsset = async (req, res, next) => {
     assetData = mapFrontendFields(assetData)
     
     // 只保留数据库模型中存在的字段
-    const allowedFields = [
-      'name', 'category_l1', 'category_l2', 'category_l3',
-      'initial_value', 'current_value', 'original_value',
-      'is_depreciable', 'depreciation_rate', 'custom_depreciation_rate',
-      'total_depreciation', 'monthly_depreciation', 'depreciation_ratio',
-      'last_depreciation_update', 'monthly_income', 'monthly_operating_cost',
-      'salary_structure', 'daily_work_hours', 'weekly_work_days',
-      'working_months_per_year', 'fixed_allowances', 'start_date', 'end_date',
-      'status', 'create_date', 'purchase_date', 'notes',
-      'purchase_method', 'related_loan_id', 'is_sample'
-    ]
-    
-    const filteredData = {}
-    allowedFields.forEach(field => {
-      if (assetData.hasOwnProperty(field)) {
-        // 将空字符串转为 null
-        filteredData[field] = assetData[field] === '' ? null : assetData[field]
-      }
-    })
+    const filteredData = pickAssetFields(assetData)
     
     assetData = filteredData
     
     console.log('📥 映射后的数据:', JSON.stringify(assetData, null, 2))
 
     // 处理消费性资产的折旧计算
-    // 判断是否需要折旧：consumer_asset 或 physical_assets 下的 consumer_assets
-    const needsDepreciation = 
-      assetData.category_l1 === 'consumer_asset' ||
-      (assetData.category_l1 === 'physical_assets' && assetData.category_l2 === 'consumer_assets') ||
-      assetData.category_l2 === 'mobile_phone' ||
-      assetData.category_l2 === 'computer_digital' ||
-      assetData.category_l2 === 'home_appliances'
-    
-    if (needsDepreciation) {
-      const depreciationData = DepreciationEngine.calculateCurrentValue(
-        assetData.initial_value,
-        assetData.create_date || new Date().toISOString().split('T')[0],
-        assetData.custom_depreciation_rate,
-        assetData.category_l2
-      )
+    if (DepreciationEngine.needsDepreciation(assetData)) {
+      const depreciationData = DepreciationEngine.calculateCurrentValue({
+        initialValue: DepreciationEngine.initialValueOf(assetData),
+        purchaseDate: assetData.create_date || assetData.purchase_date || new Date().toISOString().split('T')[0],
+        customRate: assetData.custom_depreciation_rate,
+        rate: assetData.depreciation_rate,
+        categoryL2: assetData.category_l2,
+        categoryL3: assetData.category_l3
+      })
       
       Object.assign(assetData, {
         current_value: depreciationData.currentValue,
@@ -293,7 +310,8 @@ exports.createAsset = async (req, res, next) => {
         is_depreciable: true,
         last_depreciation_update: new Date()
       })
-    } else {
+    } else if (!hasOwn(assetData, 'current_value')) {
+      // 非折旧资产：客户端未给出现值时按初始价值入账（显式传 0 视为有效值）
       assetData.current_value = assetData.initial_value
     }
 
@@ -328,27 +346,7 @@ exports.updateAsset = async (req, res, next) => {
     updateData = mapFrontendFields(updateData)
     
     // 只保留数据库模型中存在的字段
-    const allowedFields = [
-      'name', 'category_l1', 'category_l2', 'category_l3',
-      'initial_value', 'current_value', 'original_value',
-      'is_depreciable', 'depreciation_rate', 'custom_depreciation_rate',
-      'total_depreciation', 'monthly_depreciation', 'depreciation_ratio',
-      'last_depreciation_update', 'monthly_income', 'monthly_operating_cost',
-      'salary_structure', 'daily_work_hours', 'weekly_work_days',
-      'working_months_per_year', 'fixed_allowances', 'start_date', 'end_date',
-      'status', 'create_date', 'purchase_date', 'notes',
-      'purchase_method', 'related_loan_id', 'is_sample'
-    ]
-    
-    const filteredData = {}
-    allowedFields.forEach(field => {
-      if (updateData.hasOwnProperty(field)) {
-        // 将空字符串转为 null
-        filteredData[field] = updateData[field] === '' ? null : updateData[field]
-      }
-    })
-    
-    updateData = filteredData
+    updateData = pickAssetFields(updateData)
 
     const asset = await Asset.findOne({
       where: { id: assetId, user_id: userId }
@@ -362,23 +360,27 @@ exports.updateAsset = async (req, res, next) => {
     }
 
     // 如果是消费性资产，重新计算折旧
-    const categoryL1 = updateData.category_l1 || asset.category_l1
-    const categoryL2 = updateData.category_l2 || asset.category_l2
+    // 分类与购买日期允许单独更新，未提供的字段沿用库中原值
+    const mergedForCheck = {
+      is_depreciable: hasOwn(updateData, 'is_depreciable') ? updateData.is_depreciable : asset.is_depreciable,
+      category_l1: hasOwn(updateData, 'category_l1') ? updateData.category_l1 : asset.category_l1,
+      category_l2: hasOwn(updateData, 'category_l2') ? updateData.category_l2 : asset.category_l2
+    }
+    const categoryL2 = mergedForCheck.category_l2
+    const categoryL3 = hasOwn(updateData, 'category_l3') ? updateData.category_l3 : asset.category_l3
     
-    const needsDepreciation = 
-      categoryL1 === 'consumer_asset' ||
-      (categoryL1 === 'physical_assets' && categoryL2 === 'consumer_assets') ||
-      categoryL2 === 'mobile_phone' ||
-      categoryL2 === 'computer_digital' ||
-      categoryL2 === 'home_appliances'
-    
-    if (needsDepreciation) {
-      const depreciationData = DepreciationEngine.calculateCurrentValue(
-        updateData.initial_value || asset.initial_value,
-        updateData.create_date || asset.create_date,
-        updateData.custom_depreciation_rate || asset.custom_depreciation_rate,
-        categoryL2
-      )
+    if (DepreciationEngine.needsDepreciation(mergedForCheck)) {
+      const depreciationData = DepreciationEngine.calculateCurrentValue({
+        initialValue: DepreciationEngine.initialValueOf({
+          initial_value: hasOwn(updateData, 'initial_value') ? updateData.initial_value : asset.initial_value,
+          original_value: hasOwn(updateData, 'original_value') ? updateData.original_value : asset.original_value
+        }),
+        purchaseDate: hasOwn(updateData, 'create_date') ? updateData.create_date : (asset.create_date || asset.purchase_date),
+        customRate: hasOwn(updateData, 'custom_depreciation_rate') ? updateData.custom_depreciation_rate : asset.custom_depreciation_rate,
+        rate: hasOwn(updateData, 'depreciation_rate') ? updateData.depreciation_rate : asset.depreciation_rate,
+        categoryL2,
+        categoryL3
+      })
       
       Object.assign(updateData, {
         current_value: depreciationData.currentValue,
@@ -452,14 +454,18 @@ exports.batchCreateAssets = async (req, res, next) => {
     }
 
     // 处理每个资产的折旧
-    const processedAssets = assets.map(assetData => {
-      if (assetData.category_l1 === 'consumer_asset') {
-        const depreciationData = DepreciationEngine.calculateCurrentValue(
-          assetData.initial_value,
-          assetData.create_date || new Date().toISOString().split('T')[0],
-          assetData.custom_depreciation_rate,
-          assetData.category_l2
-        )
+    const processedAssets = assets.map(item => {
+      const assetData = pickAssetFields(mapFrontendFields(item))
+
+      if (DepreciationEngine.needsDepreciation(assetData)) {
+        const depreciationData = DepreciationEngine.calculateCurrentValue({
+          initialValue: DepreciationEngine.initialValueOf(assetData),
+          purchaseDate: assetData.create_date || assetData.purchase_date || new Date().toISOString().split('T')[0],
+          customRate: assetData.custom_depreciation_rate,
+          rate: assetData.depreciation_rate,
+          categoryL2: assetData.category_l2,
+          categoryL3: assetData.category_l3
+        })
         
         return {
           ...assetData,
@@ -477,7 +483,7 @@ exports.batchCreateAssets = async (req, res, next) => {
       return {
         ...assetData,
         user_id: userId,
-        current_value: assetData.current_value || assetData.initial_value
+        current_value: hasOwn(assetData, 'current_value') ? assetData.current_value : assetData.initial_value
       }
     })
 

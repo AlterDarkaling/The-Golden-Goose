@@ -124,3 +124,50 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* 演示身份列表：点击进入对应账号 */
+.identity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.identity-item {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+.identity-item:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+.identity-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.identity-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.identity-desc {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.identity-action {
+  font-size: 24rpx;
+  color: #667eea;
+}
+

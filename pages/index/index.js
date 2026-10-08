@@ -1,8 +1,7 @@
 // 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
-const { SmartStorage } = require('../../utils/apiClient.js')  // 新增：云端API支持
+const { SmartStorage, APIClient } = require('../../utils/apiClient.js')  // 云端API支持
 const AccountingCategories = require('../../utils/accountingCategories.js')
-const DepreciationEngine = require('../../utils/depreciation.js')
 
 Page({
   data: {
@@ -233,7 +232,6 @@ Page({
     this.initCategories()
     this.checkLogin()
     this.loadData()
-    this.checkTutorial()
     // 初始化主题状态
     const app = getApp()
     const isDark = app.globalData.isDarkTheme || false
@@ -260,25 +258,20 @@ Page({
     }
     
     this.checkLogin()  // 重新检查登录状态和加载用户信息
-    this.loadData()
-    this.checkTutorial()  // 重新检查示例数据
+    const dataReady = this.loadData()  // 数据加载完成后由 loadData 触发教程检查
     
     // 检查是否有启动教程的全局标识
-    const shouldStartTutorial = getApp().globalData.startTutorial
-    console.log('检查启动教程标识:', shouldStartTutorial)
+    const shouldStartTutorial = app.globalData.startTutorial
     if (shouldStartTutorial) {
-      getApp().globalData.startTutorial = false  // 重置标识
-      console.log('准备启动教程，500ms后执行')
-      setTimeout(() => {
-        console.log('开始执行教程检查')
-        this.checkAndShowTutorial()
-      }, 500)
+      app.globalData.startTutorial = false  // 重置标识
+      // 等云端数据到位再判定，否则示例数据标记还没加载完，会被误判成"没有示例数据"
+      dataReady.then(() => this.checkAndShowTutorial())
     }
     
     // 检查是否有测试定位精度的全局标识
-    const shouldTestPositions = getApp().globalData.testTutorialPositions
+    const shouldTestPositions = app.globalData.testTutorialPositions
     if (shouldTestPositions) {
-      getApp().globalData.testTutorialPositions = false  // 重置标识
+      app.globalData.testTutorialPositions = false  // 重置标识
       console.log('⚠️ 启动开发者测试模式：自动测试教程定位')
       setTimeout(() => {
         this.startPositionTest()
@@ -317,9 +310,11 @@ Page({
 
   checkLogin() {
     const hasInitialized = wx.getStorageSync('app_initialized')
+    const token = APIClient.getToken()
     
-    if (!hasInitialized) {
-      // 未初始化，跳转到引导页
+    // 云端接口以 JWT 判定归属，缺 token 时所有请求都会 401，必须回登录页取身份
+    if (!hasInitialized || !token) {
+      // 未初始化或未登录，跳转到引导页
       wx.reLaunch({
         url: '/pages/login/login'
       })
@@ -360,8 +355,8 @@ Page({
       type: 'asset',
       typeText: asset.categoryL1 === 'work_income' ? '工作' : '资产',
       categoryName: self.getCategoryName(asset.categoryL1, asset.categoryL2, true),
-      displayAmount: self.formatNumber(asset.currentValue || asset.initialValue),
-      originalPrice: self.formatNumber(asset.originalValue || asset.initialValue || 0),
+      displayAmount: self.formatNumber(StorageManager.firstNumber(asset.currentValue, asset.initialValue)),
+      originalPrice: self.formatNumber(StorageManager.firstNumber(asset.originalValue, asset.initialValue)),
       // 计算实际月收入（针对工作收入）
       monthlyIncome: asset.categoryL1 === 'work_income' ? 
         self.calculateActualMonthlyIncome(asset) : asset.monthlyIncome,
@@ -373,7 +368,7 @@ Page({
       createTimeText: asset.categoryL1 === 'work_income' ? 
         self.formatWorkStartDate(asset) : StorageManager.formatPurchaseDate(asset.createDate, asset.createTime),
       // 排序用的数值字段
-      amountValue: asset.currentValue || asset.initialValue || 0,
+      amountValue: StorageManager.firstNumber(asset.currentValue, asset.initialValue),
       daysValue: self.calculateDaysSinceCreate(asset.createTime),
       purchaseDateValue: self.getPurchaseDateValue(asset.createDate, asset.createTime),
       dailyCostValue: asset.dailyIncome || 0 // 资产用每日收益
@@ -384,12 +379,12 @@ Page({
       type: 'liability',
       typeText: '负债',
       categoryName: self.getCategoryName(liability.categoryL1, liability.categoryL2, false),
-      displayAmount: self.formatNumber(liability.currentAmount || liability.initialAmount),
-      originalAmount: self.formatNumber(liability.originalAmount || liability.initialAmount || 0),
+      displayAmount: self.formatNumber(StorageManager.firstNumber(liability.currentAmount, liability.initialAmount)),
+      originalAmount: self.formatNumber(StorageManager.firstNumber(liability.originalAmount, liability.initialAmount)),
       statusText: self.getStatusText(liability.status),
       createTimeText: StorageManager.formatPurchaseDate(liability.createDate, liability.createTime),
       // 排序用的数值字段
-      amountValue: liability.currentAmount || liability.initialAmount || 0,
+      amountValue: StorageManager.firstNumber(liability.currentAmount, liability.initialAmount),
       daysValue: self.calculateDaysSinceCreate(liability.createTime),
       purchaseDateValue: self.getPurchaseDateValue(liability.createDate, liability.createTime),
       dailyCostValue: liability.dailyCost || 0 // 负债用每日成本
@@ -402,6 +397,8 @@ Page({
 
       this.calculateCashflow()
       this.updateFilteredData()
+      // 教程判定必须基于刚加载的云端数据，放在 loadData 末尾避免读到未完成的空列表
+      this.checkTutorial()
     } catch (error) {
       console.error('加载数据失败:', error)
       wx.showToast({
@@ -413,11 +410,10 @@ Page({
 
   // 检查是否显示引导教程
   checkTutorial() {
-    const assets = StorageManager.getAssets()
-    const liabilities = StorageManager.getLiabilities()
+    const assets = this.data.assets || []
+    const liabilities = this.data.liabilities || []
     
     // 检查是否有示例数据标识
-    const hasSampleData = wx.getStorageSync('has_sample_data')
     const tutorialCompleted = wx.getStorageSync('tutorial_completed')
     
     // 如果用户已经完成教程，不再显示提示
@@ -426,8 +422,7 @@ Page({
     }
     
     // 如果有示例数据标识，或者检测到数据中有isSample标记，显示引导选项
-    const hasDemo = hasSampleData !== false || 
-      assets.some(item => item.isSample) || 
+    const hasDemo = assets.some(item => item.isSample) ||
       liabilities.some(item => item.isSample)
     
     if (hasDemo && (assets.length > 0 || liabilities.length > 0)) {
@@ -439,13 +434,10 @@ Page({
 
   // 检查并强制显示教程选择（从个人中心调用）
   checkAndShowTutorial() {
-    const assets = StorageManager.getAssets()
-    const liabilities = StorageManager.getLiabilities()
+    const assets = this.data.assets || []
+    const liabilities = this.data.liabilities || []
     
-    // 检查是否有示例数据
-    const hasSampleData = wx.getStorageSync('has_sample_data')
-    const hasDemo = hasSampleData !== false || 
-      assets.some(item => item.isSample) || 
+    const hasDemo = assets.some(item => item.isSample) ||
       liabilities.some(item => item.isSample)
     
     if (hasDemo && (assets.length > 0 || liabilities.length > 0)) {
@@ -1123,11 +1115,11 @@ Page({
       if (asset.categoryL1 === 'work_income') {
         return total
       }
-      return total + (parseFloat(asset.currentValue) || parseFloat(asset.initialValue) || 0)
+      return total + StorageManager.firstNumber(asset.currentValue, asset.initialValue)
     }, 0)
     
     const totalLiabilityValue = liabilities.reduce((total, liability) => {
-      return total + (parseFloat(liability.currentAmount) || parseFloat(liability.initialAmount) || 0)
+      return total + StorageManager.firstNumber(liability.currentAmount, liability.initialAmount)
     }, 0)
     
     const netWorth = totalAssetValue - totalLiabilityValue
@@ -1199,21 +1191,22 @@ Page({
       return true
     })
 
-    // 过滤负债（暂时使用相同的分类，后续需要独立的负债分类筛选）
+    // 分类选择器目前只提供资产分类，负债只有在选中的是一级"负债分类"时才参与过滤，
+    // 否则任意资产分类都会把负债列表清空（原实现的注释也承认了这一点）
+    const liabilityCategoryL1s = Object.keys(AccountingCategories.LIABILITY_CATEGORIES)
+    const categoryAppliesToLiability = categoryIndex[0] > 0 && liabilityCategoryL1s.includes(selectedCategoryL1)
+
     let filteredLiabilities = liabilities.filter(liability => {
       if (searchKeyword && !liability.name.includes(searchKeyword)) {
         return false
       }
       
-      // 分类过滤 - 负债暂时使用资产分类逻辑，实际应该有独立的负债分类
-      if (categoryIndex[0] > 0) { // 不是"全部类别"
+      if (categoryAppliesToLiability) {
         if (categoryIndex[1] === 0) {
-          // 选择了一级分类的"全部"，只过滤一级分类
           if (liability.categoryL1 !== selectedCategoryL1) {
             return false
           }
         } else {
-          // 选择了具体的二级分类，同时过滤一级和二级
           if (liability.categoryL1 !== selectedCategoryL1 || liability.categoryL2 !== selectedCategoryL2) {
             return false
           }
@@ -1538,8 +1531,9 @@ Page({
 
   // 计算消费型资产的历史平均每日成本
   calculateDailyCost(asset) {
-    const originalValue = parseFloat(asset.originalValue) || parseFloat(asset.initialValue) || 0
-    const currentValue = parseFloat(asset.currentValue) || originalValue
+    const originalValue = StorageManager.firstNumber(asset.originalValue, asset.initialValue)
+    // 现值为 0（已折尽）是合法结果，用 || 回退到原值会让每日成本算成 0
+    const currentValue = StorageManager.firstNumber(asset.currentValue, originalValue)
     
     if (originalValue <= 0) {
       return "0.00"

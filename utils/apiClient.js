@@ -125,6 +125,20 @@ class APIClient {
   }
   
   /**
+   * 演示身份登录（后端 /auth/dev-login，仅开发环境）
+   * 微信真实登录在 test_appid 下走不通，答辩演示用这里的身份切换来验证多用户数据隔离
+   */
+  static async devLogin(nickname, avatar = '') {
+    const res = await this.request('/auth/dev-login', 'POST', { nickname, avatar }, false)
+    
+    if (res.success && res.data && res.data.token) {
+      this.setToken(res.data.token)
+    }
+    
+    return res
+  }
+  
+  /**
    * 获取当前用户信息
    */
   static async getCurrentUser() {
@@ -303,16 +317,29 @@ class APIClient {
 class SmartStorage {
   
   /**
+   * 解析云端记录 ID
+   * 后端 id 是自增整数，但页面间跳转经 URL 参数传递后必然变成字符串，
+   * 因此只要 id 是正整数（数字或纯数字字符串）就认定为已有记录，走更新而非新建
+   */
+  static resolveCloudId(id) {
+    if (typeof id === 'number' && Number.isInteger(id) && id > 0) return id
+    if (typeof id === 'string' && /^\d+$/.test(id)) {
+      const parsed = parseInt(id, 10)
+      return parsed > 0 ? parsed : null
+    }
+    return null
+  }
+  
+  /**
    * 保存资产
    */
   static async saveAsset(assetData) {
     if (API_CONFIG.ENABLE_CLOUD) {
       // 云端模式
-      // 判断是创建还是更新：数字ID表示已存在，字符串ID表示新建
-      const isUpdate = assetData.id && typeof assetData.id === 'number'
+      const cloudId = this.resolveCloudId(assetData.id)
       
-      if (isUpdate) {
-        const res = await APIClient.updateAsset(assetData.id, assetData)
+      if (cloudId) {
+        const res = await APIClient.updateAsset(cloudId, assetData)
         return res.data
       } else {
         // 新建时不传ID，让后端生成
@@ -355,11 +382,10 @@ class SmartStorage {
   static async saveLiability(liabilityData) {
     if (API_CONFIG.ENABLE_CLOUD) {
       // 云端模式
-      // 判断是创建还是更新：数字ID表示已存在，字符串ID表示新建
-      const isUpdate = liabilityData.id && typeof liabilityData.id === 'number'
+      const cloudId = this.resolveCloudId(liabilityData.id)
       
-      if (isUpdate) {
-        const res = await APIClient.updateLiability(liabilityData.id, liabilityData)
+      if (cloudId) {
+        const res = await APIClient.updateLiability(cloudId, liabilityData)
         return res.data
       } else {
         // 新建时不传ID，让后端生成
@@ -404,10 +430,10 @@ class SmartStorage {
   static async saveSavingGoal(goalData) {
     if (API_CONFIG.ENABLE_CLOUD) {
       // 云端模式
-      const isUpdate = goalData.id && typeof goalData.id === 'number'
+      const cloudId = this.resolveCloudId(goalData.id)
       
-      if (isUpdate) {
-        const res = await APIClient.updateSavingGoal(goalData.id, goalData)
+      if (cloudId) {
+        const res = await APIClient.updateSavingGoal(cloudId, goalData)
         return res.data
       } else {
         // 新建时不传ID，让后端生成

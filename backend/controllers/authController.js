@@ -76,9 +76,73 @@ exports.wechatLogin = async (req, res, next) => {
 }
 
 /**
- * 刷新Token
+ * 演示身份登录
+ * 微信登录需要真实 AppID 与 code 换 openid，开发者工具里跑不通；
+ * 此接口按昵称固定映射到一个 dev_ 前缀 openid 并签发 JWT，用于验证多用户数据隔离。
+ * 仅在开发环境开放，不涉及也不改动微信登录流程。
  */
-exports.refreshToken = async (req, res, next) => {
+exports.devLogin = async (req, res, next) => {
+  try {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({
+        success: false,
+        message: '演示登录仅在开发环境开放'
+      })
+    }
+
+    const nickname = String(req.body.nickname || '').trim().slice(0, 50)
+
+    if (!nickname) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少演示身份昵称'
+      })
+    }
+
+    // 同一昵称恒定映射到同一账号，保证切换身份后数据仍归该用户
+    const openid = 'dev_' + nickname
+
+    let user = await User.findOne({ where: { openid } })
+
+    if (!user) {
+      user = await User.create({
+        openid,
+        nickname,
+        wechat_avatar: String(req.body.avatar || '').slice(0, 200),
+        last_login_at: new Date(),
+        last_login_ip: req.ip
+      })
+    } else {
+      await user.update({
+        last_login_at: new Date(),
+        last_login_ip: req.ip
+      })
+    }
+
+    const token = generateToken(user.id)
+
+    res.json({
+      success: true,
+      message: '登录成功',
+      data: {
+        token,
+        user: {
+          id: user.id,
+          nickname: user.nickname,
+          avatar: user.avatar || user.wechat_avatar,
+          signature: user.signature
+        }
+      }
+    })
+  } catch (error) {
+    console.error('演示登录错误:', error)
+    next(error)
+  }
+}
+
+/**
+ * 刷新Token
+ */exports.refreshToken = async (req, res, next) => {
   try {
     const userId = req.userId
     

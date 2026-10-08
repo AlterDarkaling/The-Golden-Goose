@@ -1,6 +1,47 @@
 const StorageManager = require('../../utils/storage.js')
+const { SmartStorage, APIClient } = require('../../utils/apiClient.js')
 
 Page({
+  // 云端数据快照：个人中心的所有统计与导出以此为准。
+  // 直接读本地缓存会拿到上一登录身份残留的数据（缓存是按设备共享的），破坏多用户隔离演示。
+  cloudAssets: [],
+  cloudLiabilities: [],
+
+  async refreshCloudData() {
+    try {
+      const [assets, liabilities] = await Promise.all([
+        SmartStorage.getAssets(),
+        SmartStorage.getLiabilities()
+      ])
+      this.cloudAssets = assets || []
+      this.cloudLiabilities = liabilities || []
+    } catch (error) {
+      console.error('加载云端数据失败:', error)
+      wx.showToast({ title: '数据加载失败', icon: 'none' })
+    }
+  },
+
+  getCloudAssets() {
+    return this.cloudAssets || []
+  },
+
+  getCloudLiabilities() {
+    return this.cloudLiabilities || []
+  },
+
+  // 金额取值统一走 firstNumber：0（已折尽、已还清）不能被回退成原值
+  assetValueOf(asset) {
+    return StorageManager.firstNumber(asset.currentValue, asset.originalValue, asset.initialValue)
+  },
+
+  assetOriginalOf(asset) {
+    return StorageManager.firstNumber(asset.originalValue, asset.initialValue)
+  },
+
+  liabilityValueOf(liability) {
+    return StorageManager.firstNumber(liability.currentAmount, liability.initialAmount, liability.originalAmount)
+  },
+
   data: {
     userInfo: {},
     displayInfo: {
@@ -105,7 +146,8 @@ Page({
     }
   },
 
-  onLoad() {
+  async onLoad() {
+    await this.refreshCloudData()
     this.loadUserInfo()
     this.calculateStats()
     // 初始化主题状态
@@ -122,7 +164,11 @@ Page({
     this.setTheme(isDark)
   },
 
-  onShow() {
+  async onShow() {
+    // 回到本页时重新拉取云端数据，保证统计始终对应当前登录身份
+    await this.refreshCloudData()
+    this.calculateStats()
+
     // 确保主题设置正确（避免页面切换时的白色闪烁）
     const app = getApp()
     
@@ -171,8 +217,8 @@ Page({
   },
 
   calculateStats() {
-    const assets = StorageManager.getAssets()
-    const liabilities = StorageManager.getLiabilities()
+    const assets = this.getCloudAssets()
+    const liabilities = this.getCloudLiabilities()
     
     // 计算使用天数（从用户创建时间开始，最少显示1天）
     let usageDays = 1
@@ -184,7 +230,7 @@ Page({
     }
 
     // 计算净资产
-    const netWorth = StorageManager.calculateNetWorth()
+    const netWorth = StorageManager.netWorthOf(assets, liabilities)
     const netWorthText = this.formatMoney(netWorth)
 
     // 获取总记录数量（资产+负债）
@@ -735,7 +781,7 @@ Page({
       let assets, liabilities, userInfo, settings
       
       try {
-        assets = StorageManager.getAssets() || []
+        assets = this.getCloudAssets()
         console.log('获取资产数据成功:', assets.length)
       } catch (e) {
         console.error('获取资产数据失败:', e)
@@ -743,7 +789,7 @@ Page({
       }
       
       try {
-        liabilities = StorageManager.getLiabilities() || []
+        liabilities = this.getCloudLiabilities()
         console.log('获取负债数据成功:', liabilities.length)
       } catch (e) {
         console.error('获取负债数据失败:', e)
@@ -787,7 +833,8 @@ Page({
         // 其他可能的数据
         storageInfo.keys.forEach(key => {
           // 排除已经包含的数据和临时数据
-          if (!['assets_data', 'liabilities_data', 'user_info', 'settings_data', 'app_initialized', 'has_sample_data', 'backup_before_restore'].includes(key)) {
+          // 排除已经包含的数据、临时数据和登录凭证（凭证不得进入可复制/可恢复的备份文件）
+          if (!['assets_data', 'liabilities_data', 'user_info', 'settings_data', 'app_initialized', 'has_sample_data', 'backup_before_restore', 'api_token'].includes(key)) {
             try {
               additionalData[key] = wx.getStorageSync(key)
             } catch (e) {
@@ -890,8 +937,8 @@ Page({
     
     try {
       // 只备份核心数据，避免复杂的存储扫描
-      const assets = StorageManager.getAssets() || []
-      const liabilities = StorageManager.getLiabilities() || []
+      const assets = this.getCloudAssets()
+      const liabilities = this.getCloudLiabilities()
       const userInfo = StorageManager.getUser() || {}
       
       // 简化的备份数据结构
@@ -969,10 +1016,11 @@ Page({
     const safeAssets = Array.isArray(assets) ? assets : []
     const safeLiabilities = Array.isArray(liabilities) ? liabilities : []
     
-    const totalAssetValue = safeAssets.reduce((sum, asset) => 
-      sum + (asset.currentValue || asset.originalValue || asset.initialValue || 0), 0)
-    const totalLiabilityValue = safeLiabilities.reduce((sum, liability) => 
-      sum + (liability.currentAmount || liability.originalAmount || liability.initialAmount || 0), 0)
+    // 0 是合法金额（已折尽/已还清），不能用 || 逐级回退
+    const totalAssetValue = safeAssets.reduce((sum, asset) =>
+      sum + StorageManager.firstNumber(asset.currentValue, asset.originalValue, asset.initialValue), 0)
+    const totalLiabilityValue = safeLiabilities.reduce((sum, liability) =>
+      sum + StorageManager.firstNumber(liability.currentAmount, liability.originalAmount, liability.initialAmount), 0)
     const netWorth = totalAssetValue - totalLiabilityValue
     
     return {
@@ -981,8 +1029,8 @@ Page({
       totalAssetValue,
       totalLiabilityValue,
       netWorth,
-      dailyIncome: StorageManager.calculateDailyIncome ? StorageManager.calculateDailyIncome() : 0,
-      dailyCost: StorageManager.calculateDailyCost ? StorageManager.calculateDailyCost() : 0
+      dailyIncome: safeAssets.reduce((sum, item) => sum + StorageManager.firstNumber(item.monthlyIncome) / 30, 0),
+      dailyCost: safeLiabilities.reduce((sum, item) => sum + StorageManager.firstNumber(item.monthlyPayment) / 30, 0)
     }
   },
 
@@ -1043,7 +1091,7 @@ ${this.generateDetailedBackupContent(backupData)}
     if (assets.length > 0) {
       content += '💎 资产明细：\n'
       assets.forEach((asset, index) => {
-        const value = asset.currentValue || asset.originalValue || asset.initialValue || 0
+        const value = this.assetValueOf(asset)
         content += `${index + 1}. ${asset.name} - ¥${this.formatNumber(value)}\n`
       })
       content += '\n'
@@ -1053,7 +1101,7 @@ ${this.generateDetailedBackupContent(backupData)}
     if (liabilities.length > 0) {
       content += '💳 负债明细：\n'
       liabilities.forEach((liability, index) => {
-        const value = liability.currentAmount || liability.originalAmount || liability.initialAmount || 0
+        const value = this.liabilityValueOf(liability)
         content += `${index + 1}. ${liability.name} - ¥${this.formatNumber(value)}\n`
       })
       content += '\n'
@@ -1069,8 +1117,8 @@ ${this.generateDetailedBackupContent(backupData)}
     wx.showLoading({ title: '生成CSV...' })
     
     try {
-      const assets = StorageManager.getAssets() || []
-      const liabilities = StorageManager.getLiabilities() || []
+      const assets = this.getCloudAssets()
+      const liabilities = this.getCloudLiabilities()
       
       // 生成资产CSV
       let assetsCSV = '类型,名称,分类,原值,现值,月收入,月支出,状态,创建时间\n'
@@ -1079,8 +1127,8 @@ ${this.generateDetailedBackupContent(backupData)}
           '资产',
           asset.name || '',
           asset.categoryL2 || asset.categoryId || '',
-          asset.originalValue || asset.initialValue || 0,
-          asset.currentValue || asset.originalValue || asset.initialValue || 0,
+          this.assetOriginalOf(asset),
+          this.assetValueOf(asset),
           asset.monthlyIncome || 0,
           asset.monthlyOperatingCost || 0,
           asset.status || 'active',
@@ -1096,11 +1144,11 @@ ${this.generateDetailedBackupContent(backupData)}
           '负债',
           liability.name || '',
           liability.categoryL2 || liability.categoryId || '',
-          liability.originalAmount || liability.initialAmount || 0,
-          liability.currentAmount || liability.originalAmount || liability.initialAmount || 0,
+          StorageManager.firstNumber(liability.initialAmount, liability.originalAmount),
+          this.liabilityValueOf(liability),
           liability.monthlyPayment || 0,
           liability.annualRate || 0,
-          liability.status || 'active',
+          liability.status || 'normal',
           liability.createTime || ''
         ].map(cell => `"${cell}"`).join(',')
         liabilitiesCSV += row + '\n'
@@ -1400,14 +1448,15 @@ ${this.generateDetailedBackupContent(backupData)}
   },
 
   showDataStatistics() {
-    const assets = StorageManager.getAssets() || []
-    const liabilities = StorageManager.getLiabilities() || []
-    const dailyIncome = StorageManager.calculateDailyIncome() || 0
-    const dailyCost = StorageManager.calculateDailyCost() || 0
+    const assets = this.getCloudAssets()
+    const liabilities = this.getCloudLiabilities()
+    // 云端记录不含本地专有字段，日均收支按月收入/月还款额推导
+    const dailyIncome = assets.reduce((sum, item) => sum + StorageManager.firstNumber(item.monthlyIncome) / 30, 0)
+    const dailyCost = liabilities.reduce((sum, item) => sum + StorageManager.firstNumber(item.monthlyPayment) / 30, 0)
 
     wx.showModal({
       title: '数据统计',
-      content: `📈 收益分析：\n• 每日收益：¥${dailyIncome.toFixed(2)}\n• 每日成本：¥${dailyCost.toFixed(2)}\n• 日净收益：¥${(dailyIncome - dailyCost).toFixed(2)}\n\n📋 记录分析：\n• 使用中的资产：${assets.filter(a => a.status === 'active').length}项\n• 使用中的负债：${liabilities.filter(l => l.status === 'active').length}项`,
+      content: `📈 收益分析：\n• 每日收益：¥${dailyIncome.toFixed(2)}\n• 每日成本：¥${dailyCost.toFixed(2)}\n• 日净收益：¥${(dailyIncome - dailyCost).toFixed(2)}\n\n📋 记录分析：\n• 使用中的资产：${assets.filter(a => a.status === 'active').length}项\n• 还款中的负债：${liabilities.filter(l => l.status === 'normal').length}项`,
       showCancel: false
     })
   },
@@ -1653,7 +1702,8 @@ ${this.generateDetailedBackupContent(backupData)}
           this.loadUserInfo()
           this.calculateStats()
           
-          wx.switchTab({
+          // app.json 未配置 tabBar，switchTab 跳首页必然失败
+          wx.reLaunch({
             url: '/pages/index/index'
           })
         }
@@ -1688,8 +1738,9 @@ ${this.generateDetailedBackupContent(backupData)}
       content: '确定要撤销上次的数据恢复操作吗？将回退到恢复前的状态。',
       success: (res) => {
         if (res.confirm) {
+          // performDataRestore 会把"撤销前的状态"写进 backup_before_restore，
+          // 这里不能再把它删掉，否则撤销一次后就无路可退
           this.performDataRestore(backup)
-          wx.removeStorageSync('backup_before_restore')
         }
       }
     })
@@ -1748,9 +1799,25 @@ ${this.generateDetailedBackupContent(backupData)}
       content: '确定要清空所有资产负债记录吗？此操作无法恢复！',
       confirmText: '确定清空',
       confirmColor: '#ff4757',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          // 清空数据但保留用户信息
+          wx.showLoading({ title: '清空中...' })
+          
+          // 云端是业务数据的真源：只清本地缓存的话，记录会在下次进入首页时原样复活
+          try {
+            for (const asset of this.getCloudAssets()) {
+              await SmartStorage.deleteAsset(asset.id)
+            }
+            for (const liability of this.getCloudLiabilities()) {
+              await SmartStorage.deleteLiability(liability.id)
+            }
+          } catch (error) {
+            console.error('清空云端数据失败:', error)
+          }
+          
+          wx.hideLoading()
+          
+          // 清空本地缓存但保留用户信息与登录态
           wx.removeStorageSync('assets_data')
           wx.removeStorageSync('liabilities_data')
           
@@ -1760,6 +1827,7 @@ ${this.generateDetailedBackupContent(backupData)}
           })
           
           // 重新计算统计数据
+          await this.refreshCloudData()
           this.calculateStats()
         }
       }
@@ -1773,12 +1841,17 @@ ${this.generateDetailedBackupContent(backupData)}
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
+          // 清除登录凭证，否则回到登录页后请求仍会以旧身份访问云端
+          APIClient.clearToken()
+          
           // 清除用户信息和初始化标志，回到首次使用状态
           wx.removeStorageSync('user_info')
           wx.removeStorageSync('app_initialized')
           wx.removeStorageSync('assets_data')
           wx.removeStorageSync('liabilities_data')
           wx.removeStorageSync('has_sample_data')
+          this.cloudAssets = []
+          this.cloudLiabilities = []
           
           // 跳转到登录页
           wx.reLaunch({
@@ -1833,8 +1906,8 @@ ${this.generateDetailedBackupContent(backupData)}
     // 设置全局标识
     getApp().globalData.startTutorial = true
     
-    // 跳转到首页
-    wx.switchTab({
+    // 跳转到首页（首页不是 tabBar 页，必须用 reLaunch）
+    wx.reLaunch({
       url: '/pages/index/index',
       success: () => {
         wx.showToast({

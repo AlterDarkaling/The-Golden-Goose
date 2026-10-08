@@ -1,3 +1,6 @@
+const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')
+
 Page({
   data: {
     // 主题相关
@@ -99,14 +102,17 @@ Page({
   },
 
   // 加载项目信息
-  loadItemInfo() {
+  async loadItemInfo() {
     const { itemId, itemType } = this.data
-    const dataKey = itemType === 'asset' ? 'assets_data' : 'liabilities_data'
-    
+
     try {
-      const items = wx.getStorageSync(dataKey) || []
-      const item = items.find(item => item.id === itemId)
-      
+      const items = itemType === 'asset'
+        ? await SmartStorage.getAssets()
+        : await SmartStorage.getLiabilities()
+
+      // URL 参数是字符串，云端 id 是数字，统一转字符串比较
+      const item = items.find(entry => String(entry.id) === String(itemId))
+
       if (item) {
         this.setData({
           itemName: item.name || '未命名项目'
@@ -205,7 +211,7 @@ Page({
   },
 
   // 保存费用
-  handleSave() {
+  async handleSave() {
     if (!this.validateForm()) {
       return
     }
@@ -234,7 +240,7 @@ Page({
 
       // 如果影响净值，更新资产价值
       if (formData.affectNetWorth && itemType === 'asset') {
-        this.updateAssetValue(costRecord)
+        await this.updateAssetValue(costRecord)
       }
 
       wx.showToast({
@@ -256,19 +262,20 @@ Page({
   },
 
   // 更新资产价值
-  updateAssetValue(costRecord) {
+  async updateAssetValue(costRecord) {
     try {
-      let assets = wx.getStorageSync('assets_data') || []
-      const assetIndex = assets.findIndex(asset => asset.id === costRecord.itemId)
-      
-      if (assetIndex !== -1) {
-        const asset = assets[assetIndex]
-        const currentValue = asset.currentValue || asset.originalValue || asset.initialValue || 0
-        asset.currentValue = Math.max(0, currentValue - costRecord.amount)
-        
-        assets[assetIndex] = asset
-        wx.setStorageSync('assets_data', assets)
-      }
+      const assets = await SmartStorage.getAssets()
+      const asset = assets.find(entry => String(entry.id) === String(costRecord.itemId))
+      if (!asset) return
+
+      // 消费型资产的现值由后端按折旧公式计算，此处扣减会在下次读取时被覆盖回去；
+      // 只有现金、理财这类按市值计量的资产才按支出下调当前价值
+      if (asset.isDepreciable) return
+
+      const currentValue = StorageManager.firstNumber(asset.currentValue, asset.initialValue)
+      asset.currentValue = Math.max(0, currentValue - StorageManager.firstNumber(costRecord.amount))
+
+      await SmartStorage.saveAsset(asset)
     } catch (error) {
       console.error('更新资产价值失败:', error)
     }
