@@ -1,4 +1,5 @@
 const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')  // 新增：云端API支持
 const AccountingCategories = require('../../utils/accountingCategories.js')
 
 Page({
@@ -1240,7 +1241,7 @@ Page({
   },
 
   // 保存数据
-  handleSave() {
+  async handleSave() {
     if (!this.validateForm()) {
       return
     }
@@ -1323,20 +1324,16 @@ Page({
     }
     
     try {
+      wx.showLoading({ title: '保存中...' })
+      
+      // 使用 SmartStorage 自动选择本地或云端存储
       if (type === 'asset') {
-        if (isEdit) {
-          StorageManager.updateAsset(editId, saveData)
-        } else {
-          StorageManager.addAsset(saveData)
-        }
+        await SmartStorage.saveAsset(saveData)
       } else {
-        if (isEdit) {
-          StorageManager.updateLiability(editId, saveData)
-        } else {
-          StorageManager.addLiability(saveData)
-        }
+        await SmartStorage.saveLiability(saveData)
       }
       
+      wx.hideLoading()
       wx.showToast({
         title: isEdit ? '修改成功' : '添加成功',
         icon: 'success'

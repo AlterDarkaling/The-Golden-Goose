@@ -1,5 +1,6 @@
 // 引入本地存储管理工具
 const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')  // 新增：云端API支持
 const AccountingCategories = require('../../utils/accountingCategories.js')
 const DepreciationEngine = require('../../utils/depreciation.js')
 
@@ -346,9 +347,11 @@ Page({
     }
   },
 
-  loadData() {
-    const assets = StorageManager.getAssets()
-    const liabilities = StorageManager.getLiabilities()
+  async loadData() {
+    try {
+      // 使用 SmartStorage 自动选择本地或云端
+      const assets = await SmartStorage.getAssets()
+      const liabilities = await SmartStorage.getLiabilities()
     
     // 处理数据，添加显示字段
     const self = this
@@ -392,13 +395,20 @@ Page({
       dailyCostValue: liability.dailyCost || 0 // 负债用每日成本
     }))
 
-    this.setData({
-      assets: processedAssets,
-      liabilities: processedLiabilities
-    })
+      this.setData({
+        assets: processedAssets,
+        liabilities: processedLiabilities
+      })
 
-    this.calculateCashflow()
-    this.updateFilteredData()
+      this.calculateCashflow()
+      this.updateFilteredData()
+    } catch (error) {
+      console.error('加载数据失败:', error)
+      wx.showToast({
+        title: '加载失败',
+        icon: 'none'
+      })
+    }
   },
 
   // 检查是否显示引导教程

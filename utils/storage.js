@@ -94,6 +94,17 @@ const StorageManager = {
     return false
   },
 
+  // 保存资产（智能判断新增或更新）
+  saveAsset(assetData) {
+    if (assetData.id && typeof assetData.id === 'string' && assetData.id.startsWith('asset_')) {
+      // 已有ID，是更新操作
+      return this.updateAsset(assetData.id, assetData)
+    } else {
+      // 无ID或是临时ID，是新增操作
+      return this.addAsset(assetData)
+    }
+  },
+
   // 删除资产
   deleteAsset(id) {
     const assets = this.getAssets()
@@ -128,6 +139,17 @@ const StorageManager = {
       return this.saveLiabilities(liabilities)
     }
     return false
+  },
+
+  // 保存负债（智能判断新增或更新）
+  saveLiability(liabilityData) {
+    if (liabilityData.id && typeof liabilityData.id === 'string' && liabilityData.id.startsWith('liability_')) {
+      // 已有ID，是更新操作
+      return this.updateLiability(liabilityData.id, liabilityData)
+    } else {
+      // 无ID或是临时ID，是新增操作
+      return this.addLiability(liabilityData)
+    }
   },
 
   // 删除负债

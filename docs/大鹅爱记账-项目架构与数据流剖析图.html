@@ -1,0 +1,185 @@
+<html style="margin:0;padding:0;">
+<title>大鹅爱记账 · 项目架构与数据流剖析</title>
+<div style="width:100%;box-sizing:border-box;padding:16px;background:#f4f5f7;color:#1f2430;font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.5;">
+
+<!-- ============ 标题 ============ -->
+<div style="max-width:1080px;margin:0 auto;">
+  <div style="border-left:5px solid #3a5bbf;padding:2px 0 2px 12px;margin-bottom:6px;">
+    <div style="font-size:20px;font-weight:700;">大鹅爱记账（The Golden Goose）· 系统架构与真实数据流</div>
+    <div style="color:#6b7280;font-size:13px;margin-top:2px;">原生微信小程序 + Express/Sequelize/MySQL ｜ 个人资产负债表式理财 ｜ 图中红色为断裂点、虚线为半死/死代码路径</div>
+  </div>
+
+  <!-- ============ 图例 ============ -->
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;padding:10px;background:#fff;border:1px solid #e3e6ec;border-radius:8px;font-size:12.5px;">
+    <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:26px;height:0;border-top:3px solid #2e9e5b;"></span>活路径（真实数据流）</span>
+    <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:26px;height:0;border-top:3px dashed #8a909c;"></span>半死路径（仅边缘用途）</span>
+    <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:26px;height:0;border-top:3px dotted #b0463a;"></span>从未接线的死代码</span>
+    <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:16px;height:16px;border:2px solid #c0392b;border-radius:3px;background:#fdecea;"></span>架构断裂点</span>
+  </div>
+
+  <!-- ============ 第一区：架构与数据流 ============ -->
+  <div style="background:#fff;border:1px solid #e3e6ec;border-radius:10px;padding:14px;margin-bottom:14px;">
+    <div style="font-weight:700;font-size:15px;margin-bottom:10px;">① 运行时架构与数据流（纵向阅读）</div>
+
+    <!-- 页面层 -->
+    <div style="border:1.5px solid #3a5bbf;border-radius:8px;padding:10px;background:#f6f8fe;">
+      <div style="font-weight:700;color:#3a5bbf;margin-bottom:6px;">小程序页面层（9 页 · 原生 wxml/wxss/js）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;">
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">index 首页/净资产</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">edit 记账表单(55KB)</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">detail 详情/生命周期</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">report 三大报表</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">profile 个人中心(71KB)</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">goals 梦想储蓄罐</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">add-cost 追加费用</span>
+        <span style="background:#e7edfb;padding:3px 8px;border-radius:12px;">login / about</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:#2e9e5b;font-size:18px;font-weight:700;margin:4px 0;">↓</div>
+
+    <!-- SmartStorage -->
+    <div style="border:1.5px solid #2e9e5b;border-radius:8px;padding:10px;background:#f3faf5;">
+      <div style="font-weight:700;color:#207d47;">SmartStorage（apiClient.js）— 本地/云端"智能"切换开关</div>
+      <div style="font-size:12.5px;color:#555;margin-top:4px;">开关 <b>ENABLE_CLOUD 被硬编码为 true</b>，且调用方 <b>try/catch 中无本地回退</b>：云端 reject 即直接 toast「加载/保存失败」</div>
+    </div>
+
+    <!-- 分叉两条道 -->
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;">
+
+      <!-- 云端道（活） -->
+      <div style="flex:1 1 340px;min-width:300px;border:2px solid #2e9e5b;border-radius:8px;padding:10px;background:#fbfefc;">
+        <div style="font-weight:700;color:#207d47;margin-bottom:8px;">云端路径（实线 · 业务数据唯一通道）</div>
+        <div style="border:1px solid #bfe3cb;background:#eef8f1;border-radius:6px;padding:7px;font-size:12.5px;">APIClient → wx.request<br><b>http://localhost:3000/api</b>（写死，超时 10s）</div>
+        <div style="text-align:center;color:#2e9e5b;font-weight:700;margin:3px 0;">↓</div>
+        <div style="border:1px solid #bfe3cb;background:#eef8f1;border-radius:6px;padding:7px;font-size:12.5px;">
+          Express 中间件链：helmet 安全头 → cors(ALLOW=*) → 限流 100次/15分<br>
+          <b>auth 中间件（dev 环境无 token 时自动创建并登录 dev_test_user）</b>
+        </div>
+        <div style="text-align:center;color:#2e9e5b;font-weight:700;margin:3px 0;">↓</div>
+        <div style="border:1px solid #bfe3cb;background:#eef8f1;border-radius:6px;padding:7px;font-size:12.5px;">
+          6 路由 → 4 控制器（auth / asset / liability / savingGoal）<br>
+          手写 fieldMap 做 驼峰⇄下划线 双向转换；资产侧触发折旧计算
+        </div>
+        <div style="text-align:center;color:#2e9e5b;font-weight:700;margin:3px 0;">↓</div>
+        <div style="border:1px solid #bfe3cb;background:#eef8f1;border-radius:6px;padding:7px;font-size:12.5px;">Sequelize ORM（db.sync alter · 时区+8）</div>
+        <div style="text-align:center;color:#2e9e5b;font-weight:700;margin:3px 0;">↓</div>
+        <div style="border:1.5px solid #2e9e5b;background:#e4f4ea;border-radius:6px;padding:8px;font-size:12.5px;font-weight:700;">
+          MySQL · golden_goose（4 表）
+          <div style="font-weight:400;margin-top:4px;display:flex;flex-wrap:wrap;gap:5px;">
+            <span style="background:#fff;padding:2px 7px;border-radius:10px;">users</span>
+            <span style="background:#fff;padding:2px 7px;border-radius:10px;">assets</span>
+            <span style="background:#fff;padding:2px 7px;border-radius:10px;">liabilities</span>
+            <span style="background:#fff;padding:2px 7px;border-radius:10px;">saving_goals</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 本地道（半死） -->
+      <div style="flex:1 1 280px;min-width:260px;border:2px dashed #8a909c;border-radius:8px;padding:10px;background:#fafafa;">
+        <div style="font-weight:700;color:#5b616e;margin-bottom:8px;">本地路径（虚线 · 仅边缘用途）</div>
+        <div style="border:1px solid #d6d9e0;background:#f2f3f5;border-radius:6px;padding:7px;font-size:12.5px;">
+          StorageManager → wx.setStorageSync<br>
+          keys：user_info / assets_data / liabilities_data / app_settings
+        </div>
+        <div style="margin-top:8px;font-size:12.5px;color:#444;">仍在使用它的场景：</div>
+        <ul style="margin:5px 0 0 18px;padding:0;font-size:12.5px;color:#444;">
+          <li>login 页本地造默认用户 + 写示例数据</li>
+          <li>checkTutorial 读本地数据决定弹教程</li>
+          <li>数据备份/恢复（剪贴板/JSON/CSV）</li>
+          <li>日期格式化、旧分类迁移</li>
+        </ul>
+        <div style="margin-top:8px;border:1px dotted #b0463a;border-radius:6px;padding:7px;font-size:12px;color:#8a3a30;background:#fdf6f5;">
+          平行存在但<b>从未被任何页面 require</b>：financialStorage.js、newFinancialStorage.js、accountingEngine.js、前端 loanCalculator.js（一套完整的 v2 引擎，全部为死代码）
+        </div>
+      </div>
+    </div>
+
+    <!-- 三处断裂点 -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;">
+      <div style="flex:1 1 280px;min-width:260px;border:2px solid #c0392b;background:#fdecea;border-radius:8px;padding:9px;">
+        <div style="font-weight:700;color:#a52f22;">断裂 ① 数据双轨</div>
+        <div style="font-size:12.5px;margin-top:3px;">首次进入，示例数据写入<b>本地</b> storage；首页却从<b>云端</b>加载（此时为空）→ 列表显示「暂无数据」，而本地数据又触发教程弹窗。</div>
+      </div>
+      <div style="flex:1 1 280px;min-width:260px;border:2px solid #c0392b;background:#fdecea;border-radius:8px;padding:9px;">
+        <div style="font-weight:700;color:#a52f22;">断裂 ② 真机不可达</div>
+        <div style="font-size:12.5px;margin-top:3px;">BASE_URL 写死 localhost:3000，手机无法访问开发机回环地址 → 仅能在开发者工具 + 本机后端下演示，无真机可用性。</div>
+      </div>
+      <div style="flex:1 1 280px;min-width:260px;border:2px solid #c0392b;background:#fdecea;border-radius:8px;padding:9px;">
+        <div style="font-weight:700;color:#a52f22;">断裂 ③ 登录是空壳</div>
+        <div style="font-size:12.5px;margin-top:3px;">.env 为 test_appid，微信 jscode2session 必然失败；实际靠 login 页本地造用户 + dev 后端兜底 dev_test_user，微信登录链路从未真正跑通。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 第二区：领域模型 ============ -->
+  <div style="background:#fff;border:1px solid #e3e6ec;border-radius:10px;padding:14px;margin-bottom:14px;">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px;">② 核心领域模型 — 企业会计科目表的个人化改造</div>
+    <div style="font-size:12.5px;color:#6b7280;margin-bottom:10px;">资产 5 大类 / 负债 3 大类 / 梦想储蓄罐；括号内为该科目的计量规则</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;">
+
+      <!-- 资产 -->
+      <div style="flex:1 1 360px;min-width:300px;border:1px solid #cfd8f3;border-radius:8px;overflow:hidden;">
+        <div style="background:#3a5bbf;color:#fff;font-weight:700;padding:7px 10px;">资产 Assets</div>
+        <div style="padding:9px;font-size:12.5px;display:flex;flex-direction:column;gap:7px;">
+          <div><b>流动资产</b>：现金类、短期理财<span style="color:#6b7280;">（实际金额 / 应计利息）</span></div>
+          <div><b>金融资产</b>：股票基金、固定收益<span style="color:#6b7280;">（市值重估，数量×现价，浮动盈亏）</span></div>
+          <div><b>实物资产</b>：消费型（手机/电脑/车/家电）、增值型（房产/黄金/收藏）<span style="color:#6b7280;">（余额递减折旧 / 市场估值）</span></div>
+          <div><b>工作收入</b>：本职、兼职<span style="color:#6b7280;">（按月薪结构反算实际时薪，含薪资历史）</span></div>
+          <div><b>其他资产</b>：无形资产、预付资产<span style="color:#6b7280;">（按有效期/服务期摊销）</span></div>
+        </div>
+      </div>
+
+      <!-- 负债 + 储蓄罐 -->
+      <div style="flex:1 1 300px;min-width:280px;display:flex;flex-direction:column;gap:12px;">
+        <div style="border:1px solid #f0c9c3;border-radius:8px;overflow:hidden;">
+          <div style="background:#c0392b;color:#fff;font-weight:700;padding:7px 10px;">负债 Liabilities</div>
+          <div style="padding:9px;font-size:12.5px;display:flex;flex-direction:column;gap:7px;">
+            <div><b>流动负债</b>：信用卡、短期借款（花呗/亲友/现金贷）</div>
+            <div><b>长期负债</b>：房贷、车贷/消费贷<span style="color:#6b7280;">（等额本息/等额本金，存还款计划表）</span></div>
+            <div><b>其他负债</b>：应付款项、预收款项</div>
+          </div>
+        </div>
+        <div style="border:1px solid #d8c9f0;border-radius:8px;overflow:hidden;">
+          <div style="background:#7a52c4;color:#fff;font-weight:700;padding:7px 10px;">梦想储蓄罐 SavingGoal</div>
+          <div style="padding:9px;font-size:12.5px;">12 类（应急/购房/教育/旅行/投资/养老/购车/婚礼/健康/还债/礼物/其他）；按目标额与截止日倒推<b>每日/每月应存</b>，状态 active/completed/cancelled。</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;border:1px dashed #d6a72f;background:#fdf8e8;border-radius:6px;padding:8px;font-size:12.5px;color:#7a5b12;">
+      <b>科目命名实际存在 4 代并存：</b>① storage 默认的 investment/digital 体系 → ② accountingCategories 的 current_assets 体系（表单在用）→ ③ login 示例数据的 fixed_assets / long_term_debt 体系（与科目表对不上，显示为「未知」）→ ④ 后端折旧兼容的 consumer_asset（单数旧名）。
+    </div>
+  </div>
+
+  <!-- ============ 第三区：演进时间线 ============ -->
+  <div style="background:#fff;border:1px solid #e3e6ec;border-radius:10px;padding:14px;">
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px;">③ 代码考古 — 14 次提交全部发生在 2025-09-25 同一天</div>
+    <div style="font-size:12.5px;color:#6b7280;margin-bottom:10px;">主线（实线）是最终交付的产品；下方点状轨道是同期写出、却从未接线的 v2 引擎</div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;font-size:12px;">
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>first commit</b><br>初始化项目结构</div>
+      <div style="align-self:center;color:#3a5bbf;font-weight:700;">→</div>
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>会下金蛋的鹅</b><br>分类迁移、简化登录</div>
+      <div style="align-self:center;color:#3a5bbf;font-weight:700;">→</div>
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>三大报表</b><br>关于页、状态/分类扩充</div>
+      <div style="align-self:center;color:#3a5bbf;font-weight:700;">→</div>
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>图标/薪资史</b><br>add-cost、折旧率参考</div>
+      <div style="align-self:center;color:#3a5bbf;font-weight:700;">→</div>
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>改名大鹅爱记账</b><br>引导教程</div>
+      <div style="align-self:center;color:#3a5bbf;font-weight:700;">→</div>
+      <div style="flex:1 1 130px;min-width:120px;border:1.5px solid #3a5bbf;border-radius:6px;padding:7px;background:#f6f8fe;"><b>技术文档</b><br>暗黑主题、收尾</div>
+    </div>
+
+    <div style="margin-top:10px;border:2px dotted #b0463a;border-radius:8px;padding:9px;background:#fdf6f5;">
+      <div style="font-weight:700;color:#8a3a30;font-size:12.5px;">平行宇宙（死代码轨道）：financialStorage（v1 本地财务存储）→ accountingEngine（完整准则引擎：历史成本/直线折旧/摊销/等额本息）→ newFinancialStorage（assets_v2 等 v2 key）—— 层层重写，最终无一被页面引用。</div>
+    </div>
+
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:#555;">
+      <span style="background:#f2f3f5;border-radius:12px;padding:3px 10px;">miniapp/android：仅剩空目录树（uni-app App 打包残留）</span>
+      <span style="background:#f2f3f5;border-radius:12px;padding:3px 10px;">根目录残留 pages.json/manifest.json/uni.scss（uni-app 模板，实际运行以 app.json 为准）</span>
+    </div>
+  </div>
+
+</div>
+</div>
+</html>

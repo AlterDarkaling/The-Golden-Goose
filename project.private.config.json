@@ -2,13 +2,23 @@
   "libVersion": "3.9.1",
   "projectname": "The%20Golden%20Goose%20Demo1",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,
     "preloadBackgroundData": false,
     "autoAudits": false,
     "showShadowRootInWxmlPanel": true,
-    "compileHotReLoad": true
-  }
+    "compileHotReLoad": true,
+    "useApiHook": true,
+    "useApiHostProcess": true,
+    "useStaticServer": false,
+    "useLanDebug": false,
+    "showES6CompileOption": false,
+    "checkInvalidKey": true,
+    "ignoreDevUnusedFiles": true,
+    "bigPackageSizeSupport": false,
+    "useIsolateContext": true
+  },
+  "condition": {}
 }

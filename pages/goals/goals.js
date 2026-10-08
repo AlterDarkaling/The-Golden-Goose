@@ -1,4 +1,5 @@
 const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')  // 新增：云端API支持
 
 Page({
   data: {
@@ -91,9 +92,10 @@ Page({
     }
   },
 
-  loadGoals() {
+  async loadGoals() {
     try {
-      const goals = wx.getStorageSync('financial_goals') || []
+      // 使用 SmartStorage 自动选择本地或云端
+      const goals = await SmartStorage.getSavingGoals()
       // 处理目标数据，添加进度计算和智能建议
       const processedGoals = goals.map(goal => {
         const progress = this.calculateProgress(goal)
@@ -293,7 +295,7 @@ Page({
   },
 
   // 保存目标
-  saveGoal() {
+  async saveGoal() {
     const { newGoal } = this.data
     
     // 验证表单
@@ -314,7 +316,6 @@ Page({
 
     // 创建新目标
     const goal = {
-      id: Date.now().toString(),
       title: newGoal.title.trim(),
       targetAmount: parseFloat(newGoal.targetAmount),
       currentAmount: parseFloat(newGoal.currentAmount) || 0,
@@ -325,11 +326,9 @@ Page({
       status: 'active'
     }
 
-    // 保存到本地存储
+    // 使用 SmartStorage 保存
     try {
-      const goals = wx.getStorageSync('financial_goals') || []
-      goals.push(goal)
-      wx.setStorageSync('financial_goals', goals)
+      await SmartStorage.saveSavingGoal(goal)
       
       wx.showToast({ title: '储蓄罐创建成功', icon: 'success' })
       this.hideAddGoalForm()
@@ -410,25 +409,26 @@ Page({
     this.hideUpdateGoal()
   },
 
-  updateGoalAmount(goalId, newAmount) {
+  async updateGoalAmount(goalId, newAmount) {
     try {
-      const goals = wx.getStorageSync('financial_goals') || []
-      const goalIndex = goals.findIndex(g => g.id === goalId)
+      const goals = await SmartStorage.getSavingGoals()
+      const goal = goals.find(g => g.id === goalId)
       
-      if (goalIndex !== -1) {
-        goals[goalIndex].currentAmount = newAmount
-        wx.setStorageSync('financial_goals', goals)
+      if (goal) {
+        goal.currentAmount = newAmount
         
         // 检查是否完成目标
-        if (newAmount >= goals[goalIndex].targetAmount) {
+        if (newAmount >= goal.targetAmount) {
+          goal.status = 'completed'
+          
           wx.showModal({
             title: '🎉 恭喜梦想达成！',
-            content: `您已成功完成"${goals[goalIndex].title}"储蓄罐！`,
+            content: `您已成功完成"${goal.title}"储蓄罐！`,
             showCancel: false
           })
-          goals[goalIndex].status = 'completed'
-          wx.setStorageSync('financial_goals', goals)
         }
+        
+        await SmartStorage.saveSavingGoal(goal)
         
         wx.showToast({ title: '进度更新成功', icon: 'success' })
         this.loadGoals()
@@ -447,12 +447,10 @@ Page({
     wx.showModal({
       title: '确认删除',
       content: `确定要删除储蓄罐"${goal.title}"吗？`,
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
           try {
-            const goals = wx.getStorageSync('financial_goals') || []
-            const filteredGoals = goals.filter(g => g.id !== goalId)
-            wx.setStorageSync('financial_goals', filteredGoals)
+            await SmartStorage.deleteSavingGoal(goalId)
             
             wx.showToast({ title: '删除成功', icon: 'success' })
             this.loadGoals()

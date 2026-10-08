@@ -1,4 +1,5 @@
 const StorageManager = require('../../utils/storage.js')
+const { SmartStorage } = require('../../utils/apiClient.js')
 
 Page({
   data: {
@@ -112,9 +113,10 @@ Page({
   },
 
   // 生成极简财务报告（仅预计算字符串，杜绝 NaN 与对象值）
-  generate() {
-    const assets = (StorageManager.getAssets && StorageManager.getAssets()) || wx.getStorageSync('assets_data') || []
-    const liabilities = (StorageManager.getLiabilities && StorageManager.getLiabilities()) || wx.getStorageSync('liabilities_data') || []
+  async generate() {
+    // 使用 SmartStorage 自动选择云端或本地数据
+    const assets = await SmartStorage.getAssets() || []
+    const liabilities = await SmartStorage.getLiabilities() || []
 
     let currentAssetsSum = 0, financialAssetsSum = 0, physicalAssetsSum = 0, workIncomeValue = 0, otherAssetsSum = 0
     let currentLiabilitiesSum = 0, longTermLiabilitiesSum = 0, otherLiabilitiesSum = 0
