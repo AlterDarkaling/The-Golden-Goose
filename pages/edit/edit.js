@@ -1037,8 +1037,9 @@ Page({
 
   // 计算负债的历史平均每日成本
   calculateLiabilityDailyCost(formData, monthlyPayment) {
-    const originalAmount = parseFloat(formData.originalAmount) || 0
-    const currentAmount = parseFloat(formData.currentAmount) || originalAmount
+    const originalAmount = StorageManager.firstNumber(formData.originalAmount)
+    // 已还清时余额为 0 是合法值，用 || 会被顶回原始金额，导致已偿还本金算成 0
+    const currentAmount = StorageManager.firstNumber(formData.currentAmount, originalAmount)
     
     if (originalAmount <= 0) {
       return 0

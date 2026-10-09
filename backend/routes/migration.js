@@ -37,6 +37,18 @@ router.post('/upload', async (req, res, next) => {
       })
     }
 
+    // 迁移接口是整表批量写入，限制条数与类型，避免一次请求灌入超大数组
+    const MAX_MIGRATE_ROWS = 500
+    for (const [label, rows] of [['assets', assets], ['liabilities', liabilities]]) {
+      if (rows === undefined) continue
+      if (!Array.isArray(rows)) {
+        return res.status(400).json({ success: false, message: `${label} 必须是数组` })
+      }
+      if (rows.length > MAX_MIGRATE_ROWS) {
+        return res.status(400).json({ success: false, message: `${label} 单次最多 ${MAX_MIGRATE_ROWS} 条` })
+      }
+    }
+
     let assetsCreated = 0
     let liabilitiesCreated = 0
 
