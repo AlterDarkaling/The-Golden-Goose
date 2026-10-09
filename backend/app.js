@@ -32,10 +32,18 @@ const PORT = process.env.PORT || 3000
 app.use(helmet())
 
 // CORS配置
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*']
+const configuredOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(item => item.trim()).filter(Boolean)
+  : ['*']
+// 注意：cors 包里 origin: ['*'] 是"白名单里只有字面量 *"，等于所有真实 Origin 都不匹配，
+// 通配符必须传字符串 '*'
+const isWildcardOrigin = configuredOrigins.length === 1 && configuredOrigins[0] === '*'
+
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: isWildcardOrigin ? '*' : configuredOrigins,
+  // 通配符来源下开 credentials 是无效组合（浏览器会拒绝该响应），
+  // 小程序请求不依赖 Cookie，因此仅在配置了具体来源白名单时启用凭证
+  credentials: !isWildcardOrigin
 }))
 
 // 请求体解析
@@ -94,6 +102,11 @@ app.use(errorHandler)
 
 async function startServer() {
   try {
+    // 缺签名密钥时立刻失败，而不是拖到第一次登录才抛 500
+    if (!process.env.JWT_SECRET) {
+      throw new Error('缺少 JWT_SECRET，请在 backend/.env 中配置 JWT 签名密钥')
+    }
+
     // 测试数据库连接
     await db.authenticate()
     console.log('✅ 数据库连接成功')
