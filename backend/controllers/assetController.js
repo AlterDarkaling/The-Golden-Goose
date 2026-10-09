@@ -2,9 +2,24 @@
  * 资产控制器
  */
 
-const { Asset } = require('../models')
+const { Asset, Liability } = require('../models')
 const DepreciationEngine = require('../utils/depreciation')
 const { Op } = require('sequelize')
+
+/**
+ * 关联的贷款必须属于当前用户，否则会把记录指向别人的数据形成跨租户悬挂引用
+ */
+async function assertOwnedLoan(assetData, userId) {
+  if (!hasOwn(assetData, 'related_loan_id') || assetData.related_loan_id === null) return null
+
+  const loanId = parseInt(assetData.related_loan_id, 10)
+  if (!Number.isInteger(loanId) || loanId <= 0) return 'related_loan_id 取值非法'
+
+  const loan = await Liability.findOne({ where: { id: loanId, user_id: userId }, attributes: ['id'] })
+  if (!loan) return '关联的贷款不存在或不属于当前用户'
+
+  return null
+}
 
 /**
  * 字段是否存在于待写入数据中（显式传 0 与未传字段语义不同，不能用 || 判断）
@@ -287,7 +302,12 @@ exports.createAsset = async (req, res, next) => {
     const filteredData = pickAssetFields(assetData)
     
     assetData = filteredData
-    
+
+    const loanError = await assertOwnedLoan(assetData, userId)
+    if (loanError) {
+      return res.status(400).json({ success: false, message: loanError })
+    }
+
     console.log('📥 映射后的数据:', JSON.stringify(assetData, null, 2))
 
     // 处理消费性资产的折旧计算
@@ -347,6 +367,11 @@ exports.updateAsset = async (req, res, next) => {
     
     // 只保留数据库模型中存在的字段
     updateData = pickAssetFields(updateData)
+
+    const loanError = await assertOwnedLoan(updateData, userId)
+    if (loanError) {
+      return res.status(400).json({ success: false, message: loanError })
+    }
 
     const asset = await Asset.findOne({
       where: { id: assetId, user_id: userId }
@@ -428,6 +453,12 @@ exports.deleteAsset = async (req, res, next) => {
     }
 
     await asset.destroy()
+
+    // 反向引用也要清掉，否则负债会指向一条已不存在的资产
+    await Liability.update(
+      { related_asset_id: null },
+      { where: { related_asset_id: assetId, user_id: userId } }
+    )
 
     res.json({
       success: true,

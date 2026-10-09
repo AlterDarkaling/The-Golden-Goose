@@ -2,8 +2,23 @@
  * 负债控制器
  */
 
-const { Liability } = require('../models')
+const { Liability, Asset } = require('../models')
 const LoanCalculator = require('../utils/loanCalculator')
+
+/**
+ * 关联的资产必须属于当前用户，避免跨用户悬挂引用
+ */
+async function assertOwnedAsset(data, userId) {
+  if (!hasOwn(data, 'related_asset_id') || data.related_asset_id === null) return null
+
+  const assetId = parseInt(data.related_asset_id, 10)
+  if (!Number.isInteger(assetId) || assetId <= 0) return 'related_asset_id 取值非法'
+
+  const asset = await Asset.findOne({ where: { id: assetId, user_id: userId }, attributes: ['id'] })
+  if (!asset) return '关联的资产不存在或不属于当前用户'
+
+  return null
+}
 
 const LIABILITY_FIELDS = [
   'name', 'category_l1', 'category_l2', 'category_l3',
@@ -246,6 +261,11 @@ exports.createLiability = async (req, res, next) => {
     // 只保留数据库模型中存在的字段
     const filteredData = pickLiabilityFields(liabilityData)
 
+    const assetError = await assertOwnedAsset(filteredData, userId)
+    if (assetError) {
+      return res.status(400).json({ success: false, message: assetError })
+    }
+
     // 补齐本金并生成还款计划（分期负债按年利率与期数摊还）
     applyLoanTerms(filteredData, repaymentMethod)
 
@@ -284,6 +304,11 @@ exports.updateLiability = async (req, res, next) => {
     
     // 只保留数据库模型中存在的字段
     updateData = pickLiabilityFields(updateData)
+
+    const assetError = await assertOwnedAsset(updateData, userId)
+    if (assetError) {
+      return res.status(400).json({ success: false, message: assetError })
+    }
 
     const liability = await Liability.findOne({
       where: { id: liabilityId, user_id: userId }
@@ -351,6 +376,12 @@ exports.deleteLiability = async (req, res, next) => {
     }
 
     await liability.destroy()
+
+    // 资产侧的 related_loan_id 也要断开，否则留下指向已删除贷款的悬挂引用
+    await Asset.update(
+      { related_loan_id: null },
+      { where: { related_loan_id: liabilityId, user_id: userId } }
+    )
 
     res.json({
       success: true,
